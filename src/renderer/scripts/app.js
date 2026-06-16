@@ -704,19 +704,6 @@
           )
           .join("")
       : '<span class="muted">-</span>';
-
-    $("#dashboardStatusList").innerHTML = state.settings.frequentStatuses.length
-      ? state.settings.frequentStatuses
-          .map(
-            (status) => `
-              <span class="chip">
-                ${escapeHtml(status)}
-                <button type="button" data-remove-dashboard-status="${escapeHtml(status)}" aria-label="${CallFlowI18n.t("removeStatus", language)}">×</button>
-              </span>
-            `
-          )
-          .join("")
-      : '<span class="muted">-</span>';
   }
 
   async function updateFrequentStatusesFromDashboard(statuses) {
@@ -731,19 +718,22 @@
     render();
   }
 
-  async function addDashboardStatus() {
-    const input = $("#newDashboardStatus");
+  async function addCurrentDashboardStatus() {
+    const input = $("#callForm input[name='description']");
     const value = input.value.trim();
     if (!value) return;
     await updateFrequentStatusesFromDashboard([...state.settings.frequentStatuses, value]);
-    input.value = "";
     input.focus();
   }
 
-  async function removeDashboardStatus(value) {
+  async function removeCurrentDashboardStatus() {
+    const input = $("#callForm input[name='description']");
+    const value = input.value.trim();
+    if (!value || !state.settings.frequentStatuses.includes(value)) return;
     const language = state.settings.language || "es";
     if (!window.confirm(CallFlowI18n.t("confirmRemoveStatus", language))) return;
     await updateFrequentStatusesFromDashboard(state.settings.frequentStatuses.filter((status) => status !== value));
+    input.focus();
   }
 
   async function updateCallTypesFromDashboard(callTypes) {
@@ -1110,15 +1100,12 @@
         addDashboardCallType();
       }
     });
-    $("#toggleStatusManager").addEventListener("click", () => {
-      $("#dashboardStatusManager").classList.toggle("hidden");
-      if (!$("#dashboardStatusManager").classList.contains("hidden")) $("#newDashboardStatus").focus();
-    });
-    $("#saveDashboardStatus").addEventListener("click", addDashboardStatus);
-    $("#newDashboardStatus").addEventListener("keydown", (event) => {
+    $("#addCurrentStatus").addEventListener("click", addCurrentDashboardStatus);
+    $("#removeCurrentStatus").addEventListener("click", removeCurrentDashboardStatus);
+    $("#callForm input[name='description']").addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
-        addDashboardStatus();
+        addCurrentDashboardStatus();
       }
     });
     $("#copySelectedBlocks").addEventListener("click", copySelectedBlocks);
@@ -1215,7 +1202,6 @@
       const removeListId = event.target.dataset.removeListItem;
       const presetListId = event.target.dataset.presetListItem;
       const dashboardCallTypeToRemove = event.target.dataset.removeDashboardCallType;
-      const dashboardStatusToRemove = event.target.dataset.removeDashboardStatus;
       const timezoneToggleId = timezoneToggle ? timezoneToggle.dataset.timezoneToggle : null;
       const timezonePickerId = timezoneOption ? timezoneOption.dataset.timezonePickerOption : null;
       const reminderId = event.target.dataset.completeReminder;
@@ -1231,9 +1217,6 @@
       }
       if (dashboardCallTypeToRemove) {
         removeDashboardCallType(dashboardCallTypeToRemove);
-      }
-      if (dashboardStatusToRemove) {
-        removeDashboardStatus(dashboardStatusToRemove);
       }
       if (timezoneToggleId) {
         const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);

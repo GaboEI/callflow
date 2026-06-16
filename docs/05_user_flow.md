@@ -12,11 +12,13 @@ Frequent status presets and success/rejection defaults follow the selected langu
 
 ## Configuración
 
-After onboarding, the same values can be edited from the Settings section. Call types and frequent statuses are managed as add/remove lists and saved locally. The same call type and frequent status lists can also be adjusted from the Dashboard during active work, using the same settings source of truth.
+After onboarding, the same values can be edited from the Settings section. Call types and frequent statuses are managed as add/remove lists and saved locally. The same lists can also be adjusted from the Dashboard during active work, using the same settings source of truth. Call types are managed from a compact `...` control, while frequent statuses are added or removed directly beside the description/status field.
 
 ## Registro de llamada
 
 The operator enters a call ID and saves. Call type, frequent status, and custom comment are optional. A frequent status is a shortcut for repeated outcomes, while the custom comment can be used alone for unique situations.
+
+To add a frequent status during work, the operator types it in `Descripción / estado` and clicks `+` or presses Enter. To remove a frequent status, the operator selects or types that status and clicks `-`.
 
 Generated full line example:
 

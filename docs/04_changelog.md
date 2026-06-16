@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.7 - Refine dashboard inline type and status controls
+
+- Changed call type management from a plus action to a compact `...` configuration control.
+- Kept the call type manager hidden until explicitly opened.
+- Removed the extra frequent status management panel from quick registration.
+- Added direct `+` and `-` actions beside the description/status field.
+- Let Enter in the description/status field save the current text as a frequent status.
+
 ## v0.1.6 - Improve quick registration optional fields and inline status management
 
 - Made only call ID required in quick registration.

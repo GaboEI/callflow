@@ -128,7 +128,7 @@
               <label>
                 <span class="field-heading">
                   <span data-i18n="callType">Tipo / proveedor</span>
-                  <button class="icon-button" type="button" id="toggleCallTypeManager" data-i18n-title="addCallType" title="Agregar tipo">+</button>
+                  <button class="icon-button" type="button" id="toggleCallTypeManager" data-i18n-title="manageCallTypes" title="Gestionar tipos">⋯</button>
                 </span>
                 <select name="callType"></select>
               </label>
@@ -142,18 +142,14 @@
               <label>
                 <span class="field-heading">
                   <span data-i18n="description">Descripción / estado</span>
-                  <button class="icon-button" type="button" id="toggleStatusManager" data-i18n-title="addStatus" title="Agregar estado">+</button>
+                  <span class="inline-icon-actions">
+                    <button class="icon-button" type="button" id="addCurrentStatus" data-i18n-title="addStatus" title="Agregar estado">+</button>
+                    <button class="icon-button" type="button" id="removeCurrentStatus" data-i18n-title="removeStatus" title="Eliminar estado">−</button>
+                  </span>
                 </span>
                 <input name="description" list="statusList" autocomplete="off" />
                 <datalist id="statusList"></datalist>
               </label>
-              <div class="status-manager span-2 hidden" id="dashboardStatusManager">
-                <div class="input-row">
-                  <input id="newDashboardStatus" data-i18n-placeholder="newFrequentStatus" placeholder="Nuevo estado frecuente" autocomplete="off" />
-                  <button type="button" id="saveDashboardStatus" data-i18n="saveStatus">Guardar estado</button>
-                </div>
-                <div class="chip-list" id="dashboardStatusList"></div>
-              </div>
               <label class="span-2">
                 <span data-i18n="customComment">Comentario personalizado</span>
                 <input name="customComment" autocomplete="off" />

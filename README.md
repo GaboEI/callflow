@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.6` improves quick call registration. Only call ID is required, call type/status/comment are optional, frequent statuses and call types can be managed inline from the Dashboard, and the dashboard includes a live work-time clock based on the configured timezone.
+Version `0.1.7` refines quick registration controls. Only call ID is required, call type/status/comment are optional, call types are managed behind a compact `...` control, statuses are added or removed directly from the description field, and the dashboard includes a live work-time clock based on the configured timezone.
 
 The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
 
