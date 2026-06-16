@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.4` improves the timezone combobox UX. It includes a clean searchable timezone input, translated labels with stable internal IDs, language-aware frequent status presets, generic call type examples, editable success/rejection labels, local settings, call registration, CRM copy format, hourly report copy, simple stats, reminders, and a Markdown cheat sheet draft.
+Version `0.1.5` fixes the timezone combobox selection behavior. It includes a clean searchable timezone input with separate search and selected-value state, translated labels with stable internal IDs, language-aware frequent status presets, generic call type examples, editable success/rejection labels, local settings, call registration, CRM copy format, hourly report copy, simple stats, reminders, and a Markdown cheat sheet draft.
 
 The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
 

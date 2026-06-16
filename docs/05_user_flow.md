@@ -6,7 +6,7 @@ The operator opens CallFlow and sees the onboarding assistant. They choose langu
 
 Changing the language selector updates visible onboarding labels, helper text, placeholders, and actions immediately before saving.
 
-The default timezone is local system time. The timezone combobox lets the operator search by city, region, IANA ID, or UTC offset while the selected value is shown separately. It stores stable values such as `local` or `Europe/Madrid`. The `local` value means CallFlow resolves the current system timezone at runtime, while a remote worker can choose a different market timezone when needed.
+The default timezone is local system time. The timezone combobox lets the operator search by city, region, IANA ID, country alias, or UTC offset while the selected value is shown separately. Search text and selected timezone value are separate states, so the operator does not need to erase the current selection before searching. It stores stable values such as `local` or `Europe/Madrid`. The `local` value means CallFlow resolves the current system timezone at runtime, while a remote worker can choose a different market timezone when needed.
 
 Frequent status presets and success/rejection defaults follow the selected language before onboarding is saved. User-created call types, statuses, and custom labels are preserved exactly as typed.
 

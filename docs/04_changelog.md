@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.5 - Fix timezone combobox selection behavior
+
+- Rebuilt timezone picker interaction around separate search text and selected timezone state.
+- Added reliable open, close, outside-click, Escape, ArrowUp, ArrowDown, and Enter behavior.
+- Made timezone option clicks select the technical timezone value and close the dropdown immediately.
+- Kept the search input clear after selection so users do not need to delete the selected timezone label.
+- Preserved stable stored values such as `local`, `Europe/Madrid`, and `America/New_York`.
+
 ## v0.1.4 - Improve timezone searchable combobox UX
 
 - Changed timezone search so the selected value is shown separately from the search text.

@@ -422,6 +422,17 @@ code {
   color: var(--muted);
 }
 
+.timezone-option.active,
+.timezone-option:hover {
+  background: rgba(59, 130, 246, 0.16);
+}
+
+.timezone-empty {
+  margin: 0;
+  padding: 10px;
+  color: var(--muted);
+}
+
 .chip {
   display: inline-flex;
   align-items: center;

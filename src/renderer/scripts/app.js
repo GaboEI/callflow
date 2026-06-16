@@ -22,6 +22,22 @@
       onboardingRejection: false,
       settingsSuccess: false,
       settingsRejection: false
+    },
+    timezonePickers: {
+      onboarding: {
+        searchQuery: "",
+        selectedTimezoneValue: "local",
+        isTimezoneDropdownOpen: false,
+        filteredTimezoneOptions: [],
+        highlightedTimezoneIndex: -1
+      },
+      settings: {
+        searchQuery: "",
+        selectedTimezoneValue: "local",
+        isTimezoneDropdownOpen: false,
+        filteredTimezoneOptions: [],
+        highlightedTimezoneIndex: -1
+      }
     }
   };
 
@@ -282,20 +298,155 @@
     return `${label} — ${timezoneOffset(value)}${currentTime ? ` — ${currentTime}` : ""}`;
   }
 
-  function timezoneMatches(value, label, query) {
-    const normalizedQuery = normalizeTimezoneSearch(query);
-    if (!normalizedQuery) return true;
-    const compactOffsetQuery = normalizedQuery.replace(":00", "");
-    const haystack = normalizeTimezoneSearch(`${value} ${value.replaceAll("_", " ")} ${label}`);
-    return haystack.includes(normalizedQuery) || haystack.includes(compactOffsetQuery);
-  }
-
   function normalizeTimezoneSearch(value) {
     return String(value || "")
       .toLowerCase()
       .replaceAll("_", " ")
+      .replaceAll("/", " ")
+      .replace(/[—–-]/g, " ")
       .replace(/\s+/g, " ")
       .trim();
+  }
+
+  function timezoneSearchAliases(value) {
+    const aliases = {
+      "Europe/Madrid": "spain madrid espana madrid españa madrid spain espana españa madrid",
+      "Europe/London": "united kingdom uk england britain londres london",
+      "Europe/Moscow": "russia rusia moscu moscow moscú moskva",
+      "America/New_York": "new york nyc united states usa us estados unidos",
+      "America/Mexico_City": "mexico city méxico city mexico ciudad méxico ciudad ciudad de mexico ciudad de méxico",
+      "America/Havana": "cuba havana habana",
+      "America/Los_Angeles": "los angeles california united states usa us",
+      "America/Chicago": "chicago united states usa us",
+      "Asia/Tokyo": "japan japon japón tokyo",
+      "Asia/Dubai": "united arab emirates emirates dubai",
+      "UTC": "gmt utc universal"
+    };
+    return aliases[value] || "";
+  }
+
+  function timezoneOption(value, language) {
+    const resolvedTimezone = value === "local" ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" : value;
+    const [region, ...cityParts] = value.split("/");
+    const city = cityParts.join("/");
+    const displayName =
+      value === "local"
+        ? CallFlowI18n.t("localSystemTime", language)
+        : city
+          ? `${localizedRegion(region, language)} / ${localizedCity(city, language)}`
+          : value;
+    const offset = timezoneOffset(value);
+    const currentTime = timezoneCurrentTime(value, language);
+    const label =
+      value === "local"
+        ? `${displayName} — ${resolvedTimezone} — ${offset}`
+        : `${displayName} — ${offset}${currentTime ? ` — ${currentTime}` : ""}`;
+    const searchText = normalizeTimezoneSearch(
+      [
+        value,
+        value.replaceAll("_", " "),
+        resolvedTimezone,
+        resolvedTimezone.replaceAll("_", " "),
+        displayName,
+        localizedRegion(region, language),
+        localizedCity(city, language),
+        offset,
+        offset.replace(":00", ""),
+        timezoneSearchAliases(value)
+      ].join(" ")
+    );
+
+    return {
+      value,
+      label,
+      resolvedTimezone,
+      offset,
+      currentTime,
+      searchText
+    };
+  }
+
+  function timezonePickerState(pickerId) {
+    return state.timezonePickers[pickerId];
+  }
+
+  function timezonePickerForm(pickerId) {
+    return pickerId === "onboarding" ? $("#onboardingForm") : $("#settingsForm");
+  }
+
+  function timezonePickerElements(pickerId) {
+    return {
+      form: timezonePickerForm(pickerId),
+      search: document.querySelector(`[data-timezone-search="${pickerId}"]`),
+      selected: document.querySelector(`[data-timezone-selected="${pickerId}"]`),
+      results: document.querySelector(`[data-timezone-results="${pickerId}"]`)
+    };
+  }
+
+  function buildTimezoneOptions(language) {
+    return [timezoneOption("local", language), ...timezones.map((timezone) => timezoneOption(timezone, language))];
+  }
+
+  function filterTimezoneOptions(pickerId, language) {
+    const pickerState = timezonePickerState(pickerId);
+    const normalizedQuery = normalizeTimezoneSearch(pickerState.searchQuery);
+    const compactOffsetQuery = normalizedQuery.replace(":00", "");
+    const options = buildTimezoneOptions(language).filter((option) => {
+      if (!normalizedQuery) return true;
+      return option.searchText.includes(normalizedQuery) || option.searchText.includes(compactOffsetQuery);
+    });
+    pickerState.filteredTimezoneOptions = options.slice(0, 80);
+    if (pickerState.highlightedTimezoneIndex >= pickerState.filteredTimezoneOptions.length) {
+      pickerState.highlightedTimezoneIndex = pickerState.filteredTimezoneOptions.length ? 0 : -1;
+    }
+  }
+
+  function renderTimezonePicker(pickerId, language) {
+    const pickerState = timezonePickerState(pickerId);
+    const { form, search, selected, results } = timezonePickerElements(pickerId);
+    if (!form || !form.timezone || !search || !results) return;
+
+    form.timezone.value = pickerState.selectedTimezoneValue || "local";
+    search.value = pickerState.searchQuery;
+    if (selected) selected.textContent = timezoneLabel(pickerState.selectedTimezoneValue || "local", language);
+
+    results.classList.toggle("open", pickerState.isTimezoneDropdownOpen);
+    results.innerHTML = pickerState.filteredTimezoneOptions.length
+      ? pickerState.filteredTimezoneOptions
+          .map((option, index) => {
+            const active = index === pickerState.highlightedTimezoneIndex;
+            return `
+              <button type="button" class="timezone-option${active ? " active" : ""}" data-timezone-picker-option="${pickerId}" data-value="${escapeHtml(option.value)}" aria-selected="${active ? "true" : "false"}">
+                <span>${escapeHtml(option.label)}</span>
+                <small>${escapeHtml(option.value)}</small>
+              </button>
+            `;
+          })
+          .join("")
+      : '<p class="timezone-empty">No results</p>';
+  }
+
+  function openTimezoneDropdown(pickerId) {
+    const pickerState = timezonePickerState(pickerId);
+    pickerState.isTimezoneDropdownOpen = true;
+    filterTimezoneOptions(pickerId, activeFormLanguage());
+    renderTimezonePicker(pickerId, activeFormLanguage());
+  }
+
+  function closeTimezoneDropdown(pickerId) {
+    const pickerState = timezonePickerState(pickerId);
+    pickerState.isTimezoneDropdownOpen = false;
+    pickerState.highlightedTimezoneIndex = -1;
+    renderTimezonePicker(pickerId, activeFormLanguage());
+  }
+
+  function toggleTimezoneDropdown(pickerId) {
+    const pickerState = timezonePickerState(pickerId);
+    if (pickerState.isTimezoneDropdownOpen) {
+      closeTimezoneDropdown(pickerId);
+      return;
+    }
+    openTimezoneDropdown(pickerId);
   }
 
   function escapeHtml(value) {
@@ -451,50 +602,26 @@
 
   function renderTimezonePickers(language) {
     ["onboarding", "settings"].forEach((pickerId) => {
-      const form = pickerId === "onboarding" ? $("#onboardingForm") : $("#settingsForm");
-      const hidden = form.timezone;
-      const search = document.querySelector(`[data-timezone-search="${pickerId}"]`);
-      const selected = document.querySelector(`[data-timezone-selected="${pickerId}"]`);
-      if (!hidden || !search) return;
-      search.value = "";
-      if (selected) selected.textContent = timezoneLabel(hidden.value || "local", language);
-      renderTimezoneResults(pickerId, language, "", false);
+      const form = timezonePickerForm(pickerId);
+      const pickerState = timezonePickerState(pickerId);
+      if (!form || !form.timezone || !pickerState) return;
+      pickerState.selectedTimezoneValue = form.timezone.value || pickerState.selectedTimezoneValue || "local";
+      pickerState.searchQuery = "";
+      filterTimezoneOptions(pickerId, language);
+      renderTimezonePicker(pickerId, language);
     });
   }
 
-  function renderTimezoneResults(pickerId, language, query, open = true) {
-    const results = document.querySelector(`[data-timezone-results="${pickerId}"]`);
-    if (!results) return;
-    results.classList.toggle("open", open);
-
-    const localOption = { value: "local", label: timezoneLabel("local", language) };
-    const zoneOptions = timezones
-      .map((timezone) => ({ value: timezone, label: timezoneLabel(timezone, language) }))
-      .filter((option) => timezoneMatches(option.value, option.label, query));
-    const options = timezoneMatches(localOption.value, localOption.label, query)
-      ? [localOption, ...zoneOptions.slice(0, 80)]
-      : zoneOptions.slice(0, 80);
-
-    results.innerHTML = options
-      .map(
-        (option) => `
-          <button type="button" class="timezone-option" data-timezone-picker-option="${pickerId}" data-value="${escapeHtml(option.value)}">
-            <span>${escapeHtml(option.label)}</span>
-            <small>${escapeHtml(option.value)}</small>
-          </button>
-        `
-      )
-      .join("");
-  }
-
   function selectTimezone(pickerId, value) {
-    const form = pickerId === "onboarding" ? $("#onboardingForm") : $("#settingsForm");
-    const search = document.querySelector(`[data-timezone-search="${pickerId}"]`);
-    const selected = document.querySelector(`[data-timezone-selected="${pickerId}"]`);
+    const form = timezonePickerForm(pickerId);
+    const pickerState = timezonePickerState(pickerId);
+    pickerState.selectedTimezoneValue = value;
+    pickerState.searchQuery = "";
+    pickerState.isTimezoneDropdownOpen = false;
+    pickerState.highlightedTimezoneIndex = -1;
     form.timezone.value = value;
-    search.value = "";
-    if (selected) selected.textContent = timezoneLabel(value, form.language.value);
-    renderTimezoneResults(pickerId, form.language.value, "", false);
+    filterTimezoneOptions(pickerId, form.language.value);
+    renderTimezonePicker(pickerId, form.language.value);
   }
 
   function renderListEditors() {
@@ -869,10 +996,57 @@
     });
     $$("[data-timezone-search]").forEach((input) => {
       input.addEventListener("focus", () => {
-        renderTimezoneResults(input.dataset.timezoneSearch, activeFormLanguage(), "");
+        openTimezoneDropdown(input.dataset.timezoneSearch);
       });
       input.addEventListener("input", () => {
-        renderTimezoneResults(input.dataset.timezoneSearch, activeFormLanguage(), input.value);
+        const pickerId = input.dataset.timezoneSearch;
+        const pickerState = timezonePickerState(pickerId);
+        pickerState.searchQuery = input.value;
+        pickerState.isTimezoneDropdownOpen = true;
+        pickerState.highlightedTimezoneIndex = 0;
+        filterTimezoneOptions(pickerId, activeFormLanguage());
+        renderTimezonePicker(pickerId, activeFormLanguage());
+      });
+      input.addEventListener("keydown", (event) => {
+        const pickerId = input.dataset.timezoneSearch;
+        const pickerState = timezonePickerState(pickerId);
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          if (!pickerState.isTimezoneDropdownOpen) {
+            openTimezoneDropdown(pickerId);
+            return;
+          }
+          const maxIndex = pickerState.filteredTimezoneOptions.length - 1;
+          pickerState.highlightedTimezoneIndex =
+            pickerState.highlightedTimezoneIndex < maxIndex ? pickerState.highlightedTimezoneIndex + 1 : 0;
+          renderTimezonePicker(pickerId, activeFormLanguage());
+        }
+
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          if (!pickerState.isTimezoneDropdownOpen) {
+            openTimezoneDropdown(pickerId);
+            return;
+          }
+          const maxIndex = pickerState.filteredTimezoneOptions.length - 1;
+          pickerState.highlightedTimezoneIndex =
+            pickerState.highlightedTimezoneIndex > 0 ? pickerState.highlightedTimezoneIndex - 1 : maxIndex;
+          renderTimezonePicker(pickerId, activeFormLanguage());
+        }
+
+        if (event.key === "Enter" && pickerState.isTimezoneDropdownOpen) {
+          const option = pickerState.filteredTimezoneOptions[pickerState.highlightedTimezoneIndex];
+          if (option) {
+            event.preventDefault();
+            selectTimezone(pickerId, option.value);
+          }
+        }
+
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeTimezoneDropdown(pickerId);
+        }
       });
     });
 
@@ -884,11 +1058,13 @@
     });
 
     document.addEventListener("click", (event) => {
+      const timezoneToggle = event.target.closest("[data-timezone-toggle]");
+      const timezoneOption = event.target.closest("[data-timezone-picker-option]");
       const addListId = event.target.dataset.addListItem;
       const removeListId = event.target.dataset.removeListItem;
       const presetListId = event.target.dataset.presetListItem;
-      const timezoneToggleId = event.target.dataset.timezoneToggle;
-      const timezonePickerId = event.target.dataset.timezonePickerOption;
+      const timezoneToggleId = timezoneToggle ? timezoneToggle.dataset.timezoneToggle : null;
+      const timezonePickerId = timezoneOption ? timezoneOption.dataset.timezonePickerOption : null;
       const reminderId = event.target.dataset.completeReminder;
       const noteId = event.target.dataset.selectNote;
       if (addListId) {
@@ -902,11 +1078,15 @@
       }
       if (timezoneToggleId) {
         const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);
-        input.focus();
-        renderTimezoneResults(timezoneToggleId, activeFormLanguage(), input.value);
+        toggleTimezoneDropdown(timezoneToggleId);
+        if (timezonePickerState(timezoneToggleId).isTimezoneDropdownOpen) input.focus();
       }
       if (timezonePickerId) {
-        selectTimezone(timezonePickerId, event.target.dataset.value);
+        selectTimezone(timezonePickerId, timezoneOption.dataset.value);
+      }
+      if (!event.target.closest(".timezone-picker")) {
+        closeTimezoneDropdown("onboarding");
+        closeTimezoneDropdown("settings");
       }
       if (reminderId) completeReminder(reminderId);
       if (noteId) {
