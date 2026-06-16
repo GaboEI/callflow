@@ -54,7 +54,9 @@ Settings compatibility:
 - Legacy multiline strings are converted to arrays in the renderer.
 - Legacy `callStatuses` values are migrated to `frequentStatuses`.
 - Onboarding separates system presets, user-created values, and saved settings so language switching can translate untouched presets without rewriting custom user data.
-- Timezone labels are translated in the renderer; stored timezone values remain stable IDs.
+- Timezone labels are translated in the renderer; stored timezone values remain stable IANA IDs.
+- `Intl.supportedValuesOf("timeZone")` is used when available, with a fallback list for older runtimes.
+- The special `local` value resolves through `Intl.DateTimeFormat().resolvedOptions().timeZone` at runtime.
 
 ## Persistence
 

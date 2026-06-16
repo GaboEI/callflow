@@ -68,6 +68,41 @@
   };
 
   const presetStatusValues = new Set(Object.values(presets).flatMap((preset) => preset.frequentStatuses));
+  const fallbackTimezones = [
+    "Africa/Cairo",
+    "Africa/Casablanca",
+    "Africa/Johannesburg",
+    "America/Argentina/Buenos_Aires",
+    "America/Bogota",
+    "America/Chicago",
+    "America/Los_Angeles",
+    "America/Mexico_City",
+    "America/New_York",
+    "America/Santiago",
+    "America/Sao_Paulo",
+    "America/Toronto",
+    "Asia/Dubai",
+    "Asia/Hong_Kong",
+    "Asia/Jerusalem",
+    "Asia/Kolkata",
+    "Asia/Seoul",
+    "Asia/Shanghai",
+    "Asia/Singapore",
+    "Asia/Tokyo",
+    "Australia/Sydney",
+    "Europe/Berlin",
+    "Europe/Lisbon",
+    "Europe/London",
+    "Europe/Madrid",
+    "Europe/Moscow",
+    "Europe/Paris",
+    "Europe/Rome",
+    "UTC"
+  ];
+  const timezones =
+    typeof Intl.supportedValuesOf === "function"
+      ? Intl.supportedValuesOf("timeZone")
+      : fallbackTimezones;
 
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -122,6 +157,135 @@
 
     delete normalized.callStatuses;
     return normalized;
+  }
+
+  function languageLocale(language) {
+    return { es: "es-ES", en: "en-US", ru: "ru-RU" }[language] || "es-ES";
+  }
+
+  function localizedRegion(region, language) {
+    const names = {
+      es: {
+        Africa: "África",
+        America: "América",
+        Antarctica: "Antártida",
+        Arctic: "Ártico",
+        Asia: "Asia",
+        Atlantic: "Atlántico",
+        Australia: "Australia",
+        Europe: "Europa",
+        Indian: "Índico",
+        Pacific: "Pacífico",
+        UTC: "UTC",
+        Etc: "Etc"
+      },
+      en: {
+        Africa: "Africa",
+        America: "America",
+        Antarctica: "Antarctica",
+        Arctic: "Arctic",
+        Asia: "Asia",
+        Atlantic: "Atlantic",
+        Australia: "Australia",
+        Europe: "Europe",
+        Indian: "Indian",
+        Pacific: "Pacific",
+        UTC: "UTC",
+        Etc: "Etc"
+      },
+      ru: {
+        Africa: "Африка",
+        America: "Америка",
+        Antarctica: "Антарктида",
+        Arctic: "Арктика",
+        Asia: "Азия",
+        Atlantic: "Атлантика",
+        Australia: "Австралия",
+        Europe: "Европа",
+        Indian: "Индийский океан",
+        Pacific: "Тихий океан",
+        UTC: "UTC",
+        Etc: "Etc"
+      }
+    };
+    return (names[language] && names[language][region]) || region;
+  }
+
+  function localizedCity(city, language) {
+    const cleanCity = city.replaceAll("_", "_");
+    const ruCities = {
+      Madrid: "Мадрид",
+      London: "Лондон",
+      Moscow: "Москва",
+      Paris: "Париж",
+      Rome: "Рим",
+      Berlin: "Берлин",
+      New_York: "Нью-Йорк",
+      Mexico_City: "Мехико",
+      Los_Angeles: "Лос-Анджелес",
+      Chicago: "Чикаго",
+      Tokyo: "Токио",
+      Seoul: "Сеул",
+      Shanghai: "Шанхай",
+      Singapore: "Сингапур",
+      Dubai: "Дубай",
+      Sydney: "Сидней"
+    };
+    if (language === "ru" && ruCities[city]) return ruCities[city];
+    return cleanCity;
+  }
+
+  function timezoneOffset(timezone, date = new Date()) {
+    if (timezone === "local") {
+      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: timezone,
+        timeZoneName: "shortOffset",
+        hour: "2-digit"
+      }).formatToParts(date);
+      const rawOffset = parts.find((part) => part.type === "timeZoneName").value;
+      if (rawOffset === "GMT" || rawOffset === "UTC") return "UTC+00:00";
+      const match = rawOffset.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
+      if (!match) return rawOffset.replace("GMT", "UTC");
+      return `UTC${match[1]}${match[2].padStart(2, "0")}:${match[3] || "00"}`;
+    } catch (_error) {
+      return "UTC";
+    }
+  }
+
+  function timezoneCurrentTime(timezone, language) {
+    const resolvedTimezone = timezone === "local" ? Intl.DateTimeFormat().resolvedOptions().timeZone : timezone;
+    try {
+      return new Intl.DateTimeFormat(languageLocale(language), {
+        timeZone: resolvedTimezone,
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date());
+    } catch (_error) {
+      return "";
+    }
+  }
+
+  function timezoneLabel(value, language) {
+    if (value === "local") {
+      const resolved = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+      return `${CallFlowI18n.t("localSystemTime", language)} — ${resolved} — ${timezoneOffset("local")}`;
+    }
+
+    const [region, ...cityParts] = value.split("/");
+    const city = cityParts.join("/");
+    const label = city ? `${localizedRegion(region, language)} / ${localizedCity(city, language)}` : value;
+    const currentTime = timezoneCurrentTime(value, language);
+    return `${label} — ${timezoneOffset(value)}${currentTime ? ` — ${currentTime}` : ""}`;
+  }
+
+  function timezoneMatches(value, label, query) {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return true;
+    return `${value} ${label}`.toLowerCase().includes(normalizedQuery);
   }
 
   function escapeHtml(value) {
@@ -197,6 +361,7 @@
     state.formLists.settingsCallTypes = [...settings.callTypes];
     state.formLists.settingsFrequentStatuses = [...settings.frequentStatuses];
     state.presetMeta.settingsFrequentStatuses.custom = [...settings.frequentStatuses];
+    renderTimezonePickers(settings.language);
     renderListEditors();
     renderLabelSuggestions(settings.language);
   }
@@ -250,6 +415,7 @@
   function handleLanguageChange(form, language) {
     CallFlowI18n.applyI18n(language);
     renderLabelSuggestions(language);
+    renderTimezonePickers(language);
 
     if (form.id === "onboardingForm" && !state.settings.onboardingCompleted) {
       refreshPresetBackedStatuses("onboardingFrequentStatuses", language);
@@ -271,6 +437,49 @@
     }
 
     renderListEditors();
+  }
+
+  function renderTimezonePickers(language) {
+    ["onboarding", "settings"].forEach((pickerId) => {
+      const form = pickerId === "onboarding" ? $("#onboardingForm") : $("#settingsForm");
+      const hidden = form.timezone;
+      const search = document.querySelector(`[data-timezone-search="${pickerId}"]`);
+      if (!hidden || !search) return;
+      search.value = timezoneLabel(hidden.value || "local", language);
+      renderTimezoneResults(pickerId, language, "");
+    });
+  }
+
+  function renderTimezoneResults(pickerId, language, query) {
+    const results = document.querySelector(`[data-timezone-results="${pickerId}"]`);
+    if (!results) return;
+
+    const localOption = { value: "local", label: timezoneLabel("local", language) };
+    const zoneOptions = timezones
+      .map((timezone) => ({ value: timezone, label: timezoneLabel(timezone, language) }))
+      .filter((option) => timezoneMatches(option.value, option.label, query));
+    const options = timezoneMatches(localOption.value, localOption.label, query)
+      ? [localOption, ...zoneOptions.slice(0, 80)]
+      : zoneOptions.slice(0, 80);
+
+    results.innerHTML = options
+      .map(
+        (option) => `
+          <button type="button" class="timezone-option" data-timezone-picker-option="${pickerId}" data-value="${escapeHtml(option.value)}">
+            <span>${escapeHtml(option.label)}</span>
+            <small>${escapeHtml(option.value)}</small>
+          </button>
+        `
+      )
+      .join("");
+  }
+
+  function selectTimezone(pickerId, value) {
+    const form = pickerId === "onboarding" ? $("#onboardingForm") : $("#settingsForm");
+    const search = document.querySelector(`[data-timezone-search="${pickerId}"]`);
+    form.timezone.value = value;
+    search.value = timezoneLabel(value, form.language.value);
+    renderTimezoneResults(pickerId, form.language.value, "");
   }
 
   function renderListEditors() {
@@ -643,6 +852,14 @@
         }
       });
     });
+    $$("[data-timezone-search]").forEach((input) => {
+      input.addEventListener("focus", () => {
+        renderTimezoneResults(input.dataset.timezoneSearch, activeFormLanguage(), "");
+      });
+      input.addEventListener("input", () => {
+        renderTimezoneResults(input.dataset.timezoneSearch, activeFormLanguage(), input.value);
+      });
+    });
 
     document.addEventListener("change", (event) => {
       if (event.target.matches("[data-block]")) {
@@ -655,6 +872,7 @@
       const addListId = event.target.dataset.addListItem;
       const removeListId = event.target.dataset.removeListItem;
       const presetListId = event.target.dataset.presetListItem;
+      const timezonePickerId = event.target.dataset.timezonePickerOption;
       const reminderId = event.target.dataset.completeReminder;
       const noteId = event.target.dataset.selectNote;
       if (addListId) {
@@ -665,6 +883,9 @@
       }
       if (presetListId) {
         addListItem(presetListId, event.target.dataset.value);
+      }
+      if (timezonePickerId) {
+        selectTimezone(timezonePickerId, event.target.dataset.value);
       }
       if (reminderId) completeReminder(reminderId);
       if (noteId) {

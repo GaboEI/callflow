@@ -368,6 +368,45 @@ code {
   gap: 6px;
 }
 
+.timezone-picker {
+  display: grid;
+  gap: 8px;
+  position: relative;
+}
+
+.timezone-results {
+  display: grid;
+  max-height: 210px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #07101f;
+}
+
+.timezone-option {
+  display: grid;
+  gap: 2px;
+  min-height: auto;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.timezone-option:last-child {
+  border-bottom: 0;
+}
+
+.timezone-option span {
+  overflow-wrap: anywhere;
+}
+
+.timezone-option small {
+  color: var(--muted);
+}
+
 .chip {
   display: inline-flex;
   align-items: center;

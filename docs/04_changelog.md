@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.3 - Add professional IANA timezone selector
+
+- Replaced the small manual timezone dropdown with a searchable timezone selector.
+- Used runtime IANA timezone IDs via `Intl.supportedValuesOf("timeZone")` with a safe fallback list.
+- Kept `local` as the first/default stable value and resolved it at runtime.
+- Localized visible timezone labels while preserving technical stored values.
+- Added UTC offset and current time context to timezone options.
+- Reused the same timezone selector in Settings.
+
 ## v0.1.2 - Improve onboarding internationalization presets
 
 - Translated timezone display labels while preserving stable timezone values.

@@ -8,8 +8,10 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 
 - First-run onboarding for language, work timezone, operator name, configurable call types, frequent status presets, success label, and rejection label.
 - Onboarding language switching updates visible labels, helpers, placeholders, and actions immediately before settings are saved.
-- Timezone display labels are translated, while stored values remain stable identifiers such as `local` or `Europe/Madrid`.
+- Timezone selection uses IANA timezone IDs from the runtime where available.
+- Timezone display labels are translated and include useful UTC offset/current-time context, while stored values remain stable identifiers such as `local` or `Europe/Madrid`.
 - Default timezone is local system time; Spain/Madrid remains available as an explicit option.
+- The `local` timezone value means use the current system timezone at runtime, which supports remote workers whose work market differs from their physical location.
 - Operator name is user-defined and no personal name is used as a default placeholder.
 - Call type examples remain generic and are not tied to one operator workflow.
 - Frequent status presets are language-aware; user-created statuses are preserved exactly as typed.
