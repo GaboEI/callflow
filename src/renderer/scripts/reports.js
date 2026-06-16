@@ -38,8 +38,18 @@
     return [description, customComment].filter(Boolean).join(" — ");
   }
 
-  function buildCallLine(call) {
-    const parts = ["#", call.callId, call.callType, call.date, call.time].filter(Boolean);
+  function linePrefix(call, settings) {
+    const mode = settings.linePrefixMode || "hash";
+    if (mode === "none") return "";
+    if (mode === "dailyNumber") {
+      const sequence = Number(call.dailySequence || 0);
+      return sequence ? String(sequence).padStart(3, "0") : "";
+    }
+    return "#";
+  }
+
+  function buildCallLine(call, settings = {}) {
+    const parts = [linePrefix(call, settings), call.callId, call.callType, call.date, call.time].filter(Boolean);
     return `${parts.join(" ")} ${call.operatorName}: ${call.description}`;
   }
 
@@ -63,11 +73,30 @@
       time: stamp.time,
       hour: stamp.hour,
       block: blockFromHour(stamp.hour),
+      dailySequence: formData.dailySequence || null,
       createdAt: now.toISOString()
     };
-    call.fullLine = buildCallLine(call);
+    call.fullLine = buildCallLine(call, settings);
     call.crmLine = buildCrmLine(call);
     return call;
+  }
+
+  function ensureDailySequences(calls) {
+    const groups = calls.reduce((byDate, call) => {
+      byDate[call.date] = byDate[call.date] || [];
+      byDate[call.date].push(call);
+      return byDate;
+    }, {});
+
+    Object.values(groups).forEach((items) => {
+      items
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+        .forEach((call, index) => {
+          if (!call.dailySequence) call.dailySequence = index + 1;
+        });
+    });
+
+    return calls;
   }
 
   function todayKey(settings, date = new Date()) {
@@ -92,7 +121,7 @@
     const operator = (settings.operatorName || "OPERADOR").toUpperCase();
     const headerFormat = settings.reportHeaderFormat || "##### **REPORTE {OPERATOR} DE {BLOCK}**";
     const header = headerFormat.replace("{OPERATOR}", operator).replace("{BLOCK}", block);
-    const body = calls.map((call) => call.fullLine).join("\n\n");
+    const body = calls.map((call) => buildCallLine(call, settings)).join("\n");
     return `${header}\n\n\`\`\`\n${body}\n\`\`\``;
   }
 
@@ -102,6 +131,8 @@
     groupByBlock,
     blockFromHour,
     buildSupervisorReport,
+    buildCallLine,
+    ensureDailySequences,
     resolveTimezone,
     formatCallTimestamp
   };

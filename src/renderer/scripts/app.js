@@ -166,6 +166,7 @@
       frequentStatuses: uniqueItems(settings.frequentStatuses || settings.callStatuses),
       successLabel: settings.successLabel || defaultSuccessLabel(settings.language),
       rejectionLabel: settings.rejectionLabel || defaultRejectionLabel(settings.language),
+      linePrefixMode: settings.linePrefixMode || "hash",
       clockFormat: settings.clockFormat || "24h"
     };
 
@@ -520,6 +521,7 @@
     settingsForm.successLabel.value = settings.successLabel;
     settingsForm.rejectionLabel.value = settings.rejectionLabel;
     settingsForm.reportHeaderFormat.value = settings.reportHeaderFormat;
+    settingsForm.linePrefixMode.value = settings.linePrefixMode || "hash";
     settingsForm.theme.value = settings.theme || "dark";
     settingsForm.clockFormat.value = settings.clockFormat || "24h";
     state.formLists.settingsCallTypes = [...settings.callTypes];
@@ -544,6 +546,7 @@
       reportHeaderFormat: form.reportHeaderFormat
         ? form.reportHeaderFormat.value
         : state.settings.reportHeaderFormat,
+      linePrefixMode: form.linePrefixMode ? form.linePrefixMode.value : state.settings.linePrefixMode || "hash",
       clockFormat: form.clockFormat ? form.clockFormat.value : state.settings.clockFormat || "24h",
       theme: form.theme ? form.theme.value : "dark",
       onboardingCompleted
@@ -809,7 +812,7 @@
   }
 
   function renderBlocks() {
-    const todayCalls = CallFlowReports.callsForToday(state.calls, state.settings);
+    const todayCalls = CallFlowReports.ensureDailySequences(CallFlowReports.callsForToday(state.calls, state.settings));
     const groups = CallFlowReports.groupByBlock(todayCalls);
     const entries = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
 
@@ -832,7 +835,7 @@
                 <label><input type="checkbox" data-block="${escapeHtml(block)}" ${state.selectedBlocks.has(block) ? "checked" : ""} /> ${block}</label>
                 <span class="tag">${calls.length} llamadas</span>
               </header>
-              <code>${escapeHtml(calls.map((call) => call.fullLine).join("\n\n"))}</code>
+              <code>${escapeHtml(calls.map((call) => CallFlowReports.buildCallLine(call, state.settings)).join("\n"))}</code>
             </article>
           `)
           .join("")
@@ -922,7 +925,9 @@
       const latest = [...state.calls].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
       state.lastCall = latest || null;
     }
-    $("#lastFullLine").textContent = state.lastCall ? state.lastCall.fullLine : "-";
+    $("#lastFullLine").textContent = state.lastCall
+      ? CallFlowReports.buildCallLine(state.lastCall, state.settings)
+      : "-";
   }
 
   function render() {
@@ -947,7 +952,8 @@
         callId: form.callId.value,
         callType: form.callType.value,
         description: form.description.value.trim(),
-        customComment: form.customComment.value.trim()
+        customComment: form.customComment.value.trim(),
+        dailySequence: CallFlowReports.callsForToday(state.calls, state.settings).length + 1
       },
       state.settings
     );
@@ -977,7 +983,7 @@
   }
 
   async function copySelectedBlocks() {
-    const todayCalls = CallFlowReports.callsForToday(state.calls, state.settings);
+    const todayCalls = CallFlowReports.ensureDailySequences(CallFlowReports.callsForToday(state.calls, state.settings));
     const groups = CallFlowReports.groupByBlock(todayCalls);
     const reports = [...state.selectedBlocks]
       .sort()

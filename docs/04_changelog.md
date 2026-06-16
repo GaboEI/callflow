@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.8 - Refine report line spacing and prefix format
+
+- Removed blank lines between calls inside report block content.
+- Added configurable call line prefix mode in Settings.
+- Kept `#` as the default prefix.
+- Added options for no prefix and daily numbering in `001` format.
+- Applied the configured line prefix to dashboard previews and copied supervisor reports.
+
 ## v0.1.7 - Refine dashboard inline type and status controls
 
 - Changed call type management from a plus action to a compact `...` configuration control.

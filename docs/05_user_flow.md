@@ -38,6 +38,8 @@ If both frequent status and custom comment are present, they are combined:
 # 20506955 Soporte 16.06 14:05 Ana: Sin_respuesta — Cliente pidió rellamada
 ```
 
+The prefix before the call ID is configurable in Settings. The default is `#`, but the operator can choose no prefix or a daily counter such as `001`.
+
 ## Copia para CRM
 
 The operator clicks `Guardar y copiar CRM` or `Copiar último CRM`.
@@ -51,6 +53,8 @@ CRM output example:
 ## Copia para supervisor
 
 The operator opens Reports, selects one or more hourly blocks, and copies the Markdown report.
+
+Inside each report block, calls are listed on consecutive lines without a blank line between them.
 
 ## Recordatorio
 

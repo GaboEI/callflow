@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.7` refines quick registration controls. Only call ID is required, call type/status/comment are optional, call types are managed behind a compact `...` control, statuses are added or removed directly from the description field, and the dashboard includes a live work-time clock based on the configured timezone.
+Version `0.1.8` refines report line formatting. Report blocks now keep calls on consecutive lines, and the line prefix is configurable as `#`, no prefix, or a daily counter such as `001`.
 
 The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
 

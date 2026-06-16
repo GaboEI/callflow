@@ -12,6 +12,7 @@
   "successLabel": "Exitosa",
   "rejectionLabel": "Rechazo",
   "reportHeaderFormat": "##### **REPORTE {OPERATOR} DE {BLOCK}**",
+  "linePrefixMode": "hash",
   "clockFormat": "24h",
   "theme": "dark",
   "onboardingCompleted": false

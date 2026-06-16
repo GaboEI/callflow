@@ -22,9 +22,10 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - Call types and frequent statuses can be managed from both Dashboard and Settings using one shared settings source of truth.
 - Dashboard includes a live green work-time clock using the configured work timezone, with 24-hour, 12-hour, and military display options.
 - Full internal call line format: `# ID TYPE DD.MM HH:mm Operator: Description`.
+- Line prefix is configurable: `#` by default, no prefix, or daily numbering such as `001`.
 - CRM copy format: `DD.MM HH:mm Operator: Description`.
 - Hourly grouping by configured timezone.
-- Supervisor report copy in Markdown with one or more selected hourly blocks.
+- Supervisor report copy in Markdown with one or more selected hourly blocks; calls inside a block are listed on consecutive lines without blank spacing.
 - Daily statistics for total calls, successes, rejections, no answer, provider totals, hourly totals, and pending reminders.
 - Callback reminders with pending, completed, and overdue states.
 - Markdown cheat sheet with create, edit, delete, search, preview, and export to `.md` or `.txt`.

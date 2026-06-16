@@ -273,6 +273,14 @@
               <label><span data-i18n="rejectionLabel">Etiqueta rechazo</span><input name="rejectionLabel" list="rejectionLabelSuggestions" required /></label>
               <label><span>Formato encabezado</span><input name="reportHeaderFormat" required /></label>
               <label>
+                <span data-i18n="linePrefixMode">Prefijo de línea</span>
+                <select name="linePrefixMode">
+                  <option value="hash" data-i18n="linePrefixHash">#</option>
+                  <option value="none" data-i18n="linePrefixNone">Sin prefijo</option>
+                  <option value="dailyNumber" data-i18n="linePrefixDailyNumber">Número diario 001</option>
+                </select>
+              </label>
+              <label>
                 <span data-i18n="clockFormat">Formato del reloj</span>
                 <select name="clockFormat">
                   <option value="24h" data-i18n="clock24">24 horas</option>
