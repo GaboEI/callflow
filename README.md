@@ -34,10 +34,10 @@ User data is stored in Electron's `app.getPath("userData")`, not inside the sour
 
 ## GitHub Private Repository
 
-The GitHub CLI is not currently available in this environment. Create a private repository named `callflow` on GitHub, then push the local history:
+The GitHub CLI is not currently available in this environment. The private repository is `https://github.com/GaboEI/callflow`. Push the local history with:
 
 ```bash
-git --git-dir=.git-local --work-tree=. remote add origin git@github.com:TU_USUARIO/callflow.git
+git --git-dir=.git-local --work-tree=. remote set-url origin git@github.com:GaboEI/callflow.git
 git --git-dir=.git-local --work-tree=. branch -M main
 git --git-dir=.git-local --work-tree=. push -u origin main
 ```
@@ -45,7 +45,7 @@ git --git-dir=.git-local --work-tree=. push -u origin main
 HTTPS alternative:
 
 ```bash
-git --git-dir=.git-local --work-tree=. remote add origin https://github.com/TU_USUARIO/callflow.git
+git --git-dir=.git-local --work-tree=. remote set-url origin https://github.com/GaboEI/callflow.git
 git --git-dir=.git-local --work-tree=. branch -M main
 git --git-dir=.git-local --work-tree=. push -u origin main
 ```
