@@ -2,11 +2,15 @@
 
 ## Primer inicio
 
-The operator opens CallFlow and sees the onboarding assistant. They choose language, timezone, operator name, call providers, frequent statuses, success label, and rejection label.
+The operator opens CallFlow and sees the onboarding assistant. They choose language, work timezone, operator name, call types, frequent statuses, success label, and rejection label.
+
+Changing the language selector updates visible onboarding labels, helper text, placeholders, and actions immediately before saving.
+
+The default timezone is local system time. Spain/Madrid is available as a separate option for workflows that need it.
 
 ## Configuración
 
-After onboarding, the same values can be edited from the Settings section. Changes are saved locally.
+After onboarding, the same values can be edited from the Settings section. Call types and frequent statuses are managed as add/remove lists and saved locally.
 
 ## Registro de llamada
 

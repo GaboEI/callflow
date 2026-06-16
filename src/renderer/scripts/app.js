@@ -6,21 +6,48 @@
     knowledgeBase: [],
     selectedNoteId: null,
     lastCall: null,
-    selectedBlocks: new Set()
+    selectedBlocks: new Set(),
+    formLists: {
+      onboardingCallTypes: [],
+      onboardingFrequentStatuses: [],
+      settingsCallTypes: [],
+      settingsFrequentStatuses: []
+    }
   };
+
+  const defaultStatusSuggestions = ["Sin_respuesta", "Buzón", "Contesta_cuelga", "Teléfono_apagado"];
 
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
   function linesToArray(value) {
+    if (Array.isArray(value)) {
+      return value.map((item) => String(item).trim()).filter(Boolean);
+    }
     return String(value || "")
       .split(/\n|,/)
       .map((item) => item.trim())
       .filter(Boolean);
   }
 
-  function arrayToLines(value) {
-    return (value || []).join("\n");
+  function uniqueItems(value) {
+    return [...new Set(linesToArray(value))];
+  }
+
+  function normalizeSettings(settings) {
+    const normalized = {
+      ...settings,
+      timezone: settings.timezone || "local",
+      callTypes: uniqueItems(settings.callTypes),
+      frequentStatuses: uniqueItems(settings.frequentStatuses || settings.callStatuses)
+    };
+
+    if (!normalized.frequentStatuses.length) {
+      normalized.frequentStatuses = [...defaultStatusSuggestions];
+    }
+
+    delete normalized.callStatuses;
+    return normalized;
   }
 
   function escapeHtml(value) {
@@ -70,10 +97,10 @@
     onboardingForm.language.value = settings.language;
     onboardingForm.timezone.value = settings.timezone;
     onboardingForm.operatorName.value = settings.operatorName || "";
-    onboardingForm.callTypes.value = arrayToLines(settings.callTypes);
-    onboardingForm.callStatuses.value = arrayToLines(settings.callStatuses);
     onboardingForm.successLabel.value = settings.successLabel;
     onboardingForm.rejectionLabel.value = settings.rejectionLabel;
+    state.formLists.onboardingCallTypes = [...settings.callTypes];
+    state.formLists.onboardingFrequentStatuses = [...settings.frequentStatuses];
 
     const settingsForm = $("#settingsForm");
     settingsForm.language.innerHTML = [
@@ -90,18 +117,20 @@
     settingsForm.rejectionLabel.value = settings.rejectionLabel;
     settingsForm.reportHeaderFormat.value = settings.reportHeaderFormat;
     settingsForm.theme.value = settings.theme || "dark";
-    settingsForm.callTypes.value = arrayToLines(settings.callTypes);
-    settingsForm.callStatuses.value = arrayToLines(settings.callStatuses);
+    state.formLists.settingsCallTypes = [...settings.callTypes];
+    state.formLists.settingsFrequentStatuses = [...settings.frequentStatuses];
+    renderListEditors();
   }
 
   function settingsFromForm(form, onboardingCompleted) {
+    const listPrefix = form.id === "onboardingForm" ? "onboarding" : "settings";
     return {
       ...state.settings,
       language: form.language.value,
       timezone: form.timezone.value,
       operatorName: form.operatorName.value.trim(),
-      callTypes: linesToArray(form.callTypes.value),
-      callStatuses: linesToArray(form.callStatuses.value),
+      callTypes: [...state.formLists[`${listPrefix}CallTypes`]],
+      frequentStatuses: [...state.formLists[`${listPrefix}FrequentStatuses`]],
       successLabel: form.successLabel.value.trim() || "Exitosa",
       rejectionLabel: form.rejectionLabel.value.trim() || "Rechazo",
       reportHeaderFormat: form.reportHeaderFormat
@@ -113,20 +142,62 @@
   }
 
   async function saveSettings(settings) {
-    state.settings = settings;
-    await CallFlowStorage.write("settings", settings);
-    CallFlowI18n.applyI18n(settings.language);
+    state.settings = normalizeSettings(settings);
+    await CallFlowStorage.write("settings", state.settings);
+    CallFlowI18n.applyI18n(state.settings.language);
     applySettingsToForms();
     render();
   }
 
+  function renderListEditors() {
+    Object.entries(state.formLists).forEach(([listId, items]) => {
+      const output = document.querySelector(`[data-list-output="${listId}"]`);
+      if (!output) return;
+      output.innerHTML = items.length
+        ? items
+            .map(
+              (item) => `
+                <span class="chip">
+                  ${escapeHtml(item)}
+                  <button type="button" data-remove-list-item="${listId}" data-value="${escapeHtml(item)}" aria-label="${CallFlowI18n.t("remove", state.settings.language)}">×</button>
+                </span>
+              `
+            )
+            .join("")
+        : '<span class="muted">-</span>';
+    });
+
+    $$("[data-status-suggestions]").forEach((container) => {
+      const target = container.dataset.statusSuggestions;
+      container.innerHTML = defaultStatusSuggestions
+        .map((status) => `<button type="button" class="chip preset" data-preset-list-item="${target}" data-value="${escapeHtml(status)}">${escapeHtml(status)}</button>`)
+        .join("");
+    });
+  }
+
+  function addListItem(listId, value) {
+    const item = String(value || "").trim();
+    if (!item) return;
+    state.formLists[listId] = uniqueItems([...state.formLists[listId], item]);
+    const input = document.querySelector(`[data-list-input="${listId}"]`);
+    if (input) input.value = "";
+    renderListEditors();
+  }
+
+  function removeListItem(listId, value) {
+    state.formLists[listId] = state.formLists[listId].filter((item) => item !== value);
+    renderListEditors();
+  }
+
   function renderCallOptions() {
     const callType = $("#callForm select[name='callType']");
-    callType.innerHTML = state.settings.callTypes
-      .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`)
-      .join("");
+    callType.innerHTML = state.settings.callTypes.length
+      ? state.settings.callTypes
+          .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`)
+          .join("")
+      : '<option value="General">General</option>';
 
-    $("#statusList").innerHTML = state.settings.callStatuses
+    $("#statusList").innerHTML = state.settings.frequentStatuses
       .map((status) => `<option value="${escapeHtml(status)}"></option>`)
       .join("");
   }
@@ -258,6 +329,7 @@
     if (!state.settings) return;
     renderHeader();
     renderCallOptions();
+    renderListEditors();
     renderBlocks();
     renderStats();
     renderReminders();
@@ -390,10 +462,18 @@
       $("#onboarding").classList.add("hidden");
       $("#app").classList.remove("hidden");
     });
+    $("#onboardingForm select[name='language']").addEventListener("change", (event) => {
+      CallFlowI18n.applyI18n(event.target.value);
+      renderListEditors();
+    });
 
     $("#settingsForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       await saveSettings(settingsFromForm(event.currentTarget, true));
+    });
+    $("#settingsForm select[name='language']").addEventListener("change", (event) => {
+      CallFlowI18n.applyI18n(event.target.value);
+      renderListEditors();
     });
 
     $("#callForm").addEventListener("submit", saveCall);
@@ -414,6 +494,14 @@
     });
     $("#exportMd").addEventListener("click", () => exportNote("md"));
     $("#exportTxt").addEventListener("click", () => exportNote("txt"));
+    $$("[data-list-input]").forEach((input) => {
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          addListItem(input.dataset.listInput, input.value);
+        }
+      });
+    });
 
     document.addEventListener("change", (event) => {
       if (event.target.matches("[data-block]")) {
@@ -423,8 +511,20 @@
     });
 
     document.addEventListener("click", (event) => {
+      const addListId = event.target.dataset.addListItem;
+      const removeListId = event.target.dataset.removeListItem;
+      const presetListId = event.target.dataset.presetListItem;
       const reminderId = event.target.dataset.completeReminder;
       const noteId = event.target.dataset.selectNote;
+      if (addListId) {
+        addListItem(addListId, document.querySelector(`[data-list-input="${addListId}"]`).value);
+      }
+      if (removeListId) {
+        removeListItem(removeListId, event.target.dataset.value);
+      }
+      if (presetListId) {
+        addListItem(presetListId, event.target.dataset.value);
+      }
       if (reminderId) completeReminder(reminderId);
       if (noteId) {
         state.selectedNoteId = noteId;
@@ -437,6 +537,7 @@
     bindEvents();
     const data = await CallFlowStorage.readAll();
     Object.assign(state, data);
+    state.settings = normalizeSettings(state.settings);
     CallFlowI18n.applyI18n(state.settings.language);
     applySettingsToForms();
     const dataDir = await window.callflow.getDataDir();

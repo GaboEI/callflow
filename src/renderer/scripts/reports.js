@@ -3,7 +3,7 @@
     if (!settings || settings.timezone === "local") {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
     }
-    return settings.timezone || "Europe/Madrid";
+    return settings.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
   }
 
   function dateParts(date, timezone) {

@@ -38,12 +38,19 @@ Responsibilities:
 
 - Interface and forms.
 - Onboarding.
+- Immediate onboarding i18n updates before saving.
 - Call history rendering.
 - Report formatting.
 - Daily statistics.
 - Reminder list and status changes.
 - Knowledge base editor.
 - Settings screen.
+
+Settings compatibility:
+
+- `callTypes` and `frequentStatuses` are stored as arrays.
+- Legacy multiline strings are converted to arrays in the renderer.
+- Legacy `callStatuses` values are migrated to `frequentStatuses`.
 
 ## Persistence
 

@@ -6,7 +6,12 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 
 ## MVP Features
 
-- First-run onboarding for language, timezone, operator name, call providers, frequent statuses, success label, and rejection label.
+- First-run onboarding for language, work timezone, operator name, configurable call types, frequent status presets, success label, and rejection label.
+- Onboarding language switching updates visible labels, helpers, placeholders, and actions immediately before settings are saved.
+- Default timezone is local system time; Spain/Madrid remains available as an explicit option.
+- Operator name is user-defined and no personal name is used as a default placeholder.
+- Call types are generic configurable categories such as sales, support, VIP, callback, or numeric workflow codes.
+- Frequent statuses are editable presets saved as a list.
 - Fast call registration with ID, provider, description/status, and optional custom comment.
 - Full internal call line format: `# ID TYPE DD.MM HH:mm Operator: Description`.
 - CRM copy format: `DD.MM HH:mm Operator: Description`.

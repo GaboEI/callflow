@@ -67,6 +67,21 @@ label span {
   font-size: 13px;
 }
 
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.helper {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 h1,
 h2,
 p {
@@ -127,6 +142,8 @@ h2 {
   border-radius: 8px;
   padding: 28px;
 }
+
+/* TODO: Add compact mode / smaller minimum window width for side-by-side CRM usage. */
 
 .app {
   display: grid;
@@ -320,6 +337,57 @@ code {
   background: rgba(59, 130, 246, 0.16);
   color: #bfdbfe;
   font-size: 12px;
+}
+
+.list-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.inline-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 30px;
+}
+
+.preset-row {
+  display: grid;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--text);
+  padding: 4px 6px 4px 10px;
+  font-size: 13px;
+}
+
+.chip button {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  min-height: 22px;
+  height: 22px;
+  border-radius: 999px;
+  padding: 0;
+  line-height: 1;
+}
+
+.chip.preset {
+  background: #172033;
 }
 
 .preview {

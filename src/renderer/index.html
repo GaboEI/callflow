@@ -26,10 +26,11 @@
           </label>
 
           <label>
-            <span data-i18n="timezone">Zona horaria</span>
+            <span data-i18n="workTimezone">Zona horaria de trabajo</span>
+            <small class="helper" data-i18n="timezoneHelper">Selecciona la zona horaria que usa tu puesto de trabajo o el mercado al que llamas.</small>
             <select name="timezone">
+              <option value="local" data-i18n="localSystemTime">Hora local del sistema</option>
               <option value="Europe/Madrid">España / Madrid</option>
-              <option value="local">Hora local del sistema</option>
               <option value="Europe/Moscow">Europe / Moscow</option>
               <option value="Europe/London">Europe / London</option>
               <option value="America/New_York">America / New York</option>
@@ -39,21 +40,38 @@
 
           <label>
             <span data-i18n="operatorName">Nombre del operador</span>
-            <input name="operatorName" placeholder="Gabriel" required />
+            <input name="operatorName" data-i18n-placeholder="operatorNamePlaceholder" placeholder="Ejemplo: Ana Pérez" required />
           </label>
 
-          <label>
-            <span data-i18n="callTypes">Tipos / proveedores</span>
-            <textarea name="callTypes" rows="2"></textarea>
-          </label>
+          <div class="list-editor span-2" data-list-editor="onboardingCallTypes">
+            <span class="field-label" data-i18n="callTypes">Tipos de llamada</span>
+            <small class="helper" data-i18n="callTypesHelper">Agrega las clasificaciones que usas para tus llamadas. Ejemplo: ventas, soporte, 3333, 2222, VIP, callback.</small>
+            <div class="inline-add">
+              <input data-list-input="onboardingCallTypes" data-i18n-placeholder="newCallTypePlaceholder" placeholder="Escribe un tipo de llamada..." />
+              <button type="button" data-add-list-item="onboardingCallTypes" data-i18n="add">Agregar</button>
+            </div>
+            <small class="helper" data-i18n="addedCallTypes">Tipos agregados</small>
+            <div class="chip-list" data-list-output="onboardingCallTypes"></div>
+          </div>
+
+          <div class="list-editor span-2" data-list-editor="onboardingFrequentStatuses">
+            <span class="field-label" data-i18n="frequentStatuses">Estados frecuentes</span>
+            <small class="helper" data-i18n="frequentStatusesHelper">Usa estados rápidos para registrar llamadas repetitivas.</small>
+            <div class="preset-row">
+              <small class="helper" data-i18n="suggestions">Sugerencias</small>
+              <div class="chip-list suggestions" data-status-suggestions="onboardingFrequentStatuses"></div>
+            </div>
+            <div class="inline-add">
+              <input data-list-input="onboardingFrequentStatuses" data-i18n-placeholder="newFrequentStatusPlaceholder" placeholder="Nuevo estado frecuente" />
+              <button type="button" data-add-list-item="onboardingFrequentStatuses" data-i18n="add">Agregar</button>
+            </div>
+            <small class="helper" data-i18n="selectedStatuses">Estados seleccionados</small>
+            <div class="chip-list" data-list-output="onboardingFrequentStatuses"></div>
+          </div>
 
           <label>
-            <span data-i18n="callStatuses">Estados frecuentes</span>
-            <textarea name="callStatuses" rows="3"></textarea>
-          </label>
-
-          <label>
-            <span data-i18n="successLabel">Etiqueta exitosa</span>
+            <span data-i18n="successLabel">Etiqueta de llamada exitosa</span>
+            <small class="helper" data-i18n="successLabelHelper">Ejemplo: Exitosa, Venta, Cita agendada, Caso resuelto.</small>
             <input name="successLabel" />
           </label>
 
@@ -220,14 +238,28 @@
             <h2 data-i18n="settings">Configuración</h2>
             <form id="settingsForm" class="form-grid">
               <label><span data-i18n="language">Idioma</span><select name="language"></select></label>
-              <label><span data-i18n="timezone">Zona horaria</span><input name="timezone" /></label>
+              <label><span data-i18n="workTimezone">Zona horaria de trabajo</span><input name="timezone" /></label>
               <label><span data-i18n="operatorName">Nombre del operador</span><input name="operatorName" required /></label>
               <label><span data-i18n="successLabel">Etiqueta exitosa</span><input name="successLabel" required /></label>
               <label><span data-i18n="rejectionLabel">Etiqueta rechazo</span><input name="rejectionLabel" required /></label>
               <label><span>Formato encabezado</span><input name="reportHeaderFormat" required /></label>
               <label><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
-              <label><span data-i18n="callTypes">Tipos / proveedores</span><textarea name="callTypes" rows="3"></textarea></label>
-              <label class="span-2"><span data-i18n="callStatuses">Estados frecuentes</span><textarea name="callStatuses" rows="4"></textarea></label>
+              <div class="list-editor span-2" data-list-editor="settingsCallTypes">
+                <span class="field-label" data-i18n="callTypes">Tipos de llamada</span>
+                <div class="inline-add">
+                  <input data-list-input="settingsCallTypes" data-i18n-placeholder="newCallTypePlaceholder" placeholder="Escribe un tipo de llamada..." />
+                  <button type="button" data-add-list-item="settingsCallTypes" data-i18n="add">Agregar</button>
+                </div>
+                <div class="chip-list" data-list-output="settingsCallTypes"></div>
+              </div>
+              <div class="list-editor span-2" data-list-editor="settingsFrequentStatuses">
+                <span class="field-label" data-i18n="frequentStatuses">Estados frecuentes</span>
+                <div class="inline-add">
+                  <input data-list-input="settingsFrequentStatuses" data-i18n-placeholder="newFrequentStatusPlaceholder" placeholder="Nuevo estado frecuente" />
+                  <button type="button" data-add-list-item="settingsFrequentStatuses" data-i18n="add">Agregar</button>
+                </div>
+                <div class="chip-list" data-list-output="settingsFrequentStatuses"></div>
+              </div>
               <button class="primary span-2" type="submit" data-i18n="saveSettings">Guardar configuración</button>
             </form>
           </div>

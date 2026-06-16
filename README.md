@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.0` is the initial functional MVP. It includes onboarding, local settings, call registration, CRM copy format, hourly report copy, simple stats, reminders, and a Markdown cheat sheet draft.
+Version `0.1.1` refines the reusable onboarding flow. It includes instant language switching, neutral local-time defaults, configurable call type lists, editable frequent status presets, local settings, call registration, CRM copy format, hourly report copy, simple stats, reminders, and a Markdown cheat sheet draft.
 
 User data is stored in Electron's `app.getPath("userData")`, not inside the source tree.
 
