@@ -155,6 +155,7 @@ h2 {
 }
 
 /* Compact default is tuned for side-by-side CRM or Telegram usage during call center work. */
+/* Sidebar fallback: compact windows hide navigation behind a toggle; wider windows keep it visible on the left. */
 
 .app {
   display: grid;
@@ -163,9 +164,20 @@ h2 {
 }
 
 .sidebar {
+  display: none;
   background: #0b1220;
-  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   padding: 12px;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.sidebar-toggle {
+  min-width: 38px;
+  padding: 0 10px;
+  font-size: 18px;
 }
 
 .brand {
@@ -551,9 +563,14 @@ code {
   }
 
   .sidebar {
-    border-right: 1px solid var(--border);
-    border-bottom: 0;
+    display: block;
+    position: static;
     padding: 18px;
+  }
+
+  .sidebar-backdrop,
+  .sidebar-toggle {
+    display: none;
   }
 
   .brand {
@@ -581,6 +598,27 @@ code {
 
   .onboarding-panel {
     padding: 24px;
+  }
+}
+
+@media (max-width: 779px) {
+  .app.sidebar-open .sidebar {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 220px;
+    z-index: 30;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
+  }
+
+  .app.sidebar-open .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgba(2, 6, 23, 0.62);
   }
 }
 

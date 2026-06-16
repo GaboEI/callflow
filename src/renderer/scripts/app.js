@@ -490,6 +490,11 @@
     $$(".view").forEach((section) => section.classList.remove("active"));
     $(`#${view}View`).classList.add("active");
     $("#viewTitle").textContent = getViewTitle(view);
+    if (window.innerWidth < 780) {
+      $("#app").classList.remove("sidebar-open");
+      $("#sidebarBackdrop").hidden = true;
+      $("#sidebarToggle").setAttribute("aria-label", CallFlowI18n.t("openSidebar", state.settings.language || "es"));
+    }
     render();
   }
 
@@ -1103,6 +1108,13 @@
 
     $("#callForm").addEventListener("submit", saveCall);
     $("#copyLastCrm").addEventListener("click", copyLastCrm);
+    $("#sidebarToggle").addEventListener("click", () => {
+      const app = $("#app");
+      app.classList.toggle("sidebar-open");
+      const open = app.classList.contains("sidebar-open");
+      $("#sidebarToggle").setAttribute("aria-label", CallFlowI18n.t(open ? "closeSidebar" : "openSidebar", state.settings.language));
+      $("#sidebarBackdrop").hidden = !open;
+    });
     $("#toggleCallTypeManager").addEventListener("click", () => {
       $("#dashboardCallTypeManager").classList.toggle("hidden");
       if (!$("#dashboardCallTypeManager").classList.contains("hidden")) $("#newDashboardCallType").focus();
@@ -1210,6 +1222,13 @@
     });
 
     document.addEventListener("click", (event) => {
+      const sidebarToggle = event.target.closest("#sidebarToggle");
+      const sidebarBackdrop = event.target.closest("#sidebarBackdrop");
+      if (sidebarBackdrop) {
+        $("#app").classList.remove("sidebar-open");
+        $("#sidebarBackdrop").hidden = true;
+      }
+      if (sidebarToggle) return;
       const timezoneToggle = event.target.closest("[data-timezone-toggle]");
       const timezoneOption = event.target.closest("[data-timezone-picker-option]");
       const addListId = event.target.dataset.addListItem;
@@ -1248,6 +1267,14 @@
       if (noteId) {
         state.selectedNoteId = noteId;
         renderNotes();
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 780) {
+        $("#app").classList.remove("sidebar-open");
+        $("#sidebarBackdrop").hidden = true;
+        $("#sidebarToggle").setAttribute("aria-label", CallFlowI18n.t("openSidebar", state.settings.language));
       }
     });
   }
