@@ -1,0 +1,19 @@
+{
+  "language": "es",
+  "timezone": "Europe/Madrid",
+  "operatorName": "",
+  "callTypes": ["3333", "2222"],
+  "callStatuses": [
+    "Sin_respuesta",
+    "buzón",
+    "contesta_cuelga",
+    "teléfono_fuera_de_línea",
+    "teléfono_apagado",
+    "contesta_no_habla"
+  ],
+  "successLabel": "Exitosa",
+  "rejectionLabel": "Rechazo",
+  "reportHeaderFormat": "##### **REPORTE {OPERATOR} DE {BLOCK}**",
+  "theme": "dark",
+  "onboardingCompleted": false
+}
