@@ -962,11 +962,11 @@
     state.lastCall = call;
     await CallFlowStorage.write("calls", state.calls);
 
-    if (submitter && submitter.dataset.action === "saveCopy") {
+    if (submitter && ["saveCopy", "saveCopyReminder"].includes(submitter.dataset.action)) {
       await window.callflow.copyText(call.crmLine);
-      $("#lastSavedLabel").textContent = "Guardado y copiado para CRM";
+      $("#lastSavedLabel").textContent = CallFlowI18n.t("savedAndCopiedCrm", state.settings.language);
     } else {
-      $("#lastSavedLabel").textContent = "Guardado";
+      $("#lastSavedLabel").textContent = CallFlowI18n.t("saved", state.settings.language);
     }
 
     form.callId.value = "";
@@ -974,12 +974,20 @@
     form.customComment.value = "";
     form.callId.focus();
     render();
+
+    if (submitter && submitter.dataset.action === "saveCopyReminder") {
+      const reminderForm = $("#reminderForm");
+      reminderForm.callId.value = call.callId;
+      $("#lastSavedLabel").textContent = CallFlowI18n.t("savedCopiedReminder", state.settings.language);
+      setView("reminders");
+      reminderForm.date.focus();
+    }
   }
 
   async function copyLastCrm() {
     if (!state.lastCall) return;
     await window.callflow.copyText(state.lastCall.crmLine);
-    $("#lastSavedLabel").textContent = "Último CRM copiado";
+    $("#lastSavedLabel").textContent = CallFlowI18n.t("lastCrmCopied", state.settings.language);
   }
 
   async function copySelectedBlocks() {

@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.8` refines report line formatting. Report blocks now keep calls on consecutive lines, and the line prefix is configurable as `#`, no prefix, or a daily counter such as `001`.
+Version `0.1.9` adds a quick reminder handoff from call registration. Operators can save a call, copy the CRM text, and jump to Reminders with the call ID prefilled.
 
 The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
 

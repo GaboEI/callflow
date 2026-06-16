@@ -50,6 +50,8 @@ CRM output example:
 16.06 14:05 Ana: Sin_respuesta
 ```
 
+The operator can also click `Añadir recordatorio` from quick registration. This saves the current call, copies the CRM text, opens Recordatorios, and preloads the call ID in the reminder form.
+
 ## Copia para supervisor
 
 The operator opens Reports, selects one or more hourly blocks, and copies the Markdown report.

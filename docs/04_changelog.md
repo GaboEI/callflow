@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.9 - Add quick reminder handoff from registration
+
+- Added an `Añadir recordatorio` action beside quick registration CRM actions.
+- The new action saves the current call and copies the CRM text.
+- It opens the Reminders section with the saved call ID prefilled.
+- Added Spanish, English, and Russian labels/messages for the new flow.
+
 ## v0.1.8 - Refine report line spacing and prefix format
 
 - Removed blank lines between calls inside report block content.
