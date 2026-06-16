@@ -164,10 +164,11 @@ h2 {
 }
 
 .sidebar {
-  display: none;
+  display: block;
   background: #0b1220;
   border-right: 1px solid var(--border);
   padding: 12px;
+  position: relative;
 }
 
 .sidebar-backdrop {
@@ -175,9 +176,24 @@ h2 {
 }
 
 .sidebar-toggle {
+  display: inline-grid;
+  place-items: center;
+  position: absolute;
+  top: 12px;
+  right: -18px;
+  z-index: 5;
+  width: 36px;
+  height: 36px;
   min-width: 38px;
-  padding: 0 10px;
+  padding: 0;
   font-size: 18px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.sidebar .sidebar-toggle {
+  top: 16px;
+  right: -18px;
 }
 
 .brand {
@@ -568,9 +584,13 @@ code {
     padding: 18px;
   }
 
-  .sidebar-backdrop,
-  .sidebar-toggle {
+  .sidebar-backdrop {
     display: none;
+  }
+
+  .sidebar-toggle {
+    top: 16px;
+    right: -18px;
   }
 
   .brand {
@@ -602,15 +622,25 @@ code {
 }
 
 @media (max-width: 779px) {
-  .app.sidebar-open .sidebar {
-    display: block;
+  .sidebar-toggle {
+    top: 14px;
+    right: -18px;
+  }
+
+  .sidebar {
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
     width: 220px;
     z-index: 30;
+    transform: translateX(calc(-100% + 18px));
+    transition: transform 0.18s ease;
     box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
+  }
+
+  .app.sidebar-open .sidebar {
+    transform: translateX(0);
   }
 
   .app.sidebar-open .sidebar-backdrop {
