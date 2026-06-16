@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.1` refines the reusable onboarding flow. It includes instant language switching, neutral local-time defaults, configurable call type lists, editable frequent status presets, local settings, call registration, CRM copy format, hourly report copy, simple stats, reminders, and a Markdown cheat sheet draft.
+Version `0.1.2` refines onboarding internationalized presets. It includes translated timezone labels with stable internal IDs, language-aware frequent status presets, generic call type examples, editable success/rejection labels, local settings, call registration, CRM copy format, hourly report copy, simple stats, reminders, and a Markdown cheat sheet draft.
 
 The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
 

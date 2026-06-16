@@ -30,11 +30,11 @@
             <small class="helper" data-i18n="timezoneHelper">Selecciona la zona horaria que usa tu puesto de trabajo o el mercado al que llamas.</small>
             <select name="timezone">
               <option value="local" data-i18n="localSystemTime">Hora local del sistema</option>
-              <option value="Europe/Madrid">España / Madrid</option>
-              <option value="Europe/Moscow">Europe / Moscow</option>
-              <option value="Europe/London">Europe / London</option>
-              <option value="America/New_York">America / New York</option>
-              <option value="America/Mexico_City">America / Mexico City</option>
+              <option value="Europe/Madrid" data-i18n="timezoneMadrid">España / Madrid</option>
+              <option value="Europe/Moscow" data-i18n="timezoneMoscow">Europa / Moscú</option>
+              <option value="Europe/London" data-i18n="timezoneLondon">Europa / Londres</option>
+              <option value="America/New_York" data-i18n="timezoneNewYork">América / Nueva York</option>
+              <option value="America/Mexico_City" data-i18n="timezoneMexicoCity">América / Ciudad de México</option>
             </select>
           </label>
 
@@ -45,7 +45,7 @@
 
           <div class="list-editor span-2" data-list-editor="onboardingCallTypes">
             <span class="field-label" data-i18n="callTypes">Tipos de llamada</span>
-            <small class="helper" data-i18n="callTypesHelper">Agrega las clasificaciones que usas para tus llamadas. Ejemplo: ventas, soporte, 3333, 2222, VIP, callback.</small>
+            <small class="helper" data-i18n="callTypesHelper">Agrega las clasificaciones que usas para tus llamadas. Ejemplo: ventas, soporte, VIP, callback, retención.</small>
             <div class="inline-add">
               <input data-list-input="onboardingCallTypes" data-i18n-placeholder="newCallTypePlaceholder" placeholder="Escribe un tipo de llamada..." />
               <button type="button" data-add-list-item="onboardingCallTypes" data-i18n="add">Agregar</button>
@@ -72,12 +72,14 @@
           <label>
             <span data-i18n="successLabel">Etiqueta de llamada exitosa</span>
             <small class="helper" data-i18n="successLabelHelper">Ejemplo: Exitosa, Venta, Cita agendada, Caso resuelto.</small>
-            <input name="successLabel" />
+            <input name="successLabel" list="successLabelSuggestions" />
+            <datalist id="successLabelSuggestions"></datalist>
           </label>
 
           <label>
             <span data-i18n="rejectionLabel">Etiqueta rechazo</span>
-            <input name="rejectionLabel" />
+            <input name="rejectionLabel" list="rejectionLabelSuggestions" />
+            <datalist id="rejectionLabelSuggestions"></datalist>
           </label>
 
           <button class="primary span-2" type="submit" data-i18n="finishOnboarding">Guardar y abrir dashboard</button>
@@ -238,10 +240,20 @@
             <h2 data-i18n="settings">Configuración</h2>
             <form id="settingsForm" class="form-grid">
               <label><span data-i18n="language">Idioma</span><select name="language"></select></label>
-              <label><span data-i18n="workTimezone">Zona horaria de trabajo</span><input name="timezone" /></label>
+              <label>
+                <span data-i18n="workTimezone">Zona horaria de trabajo</span>
+                <select name="timezone">
+                  <option value="local" data-i18n="localSystemTime">Hora local del sistema</option>
+                  <option value="Europe/Madrid" data-i18n="timezoneMadrid">España / Madrid</option>
+                  <option value="Europe/Moscow" data-i18n="timezoneMoscow">Europa / Moscú</option>
+                  <option value="Europe/London" data-i18n="timezoneLondon">Europa / Londres</option>
+                  <option value="America/New_York" data-i18n="timezoneNewYork">América / Nueva York</option>
+                  <option value="America/Mexico_City" data-i18n="timezoneMexicoCity">América / Ciudad de México</option>
+                </select>
+              </label>
               <label><span data-i18n="operatorName">Nombre del operador</span><input name="operatorName" required /></label>
-              <label><span data-i18n="successLabel">Etiqueta exitosa</span><input name="successLabel" required /></label>
-              <label><span data-i18n="rejectionLabel">Etiqueta rechazo</span><input name="rejectionLabel" required /></label>
+              <label><span data-i18n="successLabel">Etiqueta exitosa</span><input name="successLabel" list="successLabelSuggestions" required /></label>
+              <label><span data-i18n="rejectionLabel">Etiqueta rechazo</span><input name="rejectionLabel" list="rejectionLabelSuggestions" required /></label>
               <label><span>Formato encabezado</span><input name="reportHeaderFormat" required /></label>
               <label><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
               <div class="list-editor span-2" data-list-editor="settingsCallTypes">

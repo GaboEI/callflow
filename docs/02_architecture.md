@@ -53,6 +53,8 @@ Settings compatibility:
 - `callTypes` and `frequentStatuses` are stored as arrays.
 - Legacy multiline strings are converted to arrays in the renderer.
 - Legacy `callStatuses` values are migrated to `frequentStatuses`.
+- Onboarding separates system presets, user-created values, and saved settings so language switching can translate untouched presets without rewriting custom user data.
+- Timezone labels are translated in the renderer; stored timezone values remain stable IDs.
 
 ## Persistence
 

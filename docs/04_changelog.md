@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.2 - Improve onboarding internationalization presets
+
+- Translated timezone display labels while preserving stable timezone values.
+- Removed personal numeric call type examples from generic helper text.
+- Added language-aware frequent status suggestions and default selected statuses.
+- Added language-aware success and rejection label defaults and suggestions.
+- Preserved user-created statuses and custom labels when switching language.
+- Kept Settings editable for the same onboarding configuration fields.
+
 ## v0.1.1 - Improve reusable onboarding configuration
 
 - Changed the default Electron window to a compact side-by-side work-helper size.

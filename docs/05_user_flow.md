@@ -6,7 +6,9 @@ The operator opens CallFlow and sees the onboarding assistant. They choose langu
 
 Changing the language selector updates visible onboarding labels, helper text, placeholders, and actions immediately before saving.
 
-The default timezone is local system time. Spain/Madrid is available as a separate option for workflows that need it.
+The default timezone is local system time. Timezone labels are translated, while internal values remain stable IDs such as `local` or `Europe/Madrid`. Spain/Madrid is available as a separate option for workflows that need it.
+
+Frequent status presets and success/rejection defaults follow the selected language before onboarding is saved. User-created call types, statuses, and custom labels are preserved exactly as typed.
 
 ## Configuración
 
@@ -19,7 +21,7 @@ The operator enters a call ID, chooses a provider, writes or selects a status, o
 Generated full line example:
 
 ```text
-# 20506955 3333 16.06 14:05 Gabriel: Sin_respuesta
+# 20506955 Soporte 16.06 14:05 Ana: Sin_respuesta
 ```
 
 ## Copia para CRM
@@ -29,7 +31,7 @@ The operator clicks `Guardar y copiar CRM` or `Copiar último CRM`.
 CRM output example:
 
 ```text
-16.06 14:05 Gabriel: Sin_respuesta
+16.06 14:05 Ana: Sin_respuesta
 ```
 
 ## Copia para supervisor

@@ -12,10 +12,62 @@
       onboardingFrequentStatuses: [],
       settingsCallTypes: [],
       settingsFrequentStatuses: []
+    },
+    presetMeta: {
+      onboardingFrequentStatuses: { custom: [] },
+      settingsFrequentStatuses: { custom: [] }
+    },
+    labelTouched: {
+      onboardingSuccess: false,
+      onboardingRejection: false,
+      settingsSuccess: false,
+      settingsRejection: false
     }
   };
 
-  const defaultStatusSuggestions = ["Sin_respuesta", "Buzón", "Contesta_cuelga", "Teléfono_apagado"];
+  const presets = {
+    es: {
+      frequentStatuses: [
+        "Sin_respuesta",
+        "Buzón",
+        "Contesta_cuelga",
+        "Teléfono_apagado",
+        "Teléfono_fuera_de_línea",
+        "No_habla"
+      ],
+      selectedStatuses: ["Sin_respuesta", "Buzón", "Contesta_cuelga", "Teléfono_apagado"],
+      successLabels: ["Exitosa", "Venta", "Cita_agendada", "Caso_resuelto", "Seguimiento_programado"],
+      rejectionLabel: "Rechazo"
+    },
+    en: {
+      frequentStatuses: [
+        "No_answer",
+        "Voicemail",
+        "Answers_and_hangs_up",
+        "Phone_off",
+        "Phone_out_of_service",
+        "Does_not_speak"
+      ],
+      selectedStatuses: ["No_answer", "Voicemail", "Answers_and_hangs_up", "Phone_off"],
+      successLabels: ["Successful", "Sale", "Appointment_booked", "Case_resolved", "Follow_up_scheduled"],
+      rejectionLabel: "Rejected"
+    },
+    ru: {
+      frequentStatuses: [
+        "Нет_ответа",
+        "Голосовая_почта",
+        "Ответил_и_сбросил",
+        "Телефон_выключен",
+        "Телефон_вне_зоны",
+        "Не_говорит"
+      ],
+      selectedStatuses: ["Нет_ответа", "Голосовая_почта", "Ответил_и_сбросил", "Телефон_выключен"],
+      successLabels: ["Успешно", "Продажа", "Встреча_назначена", "Заявка_решена", "Повторный_звонок_назначен"],
+      rejectionLabel: "Отказ"
+    }
+  };
+
+  const presetStatusValues = new Set(Object.values(presets).flatMap((preset) => preset.frequentStatuses));
 
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -34,16 +86,38 @@
     return [...new Set(linesToArray(value))];
   }
 
+  function presetForLanguage(language) {
+    return presets[language] || presets.es;
+  }
+
+  function defaultSuccessLabel(language) {
+    return presetForLanguage(language).successLabels[0];
+  }
+
+  function defaultRejectionLabel(language) {
+    return presetForLanguage(language).rejectionLabel;
+  }
+
+  function isSystemDefaultSuccessLabel(value) {
+    return Object.values(presets).some((preset) => preset.successLabels[0] === value);
+  }
+
+  function isSystemDefaultRejectionLabel(value) {
+    return Object.values(presets).some((preset) => preset.rejectionLabel === value);
+  }
+
   function normalizeSettings(settings) {
     const normalized = {
       ...settings,
       timezone: settings.timezone || "local",
       callTypes: uniqueItems(settings.callTypes),
-      frequentStatuses: uniqueItems(settings.frequentStatuses || settings.callStatuses)
+      frequentStatuses: uniqueItems(settings.frequentStatuses || settings.callStatuses),
+      successLabel: settings.successLabel || defaultSuccessLabel(settings.language),
+      rejectionLabel: settings.rejectionLabel || defaultRejectionLabel(settings.language)
     };
 
     if (!normalized.frequentStatuses.length) {
-      normalized.frequentStatuses = [...defaultStatusSuggestions];
+      normalized.frequentStatuses = [...presetForLanguage(normalized.language).selectedStatuses];
     }
 
     delete normalized.callStatuses;
@@ -101,6 +175,9 @@
     onboardingForm.rejectionLabel.value = settings.rejectionLabel;
     state.formLists.onboardingCallTypes = [...settings.callTypes];
     state.formLists.onboardingFrequentStatuses = [...settings.frequentStatuses];
+    state.presetMeta.onboardingFrequentStatuses.custom = settings.onboardingCompleted
+      ? [...settings.frequentStatuses]
+      : settings.frequentStatuses.filter((status) => !presetStatusValues.has(status));
 
     const settingsForm = $("#settingsForm");
     settingsForm.language.innerHTML = [
@@ -119,7 +196,9 @@
     settingsForm.theme.value = settings.theme || "dark";
     state.formLists.settingsCallTypes = [...settings.callTypes];
     state.formLists.settingsFrequentStatuses = [...settings.frequentStatuses];
+    state.presetMeta.settingsFrequentStatuses.custom = [...settings.frequentStatuses];
     renderListEditors();
+    renderLabelSuggestions(settings.language);
   }
 
   function settingsFromForm(form, onboardingCompleted) {
@@ -131,8 +210,8 @@
       operatorName: form.operatorName.value.trim(),
       callTypes: [...state.formLists[`${listPrefix}CallTypes`]],
       frequentStatuses: [...state.formLists[`${listPrefix}FrequentStatuses`]],
-      successLabel: form.successLabel.value.trim() || "Exitosa",
-      rejectionLabel: form.rejectionLabel.value.trim() || "Rechazo",
+      successLabel: form.successLabel.value.trim() || defaultSuccessLabel(form.language.value),
+      rejectionLabel: form.rejectionLabel.value.trim() || defaultRejectionLabel(form.language.value),
       reportHeaderFormat: form.reportHeaderFormat
         ? form.reportHeaderFormat.value
         : state.settings.reportHeaderFormat,
@@ -149,7 +228,53 @@
     render();
   }
 
+  function activeFormLanguage() {
+    const onboardingVisible = !$("#onboarding").classList.contains("hidden");
+    const form = onboardingVisible ? $("#onboardingForm") : $("#settingsForm");
+    return form.language.value || state.settings.language || "es";
+  }
+
+  function renderLabelSuggestions(language) {
+    const preset = presetForLanguage(language);
+    $("#successLabelSuggestions").innerHTML = preset.successLabels
+      .map((label) => `<option value="${escapeHtml(label)}"></option>`)
+      .join("");
+    $("#rejectionLabelSuggestions").innerHTML = `<option value="${escapeHtml(preset.rejectionLabel)}"></option>`;
+  }
+
+  function refreshPresetBackedStatuses(listId, language) {
+    const meta = state.presetMeta[listId] || { custom: [] };
+    state.formLists[listId] = uniqueItems([...presetForLanguage(language).selectedStatuses, ...meta.custom]);
+  }
+
+  function handleLanguageChange(form, language) {
+    CallFlowI18n.applyI18n(language);
+    renderLabelSuggestions(language);
+
+    if (form.id === "onboardingForm" && !state.settings.onboardingCompleted) {
+      refreshPresetBackedStatuses("onboardingFrequentStatuses", language);
+      if (!state.labelTouched.onboardingSuccess) {
+        form.successLabel.value = defaultSuccessLabel(language);
+      }
+      if (!state.labelTouched.onboardingRejection) {
+        form.rejectionLabel.value = defaultRejectionLabel(language);
+      }
+    }
+
+    if (form.id === "settingsForm") {
+      if (!state.labelTouched.settingsSuccess && isSystemDefaultSuccessLabel(form.successLabel.value)) {
+        form.successLabel.value = defaultSuccessLabel(language);
+      }
+      if (!state.labelTouched.settingsRejection && isSystemDefaultRejectionLabel(form.rejectionLabel.value)) {
+        form.rejectionLabel.value = defaultRejectionLabel(language);
+      }
+    }
+
+    renderListEditors();
+  }
+
   function renderListEditors() {
+    const activeLanguage = activeFormLanguage();
     Object.entries(state.formLists).forEach(([listId, items]) => {
       const output = document.querySelector(`[data-list-output="${listId}"]`);
       if (!output) return;
@@ -159,7 +284,7 @@
               (item) => `
                 <span class="chip">
                   ${escapeHtml(item)}
-                  <button type="button" data-remove-list-item="${listId}" data-value="${escapeHtml(item)}" aria-label="${CallFlowI18n.t("remove", state.settings.language)}">×</button>
+                  <button type="button" data-remove-list-item="${listId}" data-value="${escapeHtml(item)}" aria-label="${CallFlowI18n.t("remove", activeLanguage)}">×</button>
                 </span>
               `
             )
@@ -169,7 +294,7 @@
 
     $$("[data-status-suggestions]").forEach((container) => {
       const target = container.dataset.statusSuggestions;
-      container.innerHTML = defaultStatusSuggestions
+      container.innerHTML = presetForLanguage(activeLanguage).frequentStatuses
         .map((status) => `<button type="button" class="chip preset" data-preset-list-item="${target}" data-value="${escapeHtml(status)}">${escapeHtml(status)}</button>`)
         .join("");
     });
@@ -179,6 +304,9 @@
     const item = String(value || "").trim();
     if (!item) return;
     state.formLists[listId] = uniqueItems([...state.formLists[listId], item]);
+    if (state.presetMeta[listId] && !presetStatusValues.has(item)) {
+      state.presetMeta[listId].custom = uniqueItems([...state.presetMeta[listId].custom, item]);
+    }
     const input = document.querySelector(`[data-list-input="${listId}"]`);
     if (input) input.value = "";
     renderListEditors();
@@ -186,6 +314,9 @@
 
   function removeListItem(listId, value) {
     state.formLists[listId] = state.formLists[listId].filter((item) => item !== value);
+    if (state.presetMeta[listId]) {
+      state.presetMeta[listId].custom = state.presetMeta[listId].custom.filter((item) => item !== value);
+    }
     renderListEditors();
   }
 
@@ -248,7 +379,7 @@
       ["Recordatorios pendientes", stats.pendingReminders]
     ];
 
-    const byType = Object.entries(stats.byType).map(([key, value]) => [`Proveedor ${key}`, value]);
+    const byType = Object.entries(stats.byType).map(([key, value]) => [`Tipo ${key}`, value]);
     const byHour = Object.entries(stats.byHour).map(([key, value]) => [`Hora ${key}`, value]);
     return [...base, ...byType, ...byHour]
       .map(([label, value]) => `<article class="card"><span class="muted">${escapeHtml(label)}</span><strong>${value}</strong></article>`)
@@ -463,8 +594,7 @@
       $("#app").classList.remove("hidden");
     });
     $("#onboardingForm select[name='language']").addEventListener("change", (event) => {
-      CallFlowI18n.applyI18n(event.target.value);
-      renderListEditors();
+      handleLanguageChange($("#onboardingForm"), event.target.value);
     });
 
     $("#settingsForm").addEventListener("submit", async (event) => {
@@ -472,8 +602,19 @@
       await saveSettings(settingsFromForm(event.currentTarget, true));
     });
     $("#settingsForm select[name='language']").addEventListener("change", (event) => {
-      CallFlowI18n.applyI18n(event.target.value);
-      renderListEditors();
+      handleLanguageChange($("#settingsForm"), event.target.value);
+    });
+    $("#onboardingForm input[name='successLabel']").addEventListener("input", () => {
+      state.labelTouched.onboardingSuccess = true;
+    });
+    $("#onboardingForm input[name='rejectionLabel']").addEventListener("input", () => {
+      state.labelTouched.onboardingRejection = true;
+    });
+    $("#settingsForm input[name='successLabel']").addEventListener("input", () => {
+      state.labelTouched.settingsSuccess = true;
+    });
+    $("#settingsForm input[name='rejectionLabel']").addEventListener("input", () => {
+      state.labelTouched.settingsRejection = true;
     });
 
     $("#callForm").addEventListener("submit", saveCall);

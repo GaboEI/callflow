@@ -1,6 +1,6 @@
 {
   "name": "callflow",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Desktop call logging assistant for call center operators.",
   "main": "src/main/main.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "crm",
     "desktop"
   ],
-  "author": "Gabriel",
+  "author": "GaboEI",
   "license": "UNLICENSED",
   "private": true,
   "devDependencies": {
