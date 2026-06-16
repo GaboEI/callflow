@@ -123,6 +123,17 @@ h2 {
   color: #052e16;
 }
 
+.reminder-action {
+  background: rgba(236, 72, 153, 0.18);
+  border-color: rgba(236, 72, 153, 0.42);
+  color: #fbcfe8;
+}
+
+.reminder-action:hover {
+  background: rgba(236, 72, 153, 0.28);
+  border-color: rgba(244, 114, 182, 0.62);
+}
+
 .danger {
   background: var(--red);
   border-color: var(--red);
