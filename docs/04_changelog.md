@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.4 - Improve timezone searchable combobox UX
+
+- Changed timezone search so the selected value is shown separately from the search text.
+- Kept the timezone results closed by default and opened them on focus or dropdown action.
+- Added a clean dropdown-arrow combobox interaction for Onboarding and Settings.
+- Improved timezone search matching for city names, IANA IDs, localized labels, and UTC offsets.
+- Preserved stable stored values such as `local` and `Europe/Madrid`.
+
 ## v0.1.3 - Add professional IANA timezone selector
 
 - Replaced the small manual timezone dropdown with a searchable timezone selector.

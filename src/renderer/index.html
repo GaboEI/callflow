@@ -29,7 +29,11 @@
             <span data-i18n="workTimezone">Zona horaria de trabajo</span>
             <small class="helper" data-i18n="timezoneHelper">Selecciona la zona horaria que usa tu puesto de trabajo o el mercado al que llamas.</small>
             <input type="hidden" name="timezone" value="local" />
-            <input class="timezone-search" data-timezone-search="onboarding" data-i18n-placeholder="timezoneSearchPlaceholder" placeholder="Buscar zona horaria..." autocomplete="off" />
+            <div class="combobox-line">
+              <input class="timezone-search" data-timezone-search="onboarding" data-i18n-placeholder="timezoneSearchPlaceholder" placeholder="Buscar ciudad, país o zona horaria..." autocomplete="off" />
+              <button class="timezone-toggle" type="button" data-timezone-toggle="onboarding" aria-label="Open timezone list">⌄</button>
+            </div>
+            <small class="helper"><span data-i18n="selectedTimezone">Seleccionada actualmente</span>: <strong data-timezone-selected="onboarding"></strong></small>
             <div class="timezone-results" data-timezone-results="onboarding"></div>
           </div>
 
@@ -238,7 +242,11 @@
               <div class="timezone-picker">
                 <span data-i18n="workTimezone">Zona horaria de trabajo</span>
                 <input type="hidden" name="timezone" value="local" />
-                <input class="timezone-search" data-timezone-search="settings" data-i18n-placeholder="timezoneSearchPlaceholder" placeholder="Buscar zona horaria..." autocomplete="off" />
+                <div class="combobox-line">
+                  <input class="timezone-search" data-timezone-search="settings" data-i18n-placeholder="timezoneSearchPlaceholder" placeholder="Buscar ciudad, país o zona horaria..." autocomplete="off" />
+                  <button class="timezone-toggle" type="button" data-timezone-toggle="settings" aria-label="Open timezone list">⌄</button>
+                </div>
+                <small class="helper"><span data-i18n="selectedTimezone">Seleccionada actualmente</span>: <strong data-timezone-selected="settings"></strong></small>
                 <div class="timezone-results" data-timezone-results="settings"></div>
               </div>
               <label><span data-i18n="operatorName">Nombre del operador</span><input name="operatorName" required /></label>

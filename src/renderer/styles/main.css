@@ -374,13 +374,28 @@ code {
   position: relative;
 }
 
-.timezone-results {
+.combobox-line {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 8px;
+}
+
+.timezone-toggle {
+  padding: 0;
+  font-size: 18px;
+}
+
+.timezone-results {
+  display: none;
   max-height: 210px;
   overflow: auto;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: #07101f;
+}
+
+.timezone-results.open {
+  display: grid;
 }
 
 .timezone-option {

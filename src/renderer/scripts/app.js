@@ -283,9 +283,19 @@
   }
 
   function timezoneMatches(value, label, query) {
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = normalizeTimezoneSearch(query);
     if (!normalizedQuery) return true;
-    return `${value} ${label}`.toLowerCase().includes(normalizedQuery);
+    const compactOffsetQuery = normalizedQuery.replace(":00", "");
+    const haystack = normalizeTimezoneSearch(`${value} ${value.replaceAll("_", " ")} ${label}`);
+    return haystack.includes(normalizedQuery) || haystack.includes(compactOffsetQuery);
+  }
+
+  function normalizeTimezoneSearch(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replaceAll("_", " ")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   function escapeHtml(value) {
@@ -444,15 +454,18 @@
       const form = pickerId === "onboarding" ? $("#onboardingForm") : $("#settingsForm");
       const hidden = form.timezone;
       const search = document.querySelector(`[data-timezone-search="${pickerId}"]`);
+      const selected = document.querySelector(`[data-timezone-selected="${pickerId}"]`);
       if (!hidden || !search) return;
-      search.value = timezoneLabel(hidden.value || "local", language);
-      renderTimezoneResults(pickerId, language, "");
+      search.value = "";
+      if (selected) selected.textContent = timezoneLabel(hidden.value || "local", language);
+      renderTimezoneResults(pickerId, language, "", false);
     });
   }
 
-  function renderTimezoneResults(pickerId, language, query) {
+  function renderTimezoneResults(pickerId, language, query, open = true) {
     const results = document.querySelector(`[data-timezone-results="${pickerId}"]`);
     if (!results) return;
+    results.classList.toggle("open", open);
 
     const localOption = { value: "local", label: timezoneLabel("local", language) };
     const zoneOptions = timezones
@@ -477,9 +490,11 @@
   function selectTimezone(pickerId, value) {
     const form = pickerId === "onboarding" ? $("#onboardingForm") : $("#settingsForm");
     const search = document.querySelector(`[data-timezone-search="${pickerId}"]`);
+    const selected = document.querySelector(`[data-timezone-selected="${pickerId}"]`);
     form.timezone.value = value;
-    search.value = timezoneLabel(value, form.language.value);
-    renderTimezoneResults(pickerId, form.language.value, "");
+    search.value = "";
+    if (selected) selected.textContent = timezoneLabel(value, form.language.value);
+    renderTimezoneResults(pickerId, form.language.value, "", false);
   }
 
   function renderListEditors() {
@@ -872,6 +887,7 @@
       const addListId = event.target.dataset.addListItem;
       const removeListId = event.target.dataset.removeListItem;
       const presetListId = event.target.dataset.presetListItem;
+      const timezoneToggleId = event.target.dataset.timezoneToggle;
       const timezonePickerId = event.target.dataset.timezonePickerOption;
       const reminderId = event.target.dataset.completeReminder;
       const noteId = event.target.dataset.selectNote;
@@ -883,6 +899,11 @@
       }
       if (presetListId) {
         addListItem(presetListId, event.target.dataset.value);
+      }
+      if (timezoneToggleId) {
+        const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);
+        input.focus();
+        renderTimezoneResults(timezoneToggleId, activeFormLanguage(), input.value);
       }
       if (timezonePickerId) {
         selectTimezone(timezonePickerId, event.target.dataset.value);
