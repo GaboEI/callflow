@@ -2,6 +2,9 @@
 
 ## v0.1.1 - Improve reusable onboarding configuration
 
+- Changed the default Electron window to a compact side-by-side work-helper size.
+- Tuned the responsive layout so onboarding and the main app remain usable at compact width.
+- Documented compact CRM/Telegram side-by-side usage.
 - Changed default timezone to local system time.
 - Kept Spain/Madrid as an available timezone option.
 - Removed personal operator placeholder from onboarding.

@@ -4,6 +4,8 @@
 
 CallFlow is an Electron desktop application with a strict split between the main process and renderer process.
 
+The default window opens in a compact work-helper size, approximately matching a `55 x 50` terminal-cell reference as `620 x 760` pixels. The minimum size is `520 x 620`, and the window remains freely resizable and maximizable.
+
 ## Main Process
 
 Responsibilities:
@@ -63,3 +65,7 @@ User data is stored as JSON files in Electron `userData`:
 - `knowledge_base.json`
 
 The `storage/` directory remains in the repository only as a placeholder and is not used for runtime user data.
+
+## Compact Layout Note
+
+The compact layout is optimized for call center work next to CRM, Telegram, or other operator tools. Wider dashboard-style layouts can still be reached by resizing or maximizing the window.

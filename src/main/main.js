@@ -75,10 +75,10 @@ async function ensureDataFiles() {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1100,
-    height: 720,
-    minWidth: 960,
-    minHeight: 640,
+    width: 620,
+    height: 760,
+    minWidth: 520,
+    minHeight: 620,
     backgroundColor: "#0F172A",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
