@@ -35,11 +35,12 @@
   }
 
   function buildDescription(description, customComment) {
-    return [description, customComment].filter(Boolean).join(" - ");
+    return [description, customComment].filter(Boolean).join(" — ");
   }
 
   function buildCallLine(call) {
-    return `# ${call.callId} ${call.callType} ${call.date} ${call.time} ${call.operatorName}: ${call.description}`;
+    const parts = ["#", call.callId, call.callType, call.date, call.time].filter(Boolean);
+    return `${parts.join(" ")} ${call.operatorName}: ${call.description}`;
   }
 
   function buildCrmLine(call) {
@@ -53,7 +54,7 @@
     const call = {
       id: crypto.randomUUID(),
       callId: formData.callId.trim(),
-      callType: formData.callType,
+      callType: String(formData.callType || "").trim(),
       description,
       rawDescription: formData.description,
       customComment: formData.customComment,

@@ -12,16 +12,28 @@ Frequent status presets and success/rejection defaults follow the selected langu
 
 ## Configuración
 
-After onboarding, the same values can be edited from the Settings section. Call types and frequent statuses are managed as add/remove lists and saved locally.
+After onboarding, the same values can be edited from the Settings section. Call types and frequent statuses are managed as add/remove lists and saved locally. The same call type and frequent status lists can also be adjusted from the Dashboard during active work, using the same settings source of truth.
 
 ## Registro de llamada
 
-The operator enters a call ID, chooses a provider, writes or selects a status, optionally adds a custom comment, and saves.
+The operator enters a call ID and saves. Call type, frequent status, and custom comment are optional. A frequent status is a shortcut for repeated outcomes, while the custom comment can be used alone for unique situations.
 
 Generated full line example:
 
 ```text
 # 20506955 Soporte 16.06 14:05 Ana: Sin_respuesta
+```
+
+If the operator saves only an ID, CallFlow keeps the line valid and leaves the description empty instead of inventing a status:
+
+```text
+# 20506955 16.06 14:05 Ana:
+```
+
+If both frequent status and custom comment are present, they are combined:
+
+```text
+# 20506955 Soporte 16.06 14:05 Ana: Sin_respuesta — Cliente pidió rellamada
 ```
 
 ## Copia para CRM

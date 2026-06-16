@@ -58,6 +58,8 @@ Settings compatibility:
 - The timezone combobox keeps search text separate from the selected technical timezone value to avoid storing or editing visible labels.
 - `Intl.supportedValuesOf("timeZone")` is used when available, with a fallback list for older runtimes.
 - The special `local` value resolves through `Intl.DateTimeFormat().resolvedOptions().timeZone` at runtime.
+- Dashboard inline call type and frequent status edits write back to `settings.json`; Settings and Dashboard share one source of truth.
+- The dashboard work clock reads the configured timezone and `clockFormat` from settings.
 
 ## Persistence
 

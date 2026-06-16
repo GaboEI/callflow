@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.6 - Improve quick registration optional fields and inline status management
+
+- Made only call ID required in quick registration.
+- Allowed empty call type, empty frequent status, and empty custom comment.
+- Omitted missing call type cleanly from generated full call lines.
+- Combined frequent status and custom comment with a clear separator when both are present.
+- Added inline Dashboard management for frequent statuses and call types using the same settings source of truth.
+- Added a live green work-time clock based on the configured timezone with 24-hour, 12-hour, and military formats.
+
 ## v0.1.5 - Fix timezone combobox selection behavior
 
 - Rebuilt timezone picker interaction around separate search text and selected timezone state.

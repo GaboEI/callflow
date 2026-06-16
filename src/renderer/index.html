@@ -108,7 +108,10 @@
             <p class="eyebrow" id="currentBlockLabel">--:-- - --:--</p>
             <h1 id="viewTitle">Dashboard</h1>
           </div>
-          <div class="status-pill" id="operatorLabel"></div>
+          <div class="topbar-actions">
+            <div class="work-clock" id="workClock">--:--:--</div>
+            <div class="status-pill" id="operatorLabel"></div>
+          </div>
         </header>
 
         <section id="dashboardView" class="view active">
@@ -123,14 +126,34 @@
                 <input name="callId" autocomplete="off" required />
               </label>
               <label>
-                <span data-i18n="callType">Tipo / proveedor</span>
+                <span class="field-heading">
+                  <span data-i18n="callType">Tipo / proveedor</span>
+                  <button class="icon-button" type="button" id="toggleCallTypeManager" data-i18n-title="addCallType" title="Agregar tipo">+</button>
+                </span>
                 <select name="callType"></select>
               </label>
+              <div class="status-manager span-2 hidden" id="dashboardCallTypeManager">
+                <div class="input-row">
+                  <input id="newDashboardCallType" data-i18n-placeholder="newCallTypePlaceholder" placeholder="Escribe un tipo de llamada..." autocomplete="off" />
+                  <button type="button" id="saveDashboardCallType" data-i18n="saveCallType">Guardar tipo</button>
+                </div>
+                <div class="chip-list" id="dashboardCallTypeList"></div>
+              </div>
               <label>
-                <span data-i18n="description">Descripción / estado</span>
-                <input name="description" list="statusList" autocomplete="off" required />
+                <span class="field-heading">
+                  <span data-i18n="description">Descripción / estado</span>
+                  <button class="icon-button" type="button" id="toggleStatusManager" data-i18n-title="addStatus" title="Agregar estado">+</button>
+                </span>
+                <input name="description" list="statusList" autocomplete="off" />
                 <datalist id="statusList"></datalist>
               </label>
+              <div class="status-manager span-2 hidden" id="dashboardStatusManager">
+                <div class="input-row">
+                  <input id="newDashboardStatus" data-i18n-placeholder="newFrequentStatus" placeholder="Nuevo estado frecuente" autocomplete="off" />
+                  <button type="button" id="saveDashboardStatus" data-i18n="saveStatus">Guardar estado</button>
+                </div>
+                <div class="chip-list" id="dashboardStatusList"></div>
+              </div>
               <label class="span-2">
                 <span data-i18n="customComment">Comentario personalizado</span>
                 <input name="customComment" autocomplete="off" />
@@ -253,6 +276,14 @@
               <label><span data-i18n="successLabel">Etiqueta exitosa</span><input name="successLabel" list="successLabelSuggestions" required /></label>
               <label><span data-i18n="rejectionLabel">Etiqueta rechazo</span><input name="rejectionLabel" list="rejectionLabelSuggestions" required /></label>
               <label><span>Formato encabezado</span><input name="reportHeaderFormat" required /></label>
+              <label>
+                <span data-i18n="clockFormat">Formato del reloj</span>
+                <select name="clockFormat">
+                  <option value="24h" data-i18n="clock24">24 horas</option>
+                  <option value="12h" data-i18n="clock12">12 horas</option>
+                  <option value="military" data-i18n="clockMilitary">Militar</option>
+                </select>
+              </label>
               <label><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
               <div class="list-editor span-2" data-list-editor="settingsCallTypes">
                 <span class="field-label" data-i18n="callTypes">Tipos de llamada</span>

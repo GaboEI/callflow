@@ -17,7 +17,10 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - Call type examples remain generic and are not tied to one operator workflow.
 - Frequent status presets are language-aware; user-created statuses are preserved exactly as typed.
 - Success and rejection labels are language-aware defaults with editable custom values.
-- Fast call registration with ID, provider, description/status, and optional custom comment.
+- Fast call registration where only call ID is required; call type, frequent status, and custom comment are optional.
+- Frequent statuses are shortcuts/presets, not mandatory fields.
+- Call types and frequent statuses can be managed from both Dashboard and Settings using one shared settings source of truth.
+- Dashboard includes a live green work-time clock using the configured work timezone, with 24-hour, 12-hour, and military display options.
 - Full internal call line format: `# ID TYPE DD.MM HH:mm Operator: Description`.
 - CRM copy format: `DD.MM HH:mm Operator: Description`.
 - Hourly grouping by configured timezone.

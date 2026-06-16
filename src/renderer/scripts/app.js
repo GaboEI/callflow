@@ -4,6 +4,7 @@
     calls: [],
     reminders: [],
     knowledgeBase: [],
+    clockTimer: null,
     selectedNoteId: null,
     lastCall: null,
     selectedBlocks: new Set(),
@@ -164,10 +165,11 @@
       callTypes: uniqueItems(settings.callTypes),
       frequentStatuses: uniqueItems(settings.frequentStatuses || settings.callStatuses),
       successLabel: settings.successLabel || defaultSuccessLabel(settings.language),
-      rejectionLabel: settings.rejectionLabel || defaultRejectionLabel(settings.language)
+      rejectionLabel: settings.rejectionLabel || defaultRejectionLabel(settings.language),
+      clockFormat: settings.clockFormat || "24h"
     };
 
-    if (!normalized.frequentStatuses.length) {
+    if (!normalized.onboardingCompleted && !normalized.frequentStatuses.length) {
       normalized.frequentStatuses = [...presetForLanguage(normalized.language).selectedStatuses];
     }
 
@@ -519,6 +521,7 @@
     settingsForm.rejectionLabel.value = settings.rejectionLabel;
     settingsForm.reportHeaderFormat.value = settings.reportHeaderFormat;
     settingsForm.theme.value = settings.theme || "dark";
+    settingsForm.clockFormat.value = settings.clockFormat || "24h";
     state.formLists.settingsCallTypes = [...settings.callTypes];
     state.formLists.settingsFrequentStatuses = [...settings.frequentStatuses];
     state.presetMeta.settingsFrequentStatuses.custom = [...settings.frequentStatuses];
@@ -541,6 +544,7 @@
       reportHeaderFormat: form.reportHeaderFormat
         ? form.reportHeaderFormat.value
         : state.settings.reportHeaderFormat,
+      clockFormat: form.clockFormat ? form.clockFormat.value : state.settings.clockFormat || "24h",
       theme: form.theme ? form.theme.value : "dark",
       onboardingCompleted
     };
@@ -672,22 +676,146 @@
   }
 
   function renderCallOptions() {
+    const language = state.settings.language || "es";
     const callType = $("#callForm select[name='callType']");
-    callType.innerHTML = state.settings.callTypes.length
-      ? state.settings.callTypes
-          .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`)
-          .join("")
-      : '<option value="General">General</option>';
+    const currentCallType = callType.value;
+    callType.innerHTML = [
+      `<option value="">${escapeHtml(CallFlowI18n.t("optionalCallType", language))}</option>`,
+      ...state.settings.callTypes.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`)
+    ].join("");
+    if (state.settings.callTypes.includes(currentCallType)) callType.value = currentCallType;
 
     $("#statusList").innerHTML = state.settings.frequentStatuses
       .map((status) => `<option value="${escapeHtml(status)}"></option>`)
       .join("");
   }
 
+  function renderDashboardInlineManagers() {
+    const language = state.settings.language || "es";
+    $("#dashboardCallTypeList").innerHTML = state.settings.callTypes.length
+      ? state.settings.callTypes
+          .map(
+            (type) => `
+              <span class="chip">
+                ${escapeHtml(type)}
+                <button type="button" data-remove-dashboard-call-type="${escapeHtml(type)}" aria-label="${CallFlowI18n.t("removeCallType", language)}">×</button>
+              </span>
+            `
+          )
+          .join("")
+      : '<span class="muted">-</span>';
+
+    $("#dashboardStatusList").innerHTML = state.settings.frequentStatuses.length
+      ? state.settings.frequentStatuses
+          .map(
+            (status) => `
+              <span class="chip">
+                ${escapeHtml(status)}
+                <button type="button" data-remove-dashboard-status="${escapeHtml(status)}" aria-label="${CallFlowI18n.t("removeStatus", language)}">×</button>
+              </span>
+            `
+          )
+          .join("")
+      : '<span class="muted">-</span>';
+  }
+
+  async function updateFrequentStatusesFromDashboard(statuses) {
+    state.settings = normalizeSettings({
+      ...state.settings,
+      frequentStatuses: uniqueItems(statuses)
+    });
+    state.formLists.settingsFrequentStatuses = [...state.settings.frequentStatuses];
+    state.formLists.onboardingFrequentStatuses = [...state.settings.frequentStatuses];
+    await CallFlowStorage.write("settings", state.settings);
+    applySettingsToForms();
+    render();
+  }
+
+  async function addDashboardStatus() {
+    const input = $("#newDashboardStatus");
+    const value = input.value.trim();
+    if (!value) return;
+    await updateFrequentStatusesFromDashboard([...state.settings.frequentStatuses, value]);
+    input.value = "";
+    input.focus();
+  }
+
+  async function removeDashboardStatus(value) {
+    const language = state.settings.language || "es";
+    if (!window.confirm(CallFlowI18n.t("confirmRemoveStatus", language))) return;
+    await updateFrequentStatusesFromDashboard(state.settings.frequentStatuses.filter((status) => status !== value));
+  }
+
+  async function updateCallTypesFromDashboard(callTypes) {
+    state.settings = normalizeSettings({
+      ...state.settings,
+      callTypes: uniqueItems(callTypes)
+    });
+    state.formLists.settingsCallTypes = [...state.settings.callTypes];
+    state.formLists.onboardingCallTypes = [...state.settings.callTypes];
+    await CallFlowStorage.write("settings", state.settings);
+    applySettingsToForms();
+    render();
+  }
+
+  async function addDashboardCallType() {
+    const input = $("#newDashboardCallType");
+    const value = input.value.trim();
+    if (!value) return;
+    await updateCallTypesFromDashboard([...state.settings.callTypes, value]);
+    $("#callForm select[name='callType']").value = value;
+    input.value = "";
+    input.focus();
+  }
+
+  async function removeDashboardCallType(value) {
+    const language = state.settings.language || "es";
+    if (!window.confirm(CallFlowI18n.t("confirmRemoveCallType", language))) return;
+    await updateCallTypesFromDashboard(state.settings.callTypes.filter((type) => type !== value));
+  }
+
   function renderHeader() {
     const now = CallFlowReports.formatCallTimestamp(new Date(), state.settings);
     $("#currentBlockLabel").textContent = CallFlowReports.blockFromHour(now.hour);
     $("#operatorLabel").textContent = state.settings.operatorName || "Sin operador";
+    renderWorkClock();
+  }
+
+  function formatWorkClock(date) {
+    const timezone = CallFlowReports.resolveTimezone(state.settings);
+    const format = state.settings.clockFormat || "24h";
+
+    if (format === "military") {
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: timezone,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }).formatToParts(date);
+      const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+      return `${values.hour}${values.minute}${values.second}`;
+    }
+
+    return new Intl.DateTimeFormat(languageLocale(state.settings.language), {
+      timeZone: timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: format === "12h"
+    }).format(date);
+  }
+
+  function renderWorkClock() {
+    const clock = $("#workClock");
+    if (!clock || !state.settings) return;
+    clock.textContent = formatWorkClock(new Date());
+  }
+
+  function startWorkClock() {
+    if (state.clockTimer) clearInterval(state.clockTimer);
+    renderWorkClock();
+    state.clockTimer = setInterval(renderWorkClock, 1000);
   }
 
   function renderBlocks() {
@@ -811,6 +939,7 @@
     if (!state.settings) return;
     renderHeader();
     renderCallOptions();
+    renderDashboardInlineManagers();
     renderListEditors();
     renderBlocks();
     renderStats();
@@ -970,6 +1099,28 @@
 
     $("#callForm").addEventListener("submit", saveCall);
     $("#copyLastCrm").addEventListener("click", copyLastCrm);
+    $("#toggleCallTypeManager").addEventListener("click", () => {
+      $("#dashboardCallTypeManager").classList.toggle("hidden");
+      if (!$("#dashboardCallTypeManager").classList.contains("hidden")) $("#newDashboardCallType").focus();
+    });
+    $("#saveDashboardCallType").addEventListener("click", addDashboardCallType);
+    $("#newDashboardCallType").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addDashboardCallType();
+      }
+    });
+    $("#toggleStatusManager").addEventListener("click", () => {
+      $("#dashboardStatusManager").classList.toggle("hidden");
+      if (!$("#dashboardStatusManager").classList.contains("hidden")) $("#newDashboardStatus").focus();
+    });
+    $("#saveDashboardStatus").addEventListener("click", addDashboardStatus);
+    $("#newDashboardStatus").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addDashboardStatus();
+      }
+    });
     $("#copySelectedBlocks").addEventListener("click", copySelectedBlocks);
     $("#reminderForm").addEventListener("submit", saveReminder);
     $("#reminderFilter").addEventListener("change", render);
@@ -1063,6 +1214,8 @@
       const addListId = event.target.dataset.addListItem;
       const removeListId = event.target.dataset.removeListItem;
       const presetListId = event.target.dataset.presetListItem;
+      const dashboardCallTypeToRemove = event.target.dataset.removeDashboardCallType;
+      const dashboardStatusToRemove = event.target.dataset.removeDashboardStatus;
       const timezoneToggleId = timezoneToggle ? timezoneToggle.dataset.timezoneToggle : null;
       const timezonePickerId = timezoneOption ? timezoneOption.dataset.timezonePickerOption : null;
       const reminderId = event.target.dataset.completeReminder;
@@ -1075,6 +1228,12 @@
       }
       if (presetListId) {
         addListItem(presetListId, event.target.dataset.value);
+      }
+      if (dashboardCallTypeToRemove) {
+        removeDashboardCallType(dashboardCallTypeToRemove);
+      }
+      if (dashboardStatusToRemove) {
+        removeDashboardStatus(dashboardStatusToRemove);
       }
       if (timezoneToggleId) {
         const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);
@@ -1105,6 +1264,7 @@
     applySettingsToForms();
     const dataDir = await window.callflow.getDataDir();
     $("#dataDirLabel").textContent = dataDir;
+    startWorkClock();
 
     if (state.settings.onboardingCompleted) {
       $("#app").classList.remove("hidden");
