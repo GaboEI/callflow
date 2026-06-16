@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CallFlow</title>
+    <link rel="stylesheet" href="./styles/main.css" />
+  </head>
+  <body>
+    <div id="onboarding" class="onboarding hidden">
+      <section class="onboarding-panel">
+        <div>
+          <p class="eyebrow">CallFlow</p>
+          <h1 data-i18n="onboardingTitle">Configuración inicial</h1>
+          <p class="muted" data-i18n="onboardingSubtitle">Prepara la app para tu turno de trabajo.</p>
+        </div>
+
+        <form id="onboardingForm" class="form-grid">
+          <label>
+            <span data-i18n="language">Idioma</span>
+            <select name="language">
+              <option value="es">Español</option>
+              <option value="en">English</option>
+              <option value="ru">Русский</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="timezone">Zona horaria</span>
+            <select name="timezone">
+              <option value="Europe/Madrid">España / Madrid</option>
+              <option value="local">Hora local del sistema</option>
+              <option value="Europe/Moscow">Europe / Moscow</option>
+              <option value="Europe/London">Europe / London</option>
+              <option value="America/New_York">America / New York</option>
+              <option value="America/Mexico_City">America / Mexico City</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="operatorName">Nombre del operador</span>
+            <input name="operatorName" placeholder="Gabriel" required />
+          </label>
+
+          <label>
+            <span data-i18n="callTypes">Tipos / proveedores</span>
+            <textarea name="callTypes" rows="2"></textarea>
+          </label>
+
+          <label>
+            <span data-i18n="callStatuses">Estados frecuentes</span>
+            <textarea name="callStatuses" rows="3"></textarea>
+          </label>
+
+          <label>
+            <span data-i18n="successLabel">Etiqueta exitosa</span>
+            <input name="successLabel" />
+          </label>
+
+          <label>
+            <span data-i18n="rejectionLabel">Etiqueta rechazo</span>
+            <input name="rejectionLabel" />
+          </label>
+
+          <button class="primary span-2" type="submit" data-i18n="finishOnboarding">Guardar y abrir dashboard</button>
+        </form>
+      </section>
+    </div>
+
+    <div id="app" class="app hidden">
+      <aside class="sidebar">
+        <div class="brand">
+          <strong>CallFlow</strong>
+          <span id="dataDirLabel"></span>
+        </div>
+        <nav>
+          <button class="nav-link active" data-view="dashboard" data-i18n="dashboard">Dashboard</button>
+          <button class="nav-link" data-view="reports" data-i18n="reports">Reportes</button>
+          <button class="nav-link" data-view="reminders" data-i18n="reminders">Recordatorios</button>
+          <button class="nav-link" data-view="stats" data-i18n="stats">Estadísticas</button>
+          <button class="nav-link" data-view="knowledge" data-i18n="knowledge">Chuleta</button>
+          <button class="nav-link" data-view="settings" data-i18n="settings">Configuración</button>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="currentBlockLabel">--:-- - --:--</p>
+            <h1 id="viewTitle">Dashboard</h1>
+          </div>
+          <div class="status-pill" id="operatorLabel"></div>
+        </header>
+
+        <section id="dashboardView" class="view active">
+          <div class="panel">
+            <div class="panel-header">
+              <h2 data-i18n="quickRegister">Registro rápido</h2>
+              <span class="muted" id="lastSavedLabel"></span>
+            </div>
+            <form id="callForm" class="call-form">
+              <label>
+                <span data-i18n="callId">ID de llamada</span>
+                <input name="callId" autocomplete="off" required />
+              </label>
+              <label>
+                <span data-i18n="callType">Tipo / proveedor</span>
+                <select name="callType"></select>
+              </label>
+              <label>
+                <span data-i18n="description">Descripción / estado</span>
+                <input name="description" list="statusList" autocomplete="off" required />
+                <datalist id="statusList"></datalist>
+              </label>
+              <label class="span-2">
+                <span data-i18n="customComment">Comentario personalizado</span>
+                <input name="customComment" autocomplete="off" />
+              </label>
+              <div class="button-row span-2">
+                <button class="primary" type="submit" data-action="save" data-i18n="save">Guardar</button>
+                <button class="success" type="submit" data-action="saveCopy" data-i18n="saveCopyCrm">Guardar y copiar CRM</button>
+                <button type="button" id="copyLastCrm" data-i18n="copyLastCrm">Copiar último CRM</button>
+              </div>
+            </form>
+            <div class="generated-line">
+              <span data-i18n="lastLine">Última línea generada</span>
+              <code id="lastFullLine">-</code>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="panel">
+              <div class="panel-header">
+                <h2 data-i18n="todayBlocks">Bloques de hoy</h2>
+              </div>
+              <div id="hourBlocks" class="block-list"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <h2 data-i18n="todayStats">Estadísticas del día</h2>
+              </div>
+              <div id="dashboardStats" class="cards compact"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="reportsView" class="view">
+          <div class="panel">
+            <div class="panel-header">
+              <h2 data-i18n="hourlyReports">Reportes horarios</h2>
+              <button id="copySelectedBlocks" class="primary" data-i18n="copySelectedBlocks">Copiar bloques seleccionados</button>
+            </div>
+            <div id="reportBlocks" class="report-list"></div>
+          </div>
+        </section>
+
+        <section id="remindersView" class="view">
+          <div class="grid two">
+            <div class="panel">
+              <h2 data-i18n="newReminder">Crear recordatorio</h2>
+              <form id="reminderForm" class="stack">
+                <input name="callId" placeholder="ID de llamada opcional" />
+                <input name="date" type="date" required />
+                <input name="time" type="time" required />
+                <textarea name="note" rows="4" placeholder="Nota" required></textarea>
+                <button class="primary" type="submit" data-i18n="saveReminder">Guardar recordatorio</button>
+              </form>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <h2 data-i18n="reminderList">Lista</h2>
+                <select id="reminderFilter">
+                  <option value="today">Hoy</option>
+                  <option value="tomorrow">Mañana</option>
+                  <option value="week">Esta semana</option>
+                  <option value="overdue">Vencidos</option>
+                  <option value="completed">Completados</option>
+                </select>
+              </div>
+              <div id="reminderList" class="item-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="statsView" class="view">
+          <div class="panel">
+            <h2 data-i18n="stats">Estadísticas</h2>
+            <div id="statsCards" class="cards"></div>
+          </div>
+        </section>
+
+        <section id="knowledgeView" class="view">
+          <div class="grid two knowledge-grid">
+            <div class="panel">
+              <div class="panel-header">
+                <h2 data-i18n="knowledge">Chuleta</h2>
+                <button id="newNote" class="primary" data-i18n="newNote">Nueva nota</button>
+              </div>
+              <input id="noteSearch" placeholder="Buscar nota" />
+              <div id="notesList" class="item-list"></div>
+            </div>
+            <div class="panel">
+              <form id="noteForm" class="stack">
+                <input name="title" placeholder="Título" required />
+                <textarea name="content" rows="10" placeholder="Markdown" required></textarea>
+                <div class="button-row">
+                  <button class="primary" type="submit" data-i18n="saveNote">Guardar nota</button>
+                  <button type="button" id="deleteNote" class="danger" data-i18n="delete">Eliminar</button>
+                  <button type="button" id="exportMd">.md</button>
+                  <button type="button" id="exportTxt">.txt</button>
+                </div>
+              </form>
+              <div class="preview" id="notePreview"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="settingsView" class="view">
+          <div class="panel">
+            <h2 data-i18n="settings">Configuración</h2>
+            <form id="settingsForm" class="form-grid">
+              <label><span data-i18n="language">Idioma</span><select name="language"></select></label>
+              <label><span data-i18n="timezone">Zona horaria</span><input name="timezone" /></label>
+              <label><span data-i18n="operatorName">Nombre del operador</span><input name="operatorName" required /></label>
+              <label><span data-i18n="successLabel">Etiqueta exitosa</span><input name="successLabel" required /></label>
+              <label><span data-i18n="rejectionLabel">Etiqueta rechazo</span><input name="rejectionLabel" required /></label>
+              <label><span>Formato encabezado</span><input name="reportHeaderFormat" required /></label>
+              <label><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
+              <label><span data-i18n="callTypes">Tipos / proveedores</span><textarea name="callTypes" rows="3"></textarea></label>
+              <label class="span-2"><span data-i18n="callStatuses">Estados frecuentes</span><textarea name="callStatuses" rows="4"></textarea></label>
+              <button class="primary span-2" type="submit" data-i18n="saveSettings">Guardar configuración</button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./scripts/i18n.js"></script>
+    <script src="./scripts/storage.js"></script>
+    <script src="./scripts/reports.js"></script>
+    <script src="./scripts/reminders.js"></script>
+    <script src="./scripts/stats.js"></script>
+    <script src="./scripts/app.js"></script>
+  </body>
+</html>
