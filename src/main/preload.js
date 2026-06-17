@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-const validKeys = new Set(["settings", "calls", "templates", "reminders", "knowledgeBase"]);
+const validKeys = new Set(["settings", "calls", "templates", "reminders", "knowledgeBase", "workTimer"]);
 
 function assertKey(key) {
   if (!validKeys.has(key)) {

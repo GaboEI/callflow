@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.11 - Add persistent work and break timer
+
+- Added a compact work/break timer beside the live work clock.
+- Added play/pause behavior for tracking active work time and break time.
+- Persisted timer state locally in `work_timer.json`.
+- Stored completed breaks for future statistics without showing payroll calculations yet.
+- Added Spanish, English, and Russian timer labels.
+
 ## v0.1.10 - Refine dashboard daily statistics
 
 - Removed duplicated hourly block metrics from daily statistics.

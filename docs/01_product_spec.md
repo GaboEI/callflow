@@ -21,6 +21,7 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - Frequent statuses are shortcuts/presets, not mandatory fields.
 - Call types and frequent statuses can be managed from both Dashboard and Settings using one shared settings source of truth.
 - Dashboard includes a live green work-time clock using the configured work timezone, with 24-hour, 12-hour, and military display options.
+- Dashboard header includes an optional work/break timer. Work time accumulates across play/resume actions; each pause starts a break counter from zero and stores the completed break for future statistics.
 - Full internal call line format: `# ID TYPE DD.MM HH:mm Operator: Description`.
 - Line prefix is configurable: `#` by default, no prefix, or daily numbering such as `001`.
 - CRM copy format: `DD.MM HH:mm Operator: Description`.

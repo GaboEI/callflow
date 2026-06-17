@@ -4,6 +4,7 @@
     calls: [],
     reminders: [],
     knowledgeBase: [],
+    workTimer: null,
     clockTimer: null,
     selectedNoteId: null,
     lastCall: null,
@@ -123,6 +124,25 @@
 
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+  function defaultWorkTimer() {
+    return {
+      status: "idle",
+      workElapsedMs: 0,
+      workStartedAt: null,
+      currentBreakStartedAt: null,
+      breaks: []
+    };
+  }
+
+  function normalizeWorkTimer(timer) {
+    return {
+      ...defaultWorkTimer(),
+      ...(timer || {}),
+      workElapsedMs: Number(timer && timer.workElapsedMs) || 0,
+      breaks: Array.isArray(timer && timer.breaks) ? timer.breaks : []
+    };
+  }
 
   function linesToArray(value) {
     if (Array.isArray(value)) {
@@ -813,7 +833,84 @@
   function startWorkClock() {
     if (state.clockTimer) clearInterval(state.clockTimer);
     renderWorkClock();
-    state.clockTimer = setInterval(renderWorkClock, 1000);
+    renderShiftTimer();
+    state.clockTimer = setInterval(() => {
+      renderWorkClock();
+      renderShiftTimer();
+    }, 1000);
+  }
+
+  function formatDuration(ms) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+    const seconds = String(totalSeconds % 60).padStart(2, "0");
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
+  function currentWorkElapsed(now = Date.now()) {
+    const timer = normalizeWorkTimer(state.workTimer);
+    if (timer.status !== "working" || !timer.workStartedAt) return timer.workElapsedMs;
+    return timer.workElapsedMs + Math.max(0, now - new Date(timer.workStartedAt).getTime());
+  }
+
+  function currentBreakElapsed(now = Date.now()) {
+    const timer = normalizeWorkTimer(state.workTimer);
+    if (timer.status !== "paused" || !timer.currentBreakStartedAt) return 0;
+    return Math.max(0, now - new Date(timer.currentBreakStartedAt).getTime());
+  }
+
+  function renderShiftTimer() {
+    const timer = normalizeWorkTimer(state.workTimer);
+    const wrapper = $("#shiftTimer");
+    const label = $("#shiftTimerLabel");
+    const value = $("#shiftTimerValue");
+    const button = $("#shiftTimerToggle");
+    if (!wrapper || !label || !value || !button || !state.settings) return;
+
+    const language = state.settings.language || "es";
+    const paused = timer.status === "paused";
+    const working = timer.status === "working";
+    wrapper.classList.toggle("paused", paused);
+    wrapper.classList.toggle("working", working);
+    label.textContent = CallFlowI18n.t(paused ? "breakTimer" : "workTimer", language);
+    value.textContent = formatDuration(paused ? currentBreakElapsed() : currentWorkElapsed());
+    button.textContent = working ? "⏸" : "▶";
+    button.setAttribute(
+      "aria-label",
+      CallFlowI18n.t(working ? "pauseWorkTimer" : timer.status === "paused" ? "resumeWorkTimer" : "startWorkTimer", language)
+    );
+    button.title = button.getAttribute("aria-label");
+  }
+
+  async function persistWorkTimer() {
+    state.workTimer = normalizeWorkTimer(state.workTimer);
+    await CallFlowStorage.write("workTimer", state.workTimer);
+  }
+
+  async function toggleShiftTimer() {
+    const timer = normalizeWorkTimer(state.workTimer);
+    const now = new Date();
+
+    if (timer.status === "working") {
+      timer.workElapsedMs = currentWorkElapsed(now.getTime());
+      timer.workStartedAt = null;
+      timer.currentBreakStartedAt = now.toISOString();
+      timer.status = "paused";
+    } else {
+      if (timer.status === "paused" && timer.currentBreakStartedAt) {
+        const startedAt = timer.currentBreakStartedAt;
+        const durationMs = Math.max(0, now.getTime() - new Date(startedAt).getTime());
+        timer.breaks = [...timer.breaks, { startedAt, endedAt: now.toISOString(), durationMs }];
+      }
+      timer.currentBreakStartedAt = null;
+      timer.workStartedAt = now.toISOString();
+      timer.status = "working";
+    }
+
+    state.workTimer = timer;
+    await persistWorkTimer();
+    renderShiftTimer();
   }
 
   function renderBlocks() {
@@ -1111,6 +1208,7 @@
 
     $("#callForm").addEventListener("submit", saveCall);
     $("#copyLastCrm").addEventListener("click", copyLastCrm);
+    $("#shiftTimerToggle").addEventListener("click", toggleShiftTimer);
     $("#sidebarToggle").addEventListener("click", () => {
       const app = $("#app");
       app.classList.toggle("sidebar-open");
@@ -1287,6 +1385,7 @@
     const data = await CallFlowStorage.readAll();
     Object.assign(state, data);
     state.settings = normalizeSettings(state.settings);
+    state.workTimer = normalizeWorkTimer(state.workTimer);
     CallFlowI18n.applyI18n(state.settings.language);
     applySettingsToForms();
     const dataDir = await window.callflow.getDataDir();

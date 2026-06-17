@@ -60,6 +60,7 @@ Settings compatibility:
 - The special `local` value resolves through `Intl.DateTimeFormat().resolvedOptions().timeZone` at runtime.
 - Dashboard inline call type and frequent status edits write back to `settings.json`; Settings and Dashboard share one source of truth.
 - The dashboard work clock reads the configured timezone and `clockFormat` from settings.
+- The work/break timer is stored separately in `work_timer.json` so future statistics can calculate worked time, breaks, and compensation without mixing timer state into calls.
 
 ## Persistence
 

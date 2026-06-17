@@ -1,14 +1,15 @@
 (function () {
   async function readAll() {
-    const [settings, calls, templates, reminders, knowledgeBase] = await Promise.all([
+    const [settings, calls, templates, reminders, knowledgeBase, workTimer] = await Promise.all([
       window.callflow.read("settings"),
       window.callflow.read("calls"),
       window.callflow.read("templates"),
       window.callflow.read("reminders"),
-      window.callflow.read("knowledgeBase")
+      window.callflow.read("knowledgeBase"),
+      window.callflow.read("workTimer")
     ]);
 
-    return { settings, calls, templates, reminders, knowledgeBase };
+    return { settings, calls, templates, reminders, knowledgeBase, workTimer };
   }
 
   async function write(key, value) {

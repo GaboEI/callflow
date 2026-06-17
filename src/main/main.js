@@ -7,14 +7,22 @@ const DATA_FILES = {
   calls: "calls.json",
   templates: "templates.json",
   reminders: "reminders.json",
-  knowledgeBase: "knowledge_base.json"
+  knowledgeBase: "knowledge_base.json",
+  workTimer: "work_timer.json"
 };
 
 const DEFAULT_DATA = {
   calls: [],
   templates: [],
   reminders: [],
-  knowledgeBase: []
+  knowledgeBase: [],
+  workTimer: {
+    status: "idle",
+    workElapsedMs: 0,
+    workStartedAt: null,
+    currentBreakStartedAt: null,
+    breaks: []
+  }
 };
 
 let mainWindow;
