@@ -238,6 +238,13 @@ nav {
   margin-bottom: 14px;
 }
 
+.topbar-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
 .status-pill {
   border: 1px solid var(--border);
   border-radius: 999px;
