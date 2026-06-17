@@ -1224,10 +1224,15 @@
     const byType = Object.entries(stats.byType).map(([key, value]) => [`Tipo ${key}`, value, ""]);
     const byStatus = Object.entries(stats.statusCounts).map(([key, value]) => [key, value, ""]);
     return [...base, ...byType, ...byStatus]
-      .map(
-        ([label, value, className]) =>
-          `<article class="card ${className}"><span class="muted">${escapeHtml(label)}</span><strong>${value}</strong></article>`
-      )
+      .map(([label, value, className]) => {
+        const displayLabel = compactStatusLabel(label);
+        return `
+          <article class="card ${className}">
+            <span class="muted stat-label" title="${escapeHtml(label)}">${escapeHtml(displayLabel)}</span>
+            <strong>${value}</strong>
+          </article>
+        `;
+      })
       .join("");
   }
 

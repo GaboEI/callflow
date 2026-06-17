@@ -537,6 +537,15 @@ code {
   margin-top: 6px;
 }
 
+.stat-label {
+  display: block;
+  max-width: 100%;
+  min-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .card.success-metric strong {
   color: var(--green);
 }
