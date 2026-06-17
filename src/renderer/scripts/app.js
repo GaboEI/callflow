@@ -3,10 +3,17 @@
     settings: null,
     calls: [],
     reminders: [],
+    reminderFormCollapsed: false,
+    activeAlarmReminderId: null,
+    activeAlarmPhase: null,
+    activeAlarmSoundKey: null,
+    alarmSoundTimer: null,
     knowledgeBase: [],
     workTimer: null,
     clockTimer: null,
+    reminderTimer: null,
     selectedNoteId: null,
+    editingReminderId: null,
     lastCall: null,
     pendingCallCapturedAt: null,
     selectedPrimaryOutcome: null,
@@ -26,18 +33,18 @@
     formLists: {
       onboardingCallTypes: [],
       onboardingFrequentStatuses: [],
+      onboardingSuccessOutcomes: [],
+      onboardingRejectionOutcomes: [],
+      onboardingCallbackOutcomes: [],
       settingsCallTypes: [],
-      settingsFrequentStatuses: []
+      settingsFrequentStatuses: [],
+      settingsSuccessOutcomes: [],
+      settingsRejectionOutcomes: [],
+      settingsCallbackOutcomes: []
     },
     presetMeta: {
       onboardingFrequentStatuses: { custom: [] },
       settingsFrequentStatuses: { custom: [] }
-    },
-    labelTouched: {
-      onboardingSuccess: false,
-      onboardingRejection: false,
-      settingsSuccess: false,
-      settingsRejection: false
     },
     timezonePickers: {
       onboarding: {
@@ -220,27 +227,27 @@
     };
   }
 
+  function firstOrDefault(items, fallback) {
+    return uniqueItems(items)[0] || fallback || "";
+  }
+
   function normalizeOutcomePresets(settings) {
     const defaults = defaultOutcomePresets(settings);
     const existing = settings.outcomePresets || {};
     return ["success", "rejection", "callback"].reduce((result, category) => {
-      const current = existing[category] || {};
-      const items = uniqueItems([...uniqueItems(current.items), ...(defaults[category].items || [])]);
-      const fallbackDefault = current.default || defaults[category].default || items[0] || "";
+      const hasStoredCategory = Object.prototype.hasOwnProperty.call(existing, category);
+      const current = hasStoredCategory ? existing[category] || {} : {};
+      const hasStoredItems = Array.isArray(current.items);
+      const items = uniqueItems(hasStoredItems ? current.items : defaults[category].items || []);
+      const fallbackDefault = hasStoredCategory
+        ? current.default || items[0] || ""
+        : defaults[category].default || items[0] || "";
       result[category] = {
         default: items.includes(fallbackDefault) ? fallbackDefault : items[0] || fallbackDefault,
         items
       };
       return result;
     }, {});
-  }
-
-  function isSystemDefaultSuccessLabel(value) {
-    return Object.values(presets).some((preset) => preset.successLabels[0] === value);
-  }
-
-  function isSystemDefaultRejectionLabel(value) {
-    return Object.values(presets).some((preset) => preset.rejectionLabel === value);
   }
 
   function normalizeSettings(settings) {
@@ -253,7 +260,12 @@
       rejectionLabel: settings.rejectionLabel || defaultRejectionLabel(settings.language),
       outcomePresets: normalizeOutcomePresets(settings),
       linePrefixMode: settings.linePrefixMode || "hash",
-      clockFormat: settings.clockFormat || "24h"
+      clockFormat: settings.clockFormat || "24h",
+      startOnLogin: Boolean(settings.startOnLogin),
+      runInBackground: Boolean(settings.runInBackground),
+      notifyBeforeMinutes: Number(settings.notifyBeforeMinutes) || 0,
+      notifyAtExactTime: settings.notifyAtExactTime !== false,
+      reminderSound: settings.reminderSound || "soft"
     };
 
     if (!normalized.onboardingCompleted && !normalized.frequentStatuses.length) {
@@ -592,6 +604,7 @@
       $("#sidebarToggle").setAttribute("aria-label", CallFlowI18n.t("openSidebar", state.settings.language || "es"));
     }
     render();
+    if (view === "reminders") prepareReminderFormDefaults();
   }
 
   function applySettingsToForms() {
@@ -600,10 +613,11 @@
     onboardingForm.language.value = settings.language;
     onboardingForm.timezone.value = settings.timezone;
     onboardingForm.operatorName.value = settings.operatorName || "";
-    onboardingForm.successLabel.value = settings.successLabel;
-    onboardingForm.rejectionLabel.value = settings.rejectionLabel;
     state.formLists.onboardingCallTypes = [...settings.callTypes];
     state.formLists.onboardingFrequentStatuses = [...settings.frequentStatuses];
+    state.formLists.onboardingSuccessOutcomes = [...settings.outcomePresets.success.items];
+    state.formLists.onboardingRejectionOutcomes = [...settings.outcomePresets.rejection.items];
+    state.formLists.onboardingCallbackOutcomes = [...settings.outcomePresets.callback.items];
     state.presetMeta.onboardingFrequentStatuses.custom = settings.onboardingCompleted
       ? [...settings.frequentStatuses]
       : settings.frequentStatuses.filter((status) => !presetStatusValues.has(status));
@@ -619,36 +633,73 @@
     settingsForm.language.value = settings.language;
     settingsForm.timezone.value = settings.timezone;
     settingsForm.operatorName.value = settings.operatorName || "";
-    settingsForm.successLabel.value = settings.successLabel;
-    settingsForm.rejectionLabel.value = settings.rejectionLabel;
     settingsForm.reportHeaderFormat.value = settings.reportHeaderFormat;
     settingsForm.linePrefixMode.value = settings.linePrefixMode || "hash";
     settingsForm.theme.value = settings.theme || "dark";
     settingsForm.clockFormat.value = settings.clockFormat || "24h";
+    settingsForm.startOnLogin.checked = Boolean(settings.startOnLogin);
+    settingsForm.runInBackground.checked = Boolean(settings.runInBackground);
+    settingsForm.notifyAtExactTime.checked = settings.notifyAtExactTime !== false;
+    settingsForm.notifyBeforeMinutes.value = String(settings.notifyBeforeMinutes || 0);
+    settingsForm.reminderSound.value = settings.reminderSound || "soft";
     state.formLists.settingsCallTypes = [...settings.callTypes];
     state.formLists.settingsFrequentStatuses = [...settings.frequentStatuses];
+    state.formLists.settingsSuccessOutcomes = [...settings.outcomePresets.success.items];
+    state.formLists.settingsRejectionOutcomes = [...settings.outcomePresets.rejection.items];
+    state.formLists.settingsCallbackOutcomes = [...settings.outcomePresets.callback.items];
     state.presetMeta.settingsFrequentStatuses.custom = [...settings.frequentStatuses];
     renderTimezonePickers(settings.language);
     renderListEditors();
-    renderLabelSuggestions(settings.language);
+  }
+
+  function outcomePresetsFromForm(listPrefix, language) {
+    const successItems = uniqueItems(state.formLists[`${listPrefix}SuccessOutcomes`]);
+    const rejectionItems = uniqueItems(state.formLists[`${listPrefix}RejectionOutcomes`]);
+    const callbackItems = uniqueItems(state.formLists[`${listPrefix}CallbackOutcomes`]);
+    return {
+      success: {
+        default: firstOrDefault(successItems, ""),
+        items: successItems
+      },
+      rejection: {
+        default: firstOrDefault(rejectionItems, ""),
+        items: rejectionItems
+      },
+      callback: {
+        default: firstOrDefault(callbackItems, ""),
+        items: callbackItems
+      }
+    };
   }
 
   function settingsFromForm(form, onboardingCompleted) {
     const listPrefix = form.id === "onboardingForm" ? "onboarding" : "settings";
+    const language = form.language.value;
+    const outcomePresets = outcomePresetsFromForm(listPrefix, language);
     return {
       ...state.settings,
-      language: form.language.value,
+      language,
       timezone: form.timezone.value,
       operatorName: form.operatorName.value.trim(),
       callTypes: [...state.formLists[`${listPrefix}CallTypes`]],
       frequentStatuses: [...state.formLists[`${listPrefix}FrequentStatuses`]],
-      successLabel: form.successLabel.value.trim() || defaultSuccessLabel(form.language.value),
-      rejectionLabel: form.rejectionLabel.value.trim() || defaultRejectionLabel(form.language.value),
+      successLabel: outcomePresets.success.default || defaultSuccessLabel(language),
+      rejectionLabel: outcomePresets.rejection.default || defaultRejectionLabel(language),
+      outcomePresets,
       reportHeaderFormat: form.reportHeaderFormat
         ? form.reportHeaderFormat.value
         : state.settings.reportHeaderFormat,
       linePrefixMode: form.linePrefixMode ? form.linePrefixMode.value : state.settings.linePrefixMode || "hash",
       clockFormat: form.clockFormat ? form.clockFormat.value : state.settings.clockFormat || "24h",
+      startOnLogin: form.startOnLogin ? form.startOnLogin.checked : Boolean(state.settings.startOnLogin),
+      runInBackground: form.runInBackground ? form.runInBackground.checked : Boolean(state.settings.runInBackground),
+      notifyAtExactTime: form.notifyAtExactTime
+        ? form.notifyAtExactTime.checked
+        : state.settings.notifyAtExactTime !== false,
+      notifyBeforeMinutes: form.notifyBeforeMinutes
+        ? Number(form.notifyBeforeMinutes.value) || 0
+        : Number(state.settings.notifyBeforeMinutes) || 0,
+      reminderSound: form.reminderSound ? form.reminderSound.value : state.settings.reminderSound || "soft",
       theme: form.theme ? form.theme.value : "dark",
       onboardingCompleted
     };
@@ -668,41 +719,29 @@
     return form.language.value || state.settings.language || "es";
   }
 
-  function renderLabelSuggestions(language) {
-    const preset = presetForLanguage(language);
-    $("#successLabelSuggestions").innerHTML = preset.successLabels
-      .map((label) => `<option value="${escapeHtml(label)}"></option>`)
-      .join("");
-    $("#rejectionLabelSuggestions").innerHTML = `<option value="${escapeHtml(preset.rejectionLabel)}"></option>`;
-  }
-
   function refreshPresetBackedStatuses(listId, language) {
     const meta = state.presetMeta[listId] || { custom: [] };
     state.formLists[listId] = uniqueItems([...presetForLanguage(language).selectedStatuses, ...meta.custom]);
   }
 
+  function refreshOnboardingOutcomePresets(language) {
+    const defaults = defaultOutcomePresets({
+      language,
+      successLabel: defaultSuccessLabel(language),
+      rejectionLabel: defaultRejectionLabel(language)
+    });
+    state.formLists.onboardingSuccessOutcomes = [...defaults.success.items];
+    state.formLists.onboardingRejectionOutcomes = [...defaults.rejection.items];
+    state.formLists.onboardingCallbackOutcomes = [...defaults.callback.items];
+  }
+
   function handleLanguageChange(form, language) {
     CallFlowI18n.applyI18n(language);
-    renderLabelSuggestions(language);
     renderTimezonePickers(language);
 
     if (form.id === "onboardingForm" && !state.settings.onboardingCompleted) {
       refreshPresetBackedStatuses("onboardingFrequentStatuses", language);
-      if (!state.labelTouched.onboardingSuccess) {
-        form.successLabel.value = defaultSuccessLabel(language);
-      }
-      if (!state.labelTouched.onboardingRejection) {
-        form.rejectionLabel.value = defaultRejectionLabel(language);
-      }
-    }
-
-    if (form.id === "settingsForm") {
-      if (!state.labelTouched.settingsSuccess && isSystemDefaultSuccessLabel(form.successLabel.value)) {
-        form.successLabel.value = defaultSuccessLabel(language);
-      }
-      if (!state.labelTouched.settingsRejection && isSystemDefaultRejectionLabel(form.rejectionLabel.value)) {
-        form.rejectionLabel.value = defaultRejectionLabel(language);
-      }
+      refreshOnboardingOutcomePresets(language);
     }
 
     renderListEditors();
@@ -863,8 +902,38 @@
     };
   }
 
+  function currentDateInputValue() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function currentTimeInputValue() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  }
+
+  function defaultCallbackDateTime() {
+    const form = $("#callForm");
+    if (!form.callbackDate.value) form.callbackDate.value = currentDateInputValue();
+    if (!form.callbackTime.value) form.callbackTime.value = currentTimeInputValue();
+  }
+
   function selectPrimaryOutcome(category, label) {
+    const previousCategory = state.selectedPrimaryOutcome?.category || null;
     state.selectedPrimaryOutcome = { category, label };
+    if (category === "callback") {
+      defaultCallbackDateTime();
+    }
+    if (previousCategory === "callback" && category !== "callback") {
+      const form = $("#callForm");
+      form.callbackDate.value = "";
+      form.callbackTime.value = "";
+    }
     state.openOutcomeMenu = null;
     renderOutcomeControls();
   }
@@ -903,11 +972,8 @@
     if (!window.confirm(CallFlowI18n.t("confirmRemoveOutcome", language))) return;
     const presetsCopy = structuredClone(state.settings.outcomePresets);
     presetsCopy[category].items = presetsCopy[category].items.filter((item) => item !== label);
-    if (!presetsCopy[category].items.length) {
-      presetsCopy[category].items = [defaultOutcomePresets(state.settings)[category].default];
-    }
     if (presetsCopy[category].default === label) {
-      presetsCopy[category].default = presetsCopy[category].items[0];
+      presetsCopy[category].default = presetsCopy[category].items[0] || "";
     }
     if (state.selectedPrimaryOutcome?.category === category && state.selectedPrimaryOutcome.label === label) {
       state.selectedPrimaryOutcome = null;
@@ -949,6 +1015,8 @@
       if (!button || !label || !menu) return;
       label.textContent = selectedOutcomeLabel(category);
       button.classList.toggle("selected", selected);
+      button.setAttribute("role", "radio");
+      button.setAttribute("aria-checked", selected ? "true" : "false");
       menu.classList.toggle("open", state.openOutcomeMenu === category);
       menu.innerHTML = state.openOutcomeMenu === category ? renderOutcomeMenu(category) : "";
     });
@@ -1434,26 +1502,172 @@
     $("#statsCards").innerHTML = statsCards(stats);
   }
 
+  function reminderDueDate(reminder) {
+    return new Date(`${reminder.date}T${reminder.time || "00:00"}`);
+  }
+
+  function sortedReminders(reminders) {
+    return [...reminders].sort((a, b) => {
+      const dueDiff = reminderDueDate(a) - reminderDueDate(b);
+      if (dueDiff !== 0) return dueDiff;
+      return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+    });
+  }
+
+  function compactDuration(ms) {
+    const units = [
+      ["mes", "meses", 30 * 24 * 60 * 60 * 1000],
+      ["sem", "sems", 7 * 24 * 60 * 60 * 1000],
+      ["d", "d", 24 * 60 * 60 * 1000],
+      ["h", "h", 60 * 60 * 1000],
+      ["min", "min", 60 * 1000],
+      ["s", "s", 1000]
+    ];
+    let remaining = Math.max(0, Math.floor(ms));
+    const parts = [];
+    for (const [singular, plural, size] of units) {
+      const value = Math.floor(remaining / size);
+      if (!value && parts.length === 0 && size > 60 * 1000) continue;
+      if (value || parts.length) {
+        parts.push(`${value}${value === 1 ? singular : plural}`);
+        remaining -= value * size;
+      }
+      if (parts.length >= 2) break;
+    }
+    return parts.length ? parts.join(" ") : "0s";
+  }
+
+  function reminderCountdownLabel(reminder) {
+    if (reminder.status === "completed") return "Completado";
+    const due = reminderDueDate(reminder);
+    const diff = due - new Date();
+    if (diff < 0) return `Vencido hace ${compactDuration(Math.abs(diff))}`;
+    return `Faltan ${compactDuration(diff)}`;
+  }
+
+  function reminderStatusKey(reminder) {
+    if (reminder.status === "completed") return "completed";
+    if (reminder.status === "overdue") return "overdue";
+    return "pending";
+  }
+
+  function reminderStatusLabel(reminder) {
+    const key = reminderStatusKey(reminder);
+    const labels = {
+      completed: CallFlowI18n.t("reminderCompleted", state.settings.language || "es"),
+      overdue: CallFlowI18n.t("reminderOverdue", state.settings.language || "es"),
+      pending: CallFlowI18n.t("reminderPending", state.settings.language || "es")
+    };
+    return labels[key];
+  }
+
+  function reminderRepeatLabel(reminder) {
+    const repeat = reminder.repeat || "once";
+    const labels = {
+      once: CallFlowI18n.t("repeatOnce", state.settings.language || "es"),
+      daily: CallFlowI18n.t("repeatDaily", state.settings.language || "es"),
+      weekdays: CallFlowI18n.t("repeatWeekdays", state.settings.language || "es"),
+      weekly: CallFlowI18n.t("repeatWeekly", state.settings.language || "es"),
+      monthly: CallFlowI18n.t("repeatMonthly", state.settings.language || "es")
+    };
+    return labels[repeat] || labels.once;
+  }
+
   function renderReminders() {
     const filter = $("#reminderFilter").value;
-    const reminders = CallFlowReminders.filterReminders(state.reminders, filter);
+    const reminders = sortedReminders(CallFlowReminders.filterReminders(state.reminders, filter));
     $("#reminderList").innerHTML = reminders.length
       ? reminders
           .map((reminder) => `
-            <article class="list-item">
-              <header>
-                <strong>${escapeHtml(reminder.date)} ${escapeHtml(reminder.time)}</strong>
-                <span class="tag">${escapeHtml(reminder.status)}</span>
-              </header>
-              <p>${escapeHtml(reminder.note)}</p>
-              ${reminder.callId ? `<span class="muted">ID: ${escapeHtml(reminder.callId)}</span>` : ""}
-              <div class="button-row">
-                <button data-complete-reminder="${reminder.id}">Completar</button>
+            <article class="list-item reminder-item reminder-${reminderStatusKey(reminder)}">
+              <div class="reminder-main">
+                <p class="reminder-title">${escapeHtml(reminder.note)}</p>
+                <div class="reminder-details">
+                  <span>${escapeHtml(reminder.date)} ${escapeHtml(reminder.time)}</span>
+                  <span>${escapeHtml(reminderRepeatLabel(reminder))}</span>
+                </div>
+              </div>
+              <div class="reminder-meta">
+                <span class="reminder-state">${escapeHtml(reminderStatusLabel(reminder))}</span>
+                <span class="reminder-countdown">${escapeHtml(reminderCountdownLabel(reminder))}</span>
+              </div>
+              ${
+                reminder.callId
+                  ? `<div class="reminder-id-row">
+                      <span class="reminder-id" title="${escapeHtml(reminder.callId)}">ID: ${escapeHtml(reminder.callId)}</span>
+                      <button type="button" class="icon-button" data-copy-reminder-call-id="${escapeHtml(reminder.callId)}" title="${escapeHtml(CallFlowI18n.t("copyCallId", state.settings.language || "es"))}">⇩</button>
+                    </div>`
+                  : ""
+              }
+              <div class="reminder-actions">
+                <button type="button" class="icon-button" data-edit-reminder="${reminder.id}" title="${escapeHtml(CallFlowI18n.t("editReminder", state.settings.language || "es"))}">✎</button>
+                ${
+                  reminderStatusKey(reminder) === "completed"
+                    ? `<span class="tag reminder-completed-label">${escapeHtml(CallFlowI18n.t("reminderCompleted", state.settings.language || "es"))}</span>`
+                    : `<button type="button" data-complete-reminder="${reminder.id}">${escapeHtml(CallFlowI18n.t("completeReminder", state.settings.language || "es"))}</button>`
+                }
               </div>
             </article>
           `)
           .join("")
       : '<p class="muted">No hay recordatorios en esta vista.</p>';
+  }
+
+  function prepareReminderFormDefaults() {
+    const form = $("#reminderForm");
+    if (!form) return;
+    if (state.editingReminderId) return;
+    const dashboardCallId = $("#callForm input[name='callId']")?.value.trim();
+    const lastCallId = state.lastCall?.callId || "";
+    if (!form.callId.value && (dashboardCallId || lastCallId)) {
+      form.callId.value = dashboardCallId || lastCallId;
+    }
+    if (!form.date.value) form.date.value = currentDateInputValue();
+    if (!form.time.value) form.time.value = currentTimeInputValue();
+    if (!form.repeat.value) form.repeat.value = "once";
+  }
+
+  function cancelReminderEdit() {
+    state.editingReminderId = null;
+    const form = $("#reminderForm");
+    form.reset();
+    $("#cancelReminderEdit").classList.add("hidden");
+    $("#saveReminderButton").textContent = CallFlowI18n.t("saveReminder", state.settings.language || "es");
+    prepareReminderFormDefaults();
+  }
+
+  function renderReminderFormVisibility() {
+    const panel = $("#reminderCreatePanel");
+    const showButton = $("#showReminderForm");
+    const toggleButton = $("#toggleReminderForm");
+    if (!panel || !showButton || !toggleButton) return;
+    panel.classList.toggle("hidden", state.reminderFormCollapsed);
+    showButton.classList.toggle("hidden", !state.reminderFormCollapsed);
+    toggleButton.textContent = "▴";
+    toggleButton.title = CallFlowI18n.t("hide", state.settings?.language || "es");
+    toggleButton.setAttribute("aria-label", CallFlowI18n.t("hide", state.settings?.language || "es"));
+  }
+
+  function setReminderFormCollapsed(collapsed) {
+    state.reminderFormCollapsed = collapsed;
+    renderReminderFormVisibility();
+    if (!collapsed) prepareReminderFormDefaults();
+  }
+
+  function editReminder(id) {
+    const reminder = state.reminders.find((item) => item.id === id);
+    if (!reminder) return;
+    setReminderFormCollapsed(false);
+    state.editingReminderId = id;
+    const form = $("#reminderForm");
+    form.callId.value = reminder.callId || "";
+    form.date.value = reminder.date || currentDateInputValue();
+    form.time.value = reminder.time || currentTimeInputValue();
+    form.repeat.value = reminder.repeat || "once";
+    form.note.value = reminder.note || "";
+    $("#cancelReminderEdit").classList.remove("hidden");
+    $("#saveReminderButton").textContent = CallFlowI18n.t("updateReminder", state.settings.language || "es");
+    form.callId.focus();
   }
 
   function renderNotes() {
@@ -1510,6 +1724,7 @@
     renderBlocks();
     renderStats();
     renderReminders();
+    renderReminderFormVisibility();
     renderNotes();
     renderLastCall();
   }
@@ -1661,25 +1876,247 @@
   async function saveReminder(event) {
     event.preventDefault();
     const form = event.currentTarget;
-    const reminder = {
-      id: crypto.randomUUID(),
+    const reminderPayload = {
       callId: form.callId.value.trim(),
       date: form.date.value,
       time: form.time.value,
-      note: form.note.value.trim(),
-      status: "pending",
-      createdAt: new Date().toISOString()
+      repeat: form.repeat.value || "once",
+      note: form.note.value.trim()
     };
-    state.reminders.push(reminder);
+    if (state.editingReminderId) {
+      state.reminders = state.reminders.map((reminder) =>
+        reminder.id === state.editingReminderId
+          ? { ...reminder, ...reminderPayload, updatedAt: new Date().toISOString() }
+          : reminder
+      );
+      state.editingReminderId = null;
+      $("#cancelReminderEdit").classList.add("hidden");
+      $("#saveReminderButton").textContent = CallFlowI18n.t("saveReminder", state.settings.language || "es");
+    } else {
+      state.reminders.push({
+        id: crypto.randomUUID(),
+        ...reminderPayload,
+        status: "pending",
+        createdAt: new Date().toISOString()
+      });
+    }
     await CallFlowStorage.write("reminders", state.reminders);
     form.reset();
+    prepareReminderFormDefaults();
     render();
   }
 
+  async function copyReminderCallId(callId) {
+    if (!callId) return;
+    await window.callflow.copyText(callId);
+  }
+
+  function isoDateValue(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function setReminderDateShortcut(shortcut) {
+    const form = $("#reminderForm");
+    const date = new Date();
+    if (shortcut === "tomorrow") date.setDate(date.getDate() + 1);
+    if (shortcut === "nextWeek") date.setDate(date.getDate() + 7);
+    form.date.value = isoDateValue(date);
+    form.time.focus();
+  }
+
+  function playTone(audioContext, frequency, start, duration, type = "sine", gainValue = 0.08) {
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(gainValue, start + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.02);
+  }
+
+  function playReminderSound(sound) {
+    if (sound === "none") return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const audioContext = new AudioContext();
+    const now = audioContext.currentTime;
+    const patterns = {
+      soft: [[660, 0, 0.16, "sine"], [880, 0.18, 0.18, "sine"]],
+      ping: [[1046, 0, 0.12, "triangle"]],
+      bell: [[784, 0, 0.16, "sine"], [1175, 0.1, 0.22, "sine"], [1568, 0.18, 0.28, "sine"]],
+      alert: [[523, 0, 0.16, "square"], [523, 0.22, 0.16, "square"], [523, 0.44, 0.2, "square"]],
+      chime: [[523, 0, 0.14, "triangle"], [659, 0.12, 0.14, "triangle"], [784, 0.24, 0.22, "triangle"]]
+    };
+    (patterns[sound] || patterns.soft).forEach(([frequency, offset, duration, type]) => {
+      playTone(audioContext, frequency, now + offset, duration, type);
+    });
+    setTimeout(() => audioContext.close(), 1200);
+  }
+
+  function stopAlarmSound() {
+    if (state.alarmSoundTimer) {
+      clearInterval(state.alarmSoundTimer);
+      state.alarmSoundTimer = null;
+    }
+    state.activeAlarmSoundKey = null;
+  }
+
+  function startAlarmSound(sound, reminderId, phase) {
+    const soundKey = `${reminderId}:${phase}:${sound}`;
+    if (state.activeAlarmSoundKey === soundKey) return;
+    stopAlarmSound();
+    state.activeAlarmSoundKey = soundKey;
+    if (sound === "none") return;
+    playReminderSound(sound);
+    state.alarmSoundTimer = setInterval(() => playReminderSound(sound), 8000);
+  }
+
+  function activeAlarmReminder() {
+    return state.reminders.find((reminder) => reminder.id === state.activeAlarmReminderId) || null;
+  }
+
+  function alarmPhaseLabel(phase) {
+    if (phase === "early") return CallFlowI18n.t("alarmEarly", state.settings.language || "es");
+    if (phase === "overdue") return CallFlowI18n.t("alarmOverdue", state.settings.language || "es");
+    return CallFlowI18n.t("alarmNow", state.settings.language || "es");
+  }
+
+  function renderReminderAlarm() {
+    const overlay = $("#reminderAlarmOverlay");
+    if (!overlay) return;
+    const reminder = activeAlarmReminder();
+    if (!reminder || reminder.status === "completed") {
+      overlay.classList.add("hidden");
+      stopAlarmSound();
+      return;
+    }
+    overlay.classList.remove("hidden");
+    $("#reminderAlarmPhase").textContent = alarmPhaseLabel(state.activeAlarmPhase);
+    $("#reminderAlarmTitle").textContent = CallFlowI18n.t("alarmTitle", state.settings.language || "es");
+    $("#reminderAlarmMeta").textContent = [reminder.date, reminder.time, reminder.callId ? `ID: ${reminder.callId}` : ""]
+      .filter(Boolean)
+      .join(" - ");
+    $("#reminderAlarmNote").textContent = reminder.note || "";
+  }
+
+  function clearReminderAlarm() {
+    state.activeAlarmReminderId = null;
+    state.activeAlarmPhase = null;
+    $("#reminderAlarmOverlay").classList.add("hidden");
+    stopAlarmSound();
+  }
+
+  function handleReminderAlarm(payload) {
+    if (!payload || !payload.reminder || !payload.reminder.id) return;
+    const current = state.reminders.find((reminder) => reminder.id === payload.reminder.id);
+    if (!current || current.status === "completed") return;
+    state.reminders = state.reminders.map((reminder) =>
+      reminder.id === payload.reminder.id ? { ...reminder, ...payload.reminder } : reminder
+    );
+    state.activeAlarmReminderId = payload.reminder.id;
+    state.activeAlarmPhase = payload.phase || "exact";
+    renderReminderAlarm();
+    startAlarmSound(state.settings.reminderSound || "soft", payload.reminder.id, state.activeAlarmPhase);
+  }
+
+  async function updateReminderSuppression(id, fields) {
+    state.reminders = state.reminders.map((reminder) =>
+      reminder.id === id ? { ...reminder, ...fields, updatedAt: new Date().toISOString() } : reminder
+    );
+    await CallFlowStorage.write("reminders", state.reminders);
+    clearReminderAlarm();
+    render();
+  }
+
+  async function snoozeActiveAlarm(minutes) {
+    const reminder = activeAlarmReminder();
+    if (!reminder) return;
+    await updateReminderSuppression(reminder.id, {
+      snoozedUntil: new Date(Date.now() + minutes * 60 * 1000).toISOString(),
+      mutedUntil: null
+    });
+  }
+
+  async function muteActiveAlarm(minutes) {
+    const reminder = activeAlarmReminder();
+    if (!reminder) return;
+    await updateReminderSuppression(reminder.id, {
+      mutedUntil: new Date(Date.now() + minutes * 60 * 1000).toISOString()
+    });
+  }
+
+  async function completeActiveAlarm() {
+    const reminder = activeAlarmReminder();
+    if (!reminder) return;
+    clearReminderAlarm();
+    await completeReminder(reminder.id);
+  }
+
+  function openReminderFromNotification(reminderId) {
+    setView("reminders");
+    if (reminderId) editReminder(reminderId);
+  }
+
+  function addOneMonthClamped(date) {
+    const targetDay = date.getDate();
+    const next = new Date(date);
+    next.setDate(1);
+    next.setMonth(next.getMonth() + 1);
+    const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+    next.setDate(Math.min(targetDay, lastDay));
+    return next;
+  }
+
+  function nextRecurringReminder(reminder) {
+    const repeat = reminder.repeat || "once";
+    if (repeat === "once") return null;
+    const next = reminderDueDate(reminder);
+    const now = new Date();
+    do {
+      if (repeat === "daily") {
+        next.setDate(next.getDate() + 1);
+      } else if (repeat === "weekdays") {
+        next.setDate(next.getDate() + 1);
+        while (next.getDay() === 0 || next.getDay() === 6) {
+          next.setDate(next.getDate() + 1);
+        }
+      } else if (repeat === "weekly") {
+        next.setDate(next.getDate() + 7);
+      } else if (repeat === "monthly") {
+        const monthly = addOneMonthClamped(next);
+        next.setFullYear(monthly.getFullYear(), monthly.getMonth(), monthly.getDate());
+      } else {
+        return null;
+      }
+    } while (next <= now);
+    return {
+      ...reminder,
+      id: crypto.randomUUID(),
+      date: isoDateValue(next),
+      time: reminder.time,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+      previousReminderId: reminder.id,
+      completedAt: undefined,
+      updatedAt: undefined
+    };
+  }
+
   async function completeReminder(id) {
+    const current = state.reminders.find((reminder) => reminder.id === id);
+    const next = current ? nextRecurringReminder(current) : null;
+    if (state.activeAlarmReminderId === id) clearReminderAlarm();
     state.reminders = state.reminders.map((reminder) =>
       reminder.id === id ? { ...reminder, status: "completed", completedAt: new Date().toISOString() } : reminder
     );
+    if (next) state.reminders.push(next);
     await CallFlowStorage.write("reminders", state.reminders);
     render();
   }
@@ -1740,22 +2177,17 @@
       event.preventDefault();
       await saveSettings(settingsFromForm(event.currentTarget, true));
     });
+    $("#previewReminderSound").addEventListener("click", () => {
+      playReminderSound($("#settingsForm select[name='reminderSound']").value);
+    });
+    $("#completeReminderAlarm").addEventListener("click", completeActiveAlarm);
+    $("#snoozeReminderAlarm5").addEventListener("click", () => snoozeActiveAlarm(5));
+    $("#snoozeReminderAlarm15").addEventListener("click", () => snoozeActiveAlarm(15));
+    $("#silenceReminderAlarm").addEventListener("click", () => muteActiveAlarm(30));
+    $("#dismissReminderAlarm").addEventListener("click", () => muteActiveAlarm(5));
     $("#settingsForm select[name='language']").addEventListener("change", (event) => {
       handleLanguageChange($("#settingsForm"), event.target.value);
     });
-    $("#onboardingForm input[name='successLabel']").addEventListener("input", () => {
-      state.labelTouched.onboardingSuccess = true;
-    });
-    $("#onboardingForm input[name='rejectionLabel']").addEventListener("input", () => {
-      state.labelTouched.onboardingRejection = true;
-    });
-    $("#settingsForm input[name='successLabel']").addEventListener("input", () => {
-      state.labelTouched.settingsSuccess = true;
-    });
-    $("#settingsForm input[name='rejectionLabel']").addEventListener("input", () => {
-      state.labelTouched.settingsRejection = true;
-    });
-
     $("#callForm").addEventListener("submit", saveCall);
     $("#copyLastCrm").addEventListener("click", copyLastCrm);
     $("#importCallIdClipboard").addEventListener("click", importCallIdFromClipboard);
@@ -1850,6 +2282,9 @@
       $("#reportSearchInput").focus();
     });
     $("#reminderForm").addEventListener("submit", saveReminder);
+    $("#cancelReminderEdit").addEventListener("click", cancelReminderEdit);
+    $("#toggleReminderForm").addEventListener("click", () => setReminderFormCollapsed(true));
+    $("#showReminderForm").addEventListener("click", () => setReminderFormCollapsed(false));
     $("#reminderFilter").addEventListener("change", render);
     $("#noteForm").addEventListener("submit", saveNote);
     $("#deleteNote").addEventListener("click", deleteNote);
@@ -1962,6 +2397,9 @@
       const timezoneToggleId = timezoneToggle ? timezoneToggle.dataset.timezoneToggle : null;
       const timezonePickerId = timezoneOption ? timezoneOption.dataset.timezonePickerOption : null;
       const reminderId = event.target.dataset.completeReminder;
+      const reminderCallId = event.target.dataset.copyReminderCallId;
+      const editReminderId = event.target.dataset.editReminder;
+      const reminderDateShortcut = event.target.dataset.reminderDateShortcut;
       const noteId = event.target.dataset.selectNote;
       if (addListId) {
         addListItem(addListId, document.querySelector(`[data-list-input="${addListId}"]`).value);
@@ -2032,6 +2470,9 @@
         closeTimezoneDropdown("settings");
       }
       if (reminderId) completeReminder(reminderId);
+      if (reminderCallId) copyReminderCallId(reminderCallId);
+      if (editReminderId) editReminder(editReminderId);
+      if (reminderDateShortcut) setReminderDateShortcut(reminderDateShortcut);
       if (noteId) {
         state.selectedNoteId = noteId;
         renderNotes();
@@ -2049,6 +2490,9 @@
 
   async function init() {
     bindEvents();
+    window.callflow.onReminderSound(playReminderSound);
+    window.callflow.onReminderAlarm(handleReminderAlarm);
+    window.callflow.onOpenReminder(openReminderFromNotification);
     const data = await CallFlowStorage.readAll();
     Object.assign(state, data);
     state.settings = normalizeSettings(state.settings);
@@ -2058,6 +2502,8 @@
     const dataDir = await window.callflow.getDataDir();
     $("#dataDirLabel").textContent = dataDir;
     startWorkClock();
+    state.reminderTimer = setInterval(renderReminders, 1000);
+    prepareReminderFormDefaults();
 
     if (state.settings.onboardingCompleted) {
       $("#app").classList.remove("hidden");

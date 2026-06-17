@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, clipboard, dialog } = require("electron");
+const { app, BrowserWindow, Notification, ipcMain, clipboard, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
 
@@ -26,6 +26,9 @@ const DEFAULT_DATA = {
 };
 
 let mainWindow;
+let notificationTimer;
+let keepRunningInBackground = false;
+const notificationThrottle = new Map();
 
 async function readJson(filePath, fallback) {
   try {
@@ -59,6 +62,108 @@ function getDataFile(key) {
     throw new Error(`Unknown data key: ${key}`);
   }
   return path.join(getDataDir(), DATA_FILES[key]);
+}
+
+function reminderDueDate(reminder) {
+  return new Date(`${reminder.date}T${reminder.time || "00:00"}`);
+}
+
+async function loadSettings() {
+  const defaults = await loadDefaultConfig();
+  const settings = await readJson(getDataFile("settings"), defaults);
+  return { ...defaults, ...settings };
+}
+
+function applySystemSettings(settings) {
+  keepRunningInBackground = Boolean(settings.runInBackground);
+  if (app.isPackaged || process.platform !== "linux") {
+    app.setLoginItemSettings({
+      openAtLogin: Boolean(settings.startOnLogin),
+      path: process.execPath
+    });
+  } else {
+    app.setLoginItemSettings({ openAtLogin: Boolean(settings.startOnLogin) });
+  }
+}
+
+function focusMainWindow() {
+  if (!mainWindow) {
+    createWindow();
+    return;
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  if (!mainWindow.isVisible()) mainWindow.show();
+  mainWindow.focus();
+}
+
+function openReminder(reminderId) {
+  focusMainWindow();
+  mainWindow.webContents.send("reminder:open", reminderId);
+}
+
+function isReminderSuppressed(reminder, now) {
+  const snoozedUntil = reminder.snoozedUntil ? new Date(reminder.snoozedUntil) : null;
+  const mutedUntil = reminder.mutedUntil ? new Date(reminder.mutedUntil) : null;
+  return (snoozedUntil && snoozedUntil > now) || (mutedUntil && mutedUntil > now);
+}
+
+function sendReminderAlarm(reminder, phase) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("reminder:alarm", { reminder, phase });
+  }
+}
+
+function sendReminderNotification(reminder, phase, settings) {
+  if (!Notification.isSupported()) return;
+  const key = `${reminder.id}:${phase}`;
+  const now = Date.now();
+  const lastSent = notificationThrottle.get(key) || 0;
+  if (now - lastSent < 60000) return;
+  notificationThrottle.set(key, now);
+
+  const title = phase === "early" ? "Recordatorio próximo" : "Recordatorio";
+  const bodyParts = [];
+  if (reminder.time) bodyParts.push(reminder.time);
+  if (reminder.callId) bodyParts.push(`ID ${reminder.callId}`);
+  if (reminder.note) bodyParts.push(reminder.note);
+  const notification = new Notification({
+    title,
+    body: bodyParts.join(" - "),
+    silent: settings.reminderSound === "none"
+  });
+  notification.on("click", () => openReminder(reminder.id));
+  notification.show();
+}
+
+async function checkReminderNotifications() {
+  const settings = await loadSettings();
+  const reminders = await readJson(getDataFile("reminders"), []);
+  const now = new Date();
+  const beforeMs = Math.max(0, Number(settings.notifyBeforeMinutes) || 0) * 60 * 1000;
+
+  reminders
+    .filter((reminder) => reminder.status !== "completed")
+    .forEach((reminder) => {
+      if (isReminderSuppressed(reminder, now)) return;
+      const due = reminderDueDate(reminder);
+      const diff = due - now;
+      if (beforeMs > 0 && diff > 0 && diff <= beforeMs) {
+        sendReminderAlarm(reminder, "early");
+        sendReminderNotification(reminder, "early", settings);
+      }
+      if (settings.notifyAtExactTime !== false && diff <= 0) {
+        sendReminderAlarm(reminder, diff < -60 * 1000 ? "overdue" : "exact");
+        sendReminderNotification(reminder, diff < -60 * 1000 ? "overdue" : "exact", settings);
+      }
+    });
+}
+
+function startReminderNotifications() {
+  if (notificationTimer) clearInterval(notificationTimer);
+  notificationTimer = setInterval(() => {
+    checkReminderNotifications().catch((error) => console.error("Reminder notification check failed", error));
+  }, 15000);
+  checkReminderNotifications().catch((error) => console.error("Reminder notification check failed", error));
 }
 
 async function ensureDataFiles() {
@@ -96,12 +201,21 @@ function createWindow() {
     }
   });
 
+  mainWindow.on("close", (event) => {
+    if (keepRunningInBackground && !app.isQuitting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
   mainWindow.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
 }
 
 app.whenReady().then(async () => {
   await ensureDataFiles();
+  applySystemSettings(await loadSettings());
   createWindow();
+  startReminderNotifications();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -111,24 +225,33 @@ app.whenReady().then(async () => {
 });
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
+  if (process.platform !== "darwin" && !keepRunningInBackground) {
     app.quit();
   }
+});
+
+app.on("before-quit", () => {
+  app.isQuitting = true;
 });
 
 ipcMain.handle("storage:getDataDir", () => getDataDir());
 
 ipcMain.handle("storage:read", async (_event, key) => {
   if (key === "settings") {
-    const defaults = await loadDefaultConfig();
-    const settings = await readJson(getDataFile("settings"), defaults);
-    return { ...defaults, ...settings };
+    return loadSettings();
   }
   return readJson(getDataFile(key), DEFAULT_DATA[key] || null);
 });
 
 ipcMain.handle("storage:write", async (_event, key, value) => {
-  return writeJson(getDataFile(key), value);
+  const saved = await writeJson(getDataFile(key), value);
+  if (key === "settings") {
+    applySystemSettings(saved);
+  }
+  if (key === "reminders") {
+    notificationThrottle.clear();
+  }
+  return saved;
 });
 
 ipcMain.handle("clipboard:writeText", (_event, text) => {

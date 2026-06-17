@@ -28,6 +28,11 @@
   "reportHeaderFormat": "##### **REPORTE {OPERATOR} DE {BLOCK}**",
   "linePrefixMode": "hash",
   "clockFormat": "24h",
+  "startOnLogin": false,
+  "runInBackground": false,
+  "notifyBeforeMinutes": 5,
+  "notifyAtExactTime": true,
+  "reminderSound": "soft",
   "theme": "dark",
   "onboardingCompleted": false
 }

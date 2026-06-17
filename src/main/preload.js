@@ -20,5 +20,14 @@ contextBridge.exposeInMainWorld("callflow", {
   },
   copyText: (text) => ipcRenderer.invoke("clipboard:writeText", text),
   readClipboardText: () => ipcRenderer.invoke("clipboard:readText"),
-  exportNote: (payload) => ipcRenderer.invoke("export:note", payload)
+  exportNote: (payload) => ipcRenderer.invoke("export:note", payload),
+  onReminderSound: (callback) => {
+    ipcRenderer.on("reminder:sound", (_event, sound) => callback(sound));
+  },
+  onReminderAlarm: (callback) => {
+    ipcRenderer.on("reminder:alarm", (_event, payload) => callback(payload));
+  },
+  onOpenReminder: (callback) => {
+    ipcRenderer.on("reminder:open", (_event, reminderId) => callback(reminderId));
+  }
 });

@@ -68,18 +68,33 @@
             <div class="chip-list" data-list-output="onboardingFrequentStatuses"></div>
           </div>
 
-          <label>
-            <span data-i18n="successLabel">Etiqueta de llamada exitosa</span>
-            <small class="helper" data-i18n="successLabelHelper">Ejemplo: Exitosa, Venta, Cita agendada, Caso resuelto.</small>
-            <input name="successLabel" list="successLabelSuggestions" />
-            <datalist id="successLabelSuggestions"></datalist>
-          </label>
+          <div class="list-editor span-2" data-list-editor="onboardingSuccessOutcomes">
+            <span class="field-label" data-i18n="successOutcomes">Resultados exitosos</span>
+            <small class="helper" data-i18n="outcomePresetsHelper">El primer resultado de cada lista se usa como etiqueta principal.</small>
+            <div class="inline-add">
+              <input data-list-input="onboardingSuccessOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+              <button type="button" data-add-list-item="onboardingSuccessOutcomes" data-i18n="add">Agregar</button>
+            </div>
+            <div class="chip-list" data-list-output="onboardingSuccessOutcomes"></div>
+          </div>
 
-          <label>
-            <span data-i18n="rejectionLabel">Etiqueta rechazo</span>
-            <input name="rejectionLabel" list="rejectionLabelSuggestions" />
-            <datalist id="rejectionLabelSuggestions"></datalist>
-          </label>
+          <div class="list-editor span-2" data-list-editor="onboardingRejectionOutcomes">
+            <span class="field-label" data-i18n="rejectionOutcomes">Resultados de rechazo</span>
+            <div class="inline-add">
+              <input data-list-input="onboardingRejectionOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+              <button type="button" data-add-list-item="onboardingRejectionOutcomes" data-i18n="add">Agregar</button>
+            </div>
+            <div class="chip-list" data-list-output="onboardingRejectionOutcomes"></div>
+          </div>
+
+          <div class="list-editor span-2" data-list-editor="onboardingCallbackOutcomes">
+            <span class="field-label" data-i18n="callbackOutcomes">Resultados de rellamada</span>
+            <div class="inline-add">
+              <input data-list-input="onboardingCallbackOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+              <button type="button" data-add-list-item="onboardingCallbackOutcomes" data-i18n="add">Agregar</button>
+            </div>
+            <div class="chip-list" data-list-output="onboardingCallbackOutcomes"></div>
+          </div>
 
           <button class="primary span-2" type="submit" data-i18n="finishOnboarding">Guardar y abrir dashboard</button>
         </form>
@@ -171,7 +186,7 @@
                     <div class="status-options" id="statusOptions"></div>
                   </div>
                 </label>
-                <div class="primary-outcomes" aria-label="Primary outcomes">
+                <div class="primary-outcomes" role="radiogroup" aria-label="Primary outcomes">
                   <div class="outcome-control" data-outcome-control="success">
                     <button class="outcome-button outcome-success" type="button" data-outcome-toggle="success">
                       <span data-outcome-label="success">Exitosa</span>
@@ -281,21 +296,43 @@
         </section>
 
         <section id="remindersView" class="view">
-          <div class="grid two">
-            <div class="panel">
-              <h2 data-i18n="newReminder">Crear recordatorio</h2>
+          <div class="reminders-layout">
+            <div class="panel reminder-create-panel" id="reminderCreatePanel">
+              <div class="panel-header">
+                <h2 data-i18n="newReminder">Crear recordatorio</h2>
+                <button type="button" class="icon-button" id="toggleReminderForm" data-i18n-title="hide" title="Ocultar">▴</button>
+              </div>
               <form id="reminderForm" class="stack">
                 <input name="callId" placeholder="ID de llamada opcional" />
                 <input name="date" type="date" required />
+                <div class="reminder-date-shortcuts">
+                  <button type="button" data-reminder-date-shortcut="today" data-i18n="reportToday">Hoy</button>
+                  <button type="button" data-reminder-date-shortcut="tomorrow" data-i18n="reportTomorrow">Mañana</button>
+                  <button type="button" data-reminder-date-shortcut="nextWeek" data-i18n="nextWeek">Próxima semana</button>
+                </div>
                 <input name="time" type="time" required />
+                <select name="repeat">
+                  <option value="once" data-i18n="repeatOnce">Una sola vez</option>
+                  <option value="daily" data-i18n="repeatDaily">Todos los días</option>
+                  <option value="weekdays" data-i18n="repeatWeekdays">Días laborables</option>
+                  <option value="weekly" data-i18n="repeatWeekly">Cada semana</option>
+                  <option value="monthly" data-i18n="repeatMonthly">Cada mes</option>
+                </select>
                 <textarea name="note" rows="4" placeholder="Nota" required></textarea>
-                <button class="primary" type="submit" data-i18n="saveReminder">Guardar recordatorio</button>
+                <div class="button-row">
+                  <button class="primary" id="saveReminderButton" type="submit" data-i18n="saveReminder">Guardar recordatorio</button>
+                  <button class="hidden" id="cancelReminderEdit" type="button" data-i18n="cancel">Cancelar</button>
+                </div>
               </form>
             </div>
-            <div class="panel">
+            <div class="panel reminder-list-panel">
               <div class="panel-header">
-                <h2 data-i18n="reminderList">Lista</h2>
+                <div class="panel-title-actions">
+                  <h2 data-i18n="reminderList">Lista</h2>
+                  <button type="button" class="icon-button hidden" id="showReminderForm" data-i18n-title="newReminder" title="Crear recordatorio">✎</button>
+                </div>
                 <select id="reminderFilter">
+                  <option value="all" selected>Todos</option>
                   <option value="today">Hoy</option>
                   <option value="tomorrow">Mañana</option>
                   <option value="week">Esta semana</option>
@@ -357,8 +394,6 @@
                 <div class="timezone-results" data-timezone-results="settings"></div>
               </div>
               <label><span data-i18n="operatorName">Nombre del operador</span><input name="operatorName" required /></label>
-              <label><span data-i18n="successLabel">Etiqueta exitosa</span><input name="successLabel" list="successLabelSuggestions" required /></label>
-              <label><span data-i18n="rejectionLabel">Etiqueta rechazo</span><input name="rejectionLabel" list="rejectionLabelSuggestions" required /></label>
               <label><span>Formato encabezado</span><input name="reportHeaderFormat" required /></label>
               <label>
                 <span data-i18n="linePrefixMode">Prefijo de línea</span>
@@ -377,6 +412,46 @@
                 </select>
               </label>
               <label><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
+              <div class="settings-group span-2">
+                <h3 data-i18n="reminderAutomation">Automatización de recordatorios</h3>
+                <label class="checkbox-row">
+                  <input name="startOnLogin" type="checkbox" />
+                  <span data-i18n="startOnLogin">Iniciar con el sistema</span>
+                </label>
+                <label class="checkbox-row">
+                  <input name="runInBackground" type="checkbox" />
+                  <span data-i18n="runInBackground">Mantener en segundo plano al cerrar</span>
+                </label>
+                <label class="checkbox-row">
+                  <input name="notifyAtExactTime" type="checkbox" />
+                  <span data-i18n="notifyAtExactTime">Avisar a la hora exacta</span>
+                </label>
+                <label>
+                  <span data-i18n="notifyBeforeMinutes">Aviso anticipado</span>
+                  <select name="notifyBeforeMinutes">
+                    <option value="0">0 min</option>
+                    <option value="5">5 min</option>
+                    <option value="10">10 min</option>
+                    <option value="15">15 min</option>
+                    <option value="30">30 min</option>
+                    <option value="60">60 min</option>
+                  </select>
+                </label>
+                <label>
+                  <span data-i18n="reminderSound">Sonido de alerta</span>
+                  <div class="sound-preview-row">
+                    <select name="reminderSound">
+                      <option value="soft" data-i18n="reminderSoundSoft">Suave</option>
+                      <option value="ping" data-i18n="reminderSoundPing">Ping</option>
+                      <option value="bell" data-i18n="reminderSoundBell">Campana</option>
+                      <option value="alert" data-i18n="reminderSoundAlert">Alerta</option>
+                      <option value="chime" data-i18n="reminderSoundChime">Chime</option>
+                      <option value="none" data-i18n="reminderSoundNone">Sin sonido</option>
+                    </select>
+                    <button type="button" class="icon-button" id="previewReminderSound" data-i18n-title="previewReminderSound" title="Probar sonido">▶</button>
+                  </div>
+                </label>
+              </div>
               <div class="list-editor span-2" data-list-editor="settingsCallTypes">
                 <span class="field-label" data-i18n="callTypes">Tipos de llamada</span>
                 <div class="inline-add">
@@ -393,11 +468,54 @@
                 </div>
                 <div class="chip-list" data-list-output="settingsFrequentStatuses"></div>
               </div>
+              <div class="list-editor span-2" data-list-editor="settingsSuccessOutcomes">
+                <span class="field-label" data-i18n="successOutcomes">Resultados exitosos</span>
+                <small class="helper" data-i18n="outcomePresetsHelper">El primer resultado de cada lista se usa como etiqueta principal.</small>
+                <div class="inline-add">
+                  <input data-list-input="settingsSuccessOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+                  <button type="button" data-add-list-item="settingsSuccessOutcomes" data-i18n="add">Agregar</button>
+                </div>
+                <div class="chip-list" data-list-output="settingsSuccessOutcomes"></div>
+              </div>
+              <div class="list-editor span-2" data-list-editor="settingsRejectionOutcomes">
+                <span class="field-label" data-i18n="rejectionOutcomes">Resultados de rechazo</span>
+                <div class="inline-add">
+                  <input data-list-input="settingsRejectionOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+                  <button type="button" data-add-list-item="settingsRejectionOutcomes" data-i18n="add">Agregar</button>
+                </div>
+                <div class="chip-list" data-list-output="settingsRejectionOutcomes"></div>
+              </div>
+              <div class="list-editor span-2" data-list-editor="settingsCallbackOutcomes">
+                <span class="field-label" data-i18n="callbackOutcomes">Resultados de rellamada</span>
+                <div class="inline-add">
+                  <input data-list-input="settingsCallbackOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+                  <button type="button" data-add-list-item="settingsCallbackOutcomes" data-i18n="add">Agregar</button>
+                </div>
+                <div class="chip-list" data-list-output="settingsCallbackOutcomes"></div>
+              </div>
               <button class="primary span-2" type="submit" data-i18n="saveSettings">Guardar configuración</button>
             </form>
           </div>
         </section>
       </main>
+    </div>
+
+    <div id="reminderAlarmOverlay" class="reminder-alarm-overlay hidden" role="dialog" aria-live="assertive" aria-modal="true">
+      <section class="reminder-alarm">
+        <div class="reminder-alarm-header">
+          <span class="reminder-alarm-kicker" id="reminderAlarmPhase">Recordatorio</span>
+          <button type="button" class="icon-button" id="dismissReminderAlarm" data-i18n-title="dismissReminderAlarm" title="Cerrar aviso">×</button>
+        </div>
+        <h2 id="reminderAlarmTitle">Recordatorio pendiente</h2>
+        <p id="reminderAlarmMeta" class="muted"></p>
+        <p id="reminderAlarmNote"></p>
+        <div class="reminder-alarm-actions">
+          <button type="button" class="primary" id="completeReminderAlarm" data-i18n="completeReminder">Completar</button>
+          <button type="button" id="snoozeReminderAlarm5" data-i18n="alarmSnooze5">Posponer 5 min</button>
+          <button type="button" id="snoozeReminderAlarm15" data-i18n="alarmSnooze15">Posponer 15 min</button>
+          <button type="button" id="silenceReminderAlarm" data-i18n="alarmSilence30">Silenciar 30 min</button>
+        </div>
+      </section>
     </div>
 
     <script src="./scripts/i18n.js"></script>

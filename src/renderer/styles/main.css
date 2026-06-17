@@ -385,6 +385,31 @@ nav {
   gap: 12px;
 }
 
+.settings-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.45);
+  padding: 12px;
+}
+
+.settings-group h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-row input {
+  width: auto;
+}
+
 .span-2 {
   grid-column: span 1;
 }
@@ -471,6 +496,8 @@ nav {
   gap: 8px;
   width: 100%;
   min-height: 38px;
+  background: rgba(15, 23, 42, 0.68);
+  color: var(--muted);
 }
 
 .outcome-button span:first-child {
@@ -480,20 +507,32 @@ nav {
 }
 
 .outcome-success {
-  border-color: rgba(34, 197, 94, 0.42);
-  background: rgba(34, 197, 94, 0.13);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.outcome-success.selected {
+  border-color: rgba(34, 197, 94, 0.58);
+  background: rgba(34, 197, 94, 0.16);
   color: #bbf7d0;
 }
 
 .outcome-rejection {
-  border-color: rgba(239, 68, 68, 0.42);
-  background: rgba(239, 68, 68, 0.13);
+  border-color: rgba(239, 68, 68, 0.28);
+}
+
+.outcome-rejection.selected {
+  border-color: rgba(239, 68, 68, 0.58);
+  background: rgba(239, 68, 68, 0.16);
   color: #fecaca;
 }
 
 .outcome-callback {
-  border-color: rgba(139, 92, 246, 0.48);
-  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.outcome-callback.selected {
+  border-color: rgba(139, 92, 246, 0.62);
+  background: rgba(139, 92, 246, 0.18);
   color: #ddd6fe;
 }
 
@@ -700,6 +739,233 @@ code {
 .report-item,
 .list-item {
   display: grid;
+  gap: 8px;
+}
+
+.reminder-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  border-left: 3px solid rgba(234, 179, 8, 0.62);
+  padding: 8px 10px;
+}
+
+.reminder-pending {
+  border-left-color: rgba(234, 179, 8, 0.72);
+}
+
+.reminder-overdue {
+  border-left-color: rgba(239, 68, 68, 0.82);
+}
+
+.reminder-completed {
+  border-left-color: rgba(34, 197, 94, 0.82);
+  opacity: 0.82;
+}
+
+.reminder-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.reminder-title {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.reminder-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.reminder-meta,
+.reminder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.reminder-meta {
+  min-width: 0;
+}
+
+.reminder-state,
+.reminder-countdown {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.reminder-state,
+.reminder-countdown {
+  border: 1px solid rgba(234, 179, 8, 0.34);
+  background: rgba(234, 179, 8, 0.13);
+  color: #facc15;
+}
+
+.reminder-overdue .reminder-state,
+.reminder-overdue .reminder-countdown {
+  border-color: rgba(239, 68, 68, 0.38);
+  background: rgba(239, 68, 68, 0.13);
+  color: #fca5a5;
+}
+
+.reminder-completed .reminder-state,
+.reminder-completed .reminder-countdown,
+.reminder-completed-label {
+  border-color: rgba(34, 197, 94, 0.38);
+  background: rgba(34, 197, 94, 0.13);
+  color: #86efac;
+}
+
+.reminder-id-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.reminder-id {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reminder-id-row .icon-button {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+}
+
+.reminder-date-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reminder-date-shortcuts button {
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.reminders-layout {
+  display: grid;
+  gap: 14px;
+}
+
+.panel-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reminder-list-panel .panel-header {
+  align-items: center;
+}
+
+.reminder-list-panel .panel-header select,
+.reminder-list-panel .panel-header .icon-button,
+.reminder-create-panel .panel-header .icon-button {
+  height: 34px;
+  min-height: 34px;
+}
+
+.reminder-list-panel .panel-header select {
+  min-width: 118px;
+}
+
+.reminder-list-panel .panel-header .icon-button,
+.reminder-create-panel .panel-header .icon-button {
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
+}
+
+.sound-preview-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  gap: 8px;
+}
+
+.sound-preview-row .icon-button {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0;
+}
+
+.reminder-alarm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: end center;
+  background: rgba(2, 6, 23, 0.48);
+  padding: 18px;
+}
+
+.reminder-alarm {
+  display: grid;
+  gap: 10px;
+  width: min(640px, 100%);
+  border: 1px solid rgba(234, 179, 8, 0.48);
+  border-radius: 10px;
+  background: #08111f;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.48);
+  padding: 16px;
+}
+
+.reminder-alarm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.reminder-alarm-kicker {
+  width: fit-content;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  border-radius: 999px;
+  background: rgba(234, 179, 8, 0.14);
+  color: #facc15;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.reminder-alarm h2,
+.reminder-alarm p {
+  margin: 0;
+}
+
+.reminder-alarm #reminderAlarmNote {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.reminder-alarm-actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -1078,6 +1344,19 @@ code {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
+  .reminder-item {
+    grid-template-columns: minmax(280px, 1.55fr) minmax(170px, 0.65fr) minmax(96px, 0.32fr) auto;
+    gap: 12px;
+  }
+
+  .reminder-meta {
+    justify-content: flex-start;
+  }
+
+  .reminder-actions {
+    justify-content: flex-end;
+  }
+
   .form-grid,
   .call-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1099,6 +1378,12 @@ code {
 
   .span-2 {
     grid-column: span 2;
+  }
+
+  .callback-fields.span-2 {
+    grid-column: 2;
+    justify-self: end;
+    width: min(100%, 386px);
   }
 
   .cards.compact {
