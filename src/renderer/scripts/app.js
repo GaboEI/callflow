@@ -15,6 +15,11 @@
       from: "",
       to: ""
     },
+    reportSearch: {
+      query: "",
+      matches: 0,
+      activeIndex: 0
+    },
     formLists: {
       onboardingCallTypes: [],
       onboardingFrequentStatuses: [],
@@ -485,6 +490,10 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function escapeRegExp(value) {
+    return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   function compactStatusLabel(value) {
@@ -1056,6 +1065,57 @@
     `;
   }
 
+  function highlightedReportText(text) {
+    const query = state.reportSearch.query.trim();
+    if (!query) return escapeHtml(text);
+
+    const pattern = new RegExp(escapeRegExp(query), "gi");
+    let cursor = 0;
+    let html = "";
+    let match;
+
+    while ((match = pattern.exec(text)) !== null) {
+      const matchIndex = state.reportSearch.matches;
+      const active = matchIndex === state.reportSearch.activeIndex;
+      html += escapeHtml(text.slice(cursor, match.index));
+      html += `<mark class="report-match${active ? " active" : ""}" data-report-match="${matchIndex}">${escapeHtml(match[0])}</mark>`;
+      cursor = match.index + match[0].length;
+      state.reportSearch.matches += 1;
+
+      if (match.index === pattern.lastIndex) pattern.lastIndex += 1;
+    }
+
+    return html + escapeHtml(text.slice(cursor));
+  }
+
+  function renderReportSearchStatus() {
+    const counter = $("#reportSearchCounter");
+    const input = $("#reportSearchInput");
+    const prev = $("#reportSearchPrev");
+    const next = $("#reportSearchNext");
+    if (!counter || !input || !prev || !next) return;
+
+    input.value = state.reportSearch.query;
+    const total = state.reportSearch.matches;
+    counter.textContent = state.reportSearch.query ? `${total ? state.reportSearch.activeIndex + 1 : 0}/${total}` : "0/0";
+    prev.disabled = total < 2;
+    next.disabled = total < 2;
+  }
+
+  function scrollToActiveReportMatch() {
+    const active = document.querySelector(".report-match.active");
+    if (!active) return;
+    active.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+  }
+
+  function moveReportSearch(step) {
+    if (!state.reportSearch.matches) return;
+    const total = state.reportSearch.matches;
+    state.reportSearch.activeIndex = (state.reportSearch.activeIndex + step + total) % total;
+    renderReportBlocks();
+    scrollToActiveReportMatch();
+  }
+
   function renderReportBlock(isoDate, block, calls) {
     const key = reportBlockKey(isoDate, block);
     const isEditing = state.editingReportBlockKey === key;
@@ -1076,7 +1136,7 @@
         ${
           isEditing
             ? `<textarea class="report-editor" data-report-editor="${escapeHtml(key)}" rows="7">${escapeHtml(lines)}</textarea>`
-            : `<code>${escapeHtml(lines)}</code>`
+            : `<code>${highlightedReportText(lines)}</code>`
         }
       </article>
     `;
@@ -1084,6 +1144,7 @@
 
   function renderReportBlocks() {
     syncReportRangeInputs();
+    state.reportSearch.matches = 0;
     const groupsByDate = reportGroupsForRange();
     const dateEntries = Object.entries(groupsByDate).sort(([a], [b]) => a.localeCompare(b));
 
@@ -1102,6 +1163,11 @@
           })
           .join("")
       : `<p class="muted">${escapeHtml(CallFlowI18n.t("noReportBlocks", state.settings.language || "es"))}</p>`;
+
+    if (state.reportSearch.activeIndex >= state.reportSearch.matches) {
+      state.reportSearch.activeIndex = Math.max(0, state.reportSearch.matches - 1);
+    }
+    renderReportSearchStatus();
   }
 
   function renderBlocks() {
@@ -1459,6 +1525,7 @@
       state.reportRange.preset = event.target.value;
       state.selectedBlocks.clear();
       state.editingReportBlockKey = null;
+      state.reportSearch.activeIndex = 0;
       render();
     });
     $("#reportDateFrom").addEventListener("change", (event) => {
@@ -1466,6 +1533,7 @@
       state.reportRange.from = event.target.value;
       state.selectedBlocks.clear();
       state.editingReportBlockKey = null;
+      state.reportSearch.activeIndex = 0;
       render();
     });
     $("#reportDateTo").addEventListener("change", (event) => {
@@ -1473,7 +1541,33 @@
       state.reportRange.to = event.target.value;
       state.selectedBlocks.clear();
       state.editingReportBlockKey = null;
+      state.reportSearch.activeIndex = 0;
       render();
+    });
+    $("#reportSearchInput").addEventListener("input", (event) => {
+      state.reportSearch.query = event.target.value;
+      state.reportSearch.activeIndex = 0;
+      renderReportBlocks();
+      scrollToActiveReportMatch();
+    });
+    $("#reportSearchInput").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        moveReportSearch(event.shiftKey ? -1 : 1);
+      }
+      if (event.key === "Escape") {
+        state.reportSearch.query = "";
+        state.reportSearch.activeIndex = 0;
+        renderReportBlocks();
+      }
+    });
+    $("#reportSearchPrev").addEventListener("click", () => moveReportSearch(-1));
+    $("#reportSearchNext").addEventListener("click", () => moveReportSearch(1));
+    $("#reportSearchClear").addEventListener("click", () => {
+      state.reportSearch.query = "";
+      state.reportSearch.activeIndex = 0;
+      renderReportBlocks();
+      $("#reportSearchInput").focus();
     });
     $("#reminderForm").addEventListener("submit", saveReminder);
     $("#reminderFilter").addEventListener("change", render);

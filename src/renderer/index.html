@@ -222,6 +222,18 @@
                 <input id="reportDateTo" type="date" />
               </label>
             </div>
+            <div class="report-searchbar">
+              <label>
+                <span data-i18n="reportSearch">Buscar en reportes</span>
+                <input id="reportSearchInput" data-i18n-placeholder="reportSearchPlaceholder" placeholder="Buscar palabra o frase..." autocomplete="off" />
+              </label>
+              <div class="report-search-actions">
+                <span class="search-counter" id="reportSearchCounter">0/0</span>
+                <button type="button" id="reportSearchPrev" data-i18n-title="previousMatch" title="Coincidencia anterior">‹</button>
+                <button type="button" id="reportSearchNext" data-i18n-title="nextMatch" title="Siguiente coincidencia">›</button>
+                <button type="button" id="reportSearchClear" data-i18n="clearSearch">Limpiar</button>
+              </div>
+            </div>
             <div id="reportBlocks" class="report-list"></div>
           </div>
         </section>

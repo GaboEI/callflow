@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.14 - Add report text search navigation
+
+- Added a report search bar for finding words or phrases inside the selected report period.
+- Added match count plus previous/next navigation.
+- Highlighted all matches and emphasized the active match with a green accent.
+- Kept report copying unchanged; search highlighting is visual only.
+
 ## v0.1.13 - Refine report period presets
 
 - Replaced the day-before-yesterday preset with more common report ranges: last 7 days and last 30 days.

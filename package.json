@@ -1,6 +1,6 @@
 {
   "name": "callflow",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Desktop call logging assistant for call center operators.",
   "main": "src/main/main.js",
   "scripts": {

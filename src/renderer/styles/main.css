@@ -577,6 +577,63 @@ code {
   margin-bottom: 0;
 }
 
+.report-searchbar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: end;
+  margin: 0 0 14px;
+}
+
+.report-searchbar label {
+  display: grid;
+  gap: 6px;
+}
+
+.report-searchbar label span {
+  margin-bottom: 0;
+}
+
+.report-search-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-search-actions button {
+  min-height: 34px;
+  padding: 6px 10px;
+}
+
+.report-search-actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.search-counter {
+  min-width: 48px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #bfdbfe;
+  padding: 6px 9px;
+  font-family: "Cascadia Mono", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  text-align: center;
+}
+
+.report-match {
+  border-radius: 3px;
+  background: rgba(250, 204, 21, 0.36);
+  color: var(--text);
+  padding: 0 1px;
+}
+
+.report-match.active {
+  background: var(--green);
+  color: #052e16;
+}
+
 .report-day {
   display: grid;
   gap: 10px;
@@ -863,5 +920,9 @@ code {
   .report-toolbar {
     grid-template-columns: minmax(180px, 220px) minmax(150px, 180px) minmax(150px, 180px);
     align-items: end;
+  }
+
+  .report-searchbar {
+    grid-template-columns: minmax(280px, 520px) auto;
   }
 }
