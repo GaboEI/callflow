@@ -164,11 +164,10 @@ h2 {
 }
 
 .sidebar {
-  display: block;
+  display: none;
   background: #0b1220;
   border-right: 1px solid var(--border);
   padding: 12px;
-  position: relative;
 }
 
 .sidebar-backdrop {
@@ -185,14 +184,6 @@ h2 {
   font-size: 18px;
   border-radius: 999px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
-}
-
-.sidebar-top {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 10px;
-  margin-bottom: 10px;
 }
 
 .brand {
@@ -587,13 +578,13 @@ code {
     display: none;
   }
 
-  .sidebar-top {
-    grid-template-columns: auto minmax(0, 1fr);
-    margin-bottom: 20px;
+  .sidebar-toggle {
+    display: none;
   }
 
   .brand {
     display: grid;
+    margin-bottom: 20px;
   }
 
   nav {
@@ -620,20 +611,15 @@ code {
 }
 
 @media (max-width: 779px) {
-  .sidebar {
+  .app.sidebar-open .sidebar {
+    display: block;
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
     width: 220px;
     z-index: 30;
-    transform: translateX(calc(-100% + 54px));
-    transition: transform 0.18s ease;
     box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
-  }
-
-  .app.sidebar-open .sidebar {
-    transform: translateX(0);
   }
 
   .app.sidebar-open .sidebar-backdrop {
