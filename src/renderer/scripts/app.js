@@ -988,9 +988,12 @@
       return { from: date, to: date };
     }
 
-    if (state.reportRange.preset === "dayBefore") {
-      const date = isoDateOffset(2);
-      return { from: date, to: date };
+    if (state.reportRange.preset === "last7") {
+      return { from: isoDateOffset(6), to: isoDateOffset(0) };
+    }
+
+    if (state.reportRange.preset === "last30") {
+      return { from: isoDateOffset(29), to: isoDateOffset(0) };
     }
 
     if (state.reportRange.preset === "custom") {

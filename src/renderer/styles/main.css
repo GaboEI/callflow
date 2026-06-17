@@ -54,10 +54,21 @@ textarea {
   background: #0b1220;
   color: var(--text);
   padding: 9px 10px;
+  color-scheme: dark;
 }
 
 textarea {
   resize: vertical;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 1;
+  filter: invert(64%) sepia(79%) saturate(527%) hue-rotate(88deg) brightness(91%) contrast(87%);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(67%) sepia(91%) saturate(641%) hue-rotate(86deg) brightness(102%) contrast(89%);
 }
 
 select:disabled {

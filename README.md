@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.12` improves hourly reports with today/yesterday/range filtering, aligned block selection, and per-block edit/delete actions for quick corrections.
+Version `0.1.13` refines report filters with common last-7-days and last-30-days presets, plus a clearer date picker icon in the dark theme.
 
 The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
 

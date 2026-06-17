@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.13 - Refine report period presets
+
+- Replaced the day-before-yesterday preset with more common report ranges: last 7 days and last 30 days.
+- Kept today, yesterday, and custom date range report filtering.
+- Improved native date picker icon visibility in the dark theme with a green accent.
+
 ## v0.1.12 - Improve report range and block editing
 
 - Moved the current hourly block label below the active view title and made it more visible.

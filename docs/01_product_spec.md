@@ -27,7 +27,7 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - CRM copy format: `DD.MM HH:mm Operator: Description`.
 - Hourly grouping by configured timezone.
 - Supervisor report copy in Markdown with one or more selected hourly blocks; calls inside a block are listed on consecutive lines without blank spacing.
-- Reports default to today's calls and can be filtered by yesterday, day before yesterday, or a custom date range.
+- Reports default to today's calls and can be filtered by yesterday, last 7 days, last 30 days, or a custom date range.
 - Report blocks can be edited in place for small corrections, or deleted as a complete hourly block when needed.
 - Daily statistics for total calls, successes, rejections, no answer, provider totals, frequent status counts with activity, and pending reminders.
 - Callback reminders with pending, completed, and overdue states.
