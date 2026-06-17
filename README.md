@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.11` adds a persistent work/break timer in the header. Operators can start work time, pause into break time, and resume while preserving break records for future statistics.
+Version `0.1.12` improves hourly reports with today/yesterday/range filtering, aligned block selection, and per-block edit/delete actions for quick corrections.
 
 The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
 

@@ -108,8 +108,8 @@
           <div class="topbar-title">
             <button class="sidebar-toggle" type="button" id="sidebarToggle" data-i18n-title="openSidebar" title="Abrir navegación">☰</button>
             <div>
-              <p class="eyebrow" id="currentBlockLabel">--:-- - --:--</p>
               <h1 id="viewTitle">Dashboard</h1>
+              <p class="eyebrow block-label" id="currentBlockLabel">--:-- - --:--</p>
             </div>
           </div>
           <div class="topbar-actions">
@@ -201,6 +201,25 @@
             <div class="panel-header">
               <h2 data-i18n="hourlyReports">Reportes horarios</h2>
               <button id="copySelectedBlocks" class="primary" data-i18n="copySelectedBlocks">Copiar bloques seleccionados</button>
+            </div>
+            <div class="report-toolbar">
+              <label>
+                <span data-i18n="reportPeriod">Periodo</span>
+                <select id="reportRangePreset">
+                  <option value="today" data-i18n="reportToday">Hoy</option>
+                  <option value="yesterday" data-i18n="reportYesterday">Ayer</option>
+                  <option value="dayBefore" data-i18n="reportDayBefore">Antier</option>
+                  <option value="custom" data-i18n="reportCustomRange">Rango</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="reportDateFrom">Desde</span>
+                <input id="reportDateFrom" type="date" />
+              </label>
+              <label>
+                <span data-i18n="reportDateTo">Hasta</span>
+                <input id="reportDateTo" type="date" />
+              </label>
             </div>
             <div id="reportBlocks" class="report-list"></div>
           </div>

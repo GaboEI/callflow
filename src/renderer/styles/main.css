@@ -117,6 +117,11 @@ h2 {
   text-transform: uppercase;
 }
 
+.block-label {
+  margin-top: 3px;
+  font-size: 13px;
+}
+
 .primary {
   background: var(--blue);
   border-color: var(--blue);
@@ -545,6 +550,76 @@ code {
   align-items: center;
 }
 
+.report-toolbar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.report-toolbar label {
+  display: grid;
+  gap: 6px;
+}
+
+.report-toolbar label span {
+  margin-bottom: 0;
+}
+
+.report-day {
+  display: grid;
+  gap: 10px;
+}
+
+.report-day h3 {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.report-block-header {
+  align-items: center;
+}
+
+.report-block-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+}
+
+.report-block-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--blue);
+}
+
+.report-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.report-actions button {
+  min-height: 30px;
+  padding: 5px 9px;
+}
+
+.ghost-danger {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.36);
+  color: #fecaca;
+}
+
+.report-editor {
+  min-height: 130px;
+  font-family: "Cascadia Mono", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 .tag {
   display: inline-flex;
   border-radius: 999px;
@@ -772,5 +847,10 @@ code {
 
   .cards.compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .report-toolbar {
+    grid-template-columns: minmax(180px, 220px) minmax(150px, 180px) minmax(150px, 180px);
+    align-items: end;
   }
 }

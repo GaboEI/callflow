@@ -49,6 +49,7 @@
   }
 
   function buildCallLine(call, settings = {}) {
+    if (call.reportLineOverride) return call.reportLineOverride;
     const parts = [linePrefix(call, settings), call.callId, call.callType, call.date, call.time].filter(Boolean);
     return `${parts.join(" ")} ${call.operatorName}: ${call.description}`;
   }

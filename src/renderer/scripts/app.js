@@ -9,6 +9,12 @@
     selectedNoteId: null,
     lastCall: null,
     selectedBlocks: new Set(),
+    editingReportBlockKey: null,
+    reportRange: {
+      preset: "today",
+      from: "",
+      to: ""
+    },
     formLists: {
       onboardingCallTypes: [],
       onboardingFrequentStatuses: [],
@@ -945,6 +951,156 @@
     renderShiftTimer();
   }
 
+  function isoDateInSettings(date) {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: CallFlowReports.resolveTimezone(state.settings),
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    });
+    const parts = Object.fromEntries(formatter.formatToParts(date).map((part) => [part.type, part.value]));
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
+
+  function isoDateOffset(days) {
+    return isoDateInSettings(new Date(Date.now() - days * 24 * 60 * 60 * 1000));
+  }
+
+  function compareIsoDate(a, b) {
+    return String(a).localeCompare(String(b));
+  }
+
+  function displayIsoDate(isoDate) {
+    const [year, month, day] = String(isoDate || "").split("-");
+    return year && month && day ? `${day}.${month}.${year}` : isoDate;
+  }
+
+  function callIsoDate(call) {
+    if (call.createdAt) return isoDateInSettings(new Date(call.createdAt));
+    const [day, month] = String(call.date || "").split(".");
+    const year = new Date().getFullYear();
+    return day && month ? `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}` : isoDateOffset(0);
+  }
+
+  function reportRangeBounds() {
+    if (state.reportRange.preset === "yesterday") {
+      const date = isoDateOffset(1);
+      return { from: date, to: date };
+    }
+
+    if (state.reportRange.preset === "dayBefore") {
+      const date = isoDateOffset(2);
+      return { from: date, to: date };
+    }
+
+    if (state.reportRange.preset === "custom") {
+      const from = state.reportRange.from || isoDateOffset(0);
+      const to = state.reportRange.to || from;
+      return compareIsoDate(from, to) <= 0 ? { from, to } : { from: to, to: from };
+    }
+
+    const today = isoDateOffset(0);
+    return { from: today, to: today };
+  }
+
+  function syncReportRangeInputs() {
+    const preset = $("#reportRangePreset");
+    const fromInput = $("#reportDateFrom");
+    const toInput = $("#reportDateTo");
+    if (!preset || !fromInput || !toInput) return;
+
+    const range = reportRangeBounds();
+    preset.value = state.reportRange.preset;
+    fromInput.value = range.from;
+    toInput.value = range.to;
+  }
+
+  function reportBlockKey(isoDate, block) {
+    return `${isoDate}|${block}`;
+  }
+
+  function reportGroupsForRange() {
+    const range = reportRangeBounds();
+    const calls = CallFlowReports.ensureDailySequences(state.calls)
+      .filter((call) => {
+        const isoDate = callIsoDate(call);
+        return compareIsoDate(isoDate, range.from) >= 0 && compareIsoDate(isoDate, range.to) <= 0;
+      })
+      .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+
+    return calls.reduce((groups, call) => {
+      const isoDate = callIsoDate(call);
+      const block = call.block || CallFlowReports.blockFromHour(call.hour || 0);
+      groups[isoDate] = groups[isoDate] || {};
+      groups[isoDate][block] = groups[isoDate][block] || [];
+      groups[isoDate][block].push(call);
+      return groups;
+    }, {});
+  }
+
+  function reportBlockActions(key, isEditing) {
+    const language = state.settings.language || "es";
+    if (isEditing) {
+      return `
+        <button type="button" data-save-report-block="${escapeHtml(key)}" data-i18n="saveBlock">${CallFlowI18n.t("saveBlock", language)}</button>
+        <button type="button" data-cancel-report-edit="${escapeHtml(key)}" data-i18n="cancel">${CallFlowI18n.t("cancel", language)}</button>
+      `;
+    }
+
+    return `
+      <button type="button" data-edit-report-block="${escapeHtml(key)}" data-i18n="editBlock">${CallFlowI18n.t("editBlock", language)}</button>
+      <button type="button" class="danger ghost-danger" data-delete-report-block="${escapeHtml(key)}" data-i18n="deleteBlock">${CallFlowI18n.t("deleteBlock", language)}</button>
+    `;
+  }
+
+  function renderReportBlock(isoDate, block, calls) {
+    const key = reportBlockKey(isoDate, block);
+    const isEditing = state.editingReportBlockKey === key;
+    const lines = calls.map((call) => CallFlowReports.buildCallLine(call, state.settings)).join("\n");
+
+    return `
+      <article class="report-item">
+        <header class="report-block-header">
+          <label class="report-block-check">
+            <input type="checkbox" data-report-block="${escapeHtml(key)}" ${state.selectedBlocks.has(key) ? "checked" : ""} />
+            <strong>${escapeHtml(block)}</strong>
+          </label>
+          <div class="report-actions">
+            <span class="tag">${calls.length} llamadas</span>
+            ${reportBlockActions(key, isEditing)}
+          </div>
+        </header>
+        ${
+          isEditing
+            ? `<textarea class="report-editor" data-report-editor="${escapeHtml(key)}" rows="7">${escapeHtml(lines)}</textarea>`
+            : `<code>${escapeHtml(lines)}</code>`
+        }
+      </article>
+    `;
+  }
+
+  function renderReportBlocks() {
+    syncReportRangeInputs();
+    const groupsByDate = reportGroupsForRange();
+    const dateEntries = Object.entries(groupsByDate).sort(([a], [b]) => a.localeCompare(b));
+
+    $("#reportBlocks").innerHTML = dateEntries.length
+      ? dateEntries
+          .map(([isoDate, groups]) => {
+            const blockEntries = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+            return `
+              <section class="report-day">
+                <h3>${escapeHtml(displayIsoDate(isoDate))}</h3>
+                <div class="report-list">
+                  ${blockEntries.map(([block, calls]) => renderReportBlock(isoDate, block, calls)).join("")}
+                </div>
+              </section>
+            `;
+          })
+          .join("")
+      : `<p class="muted">${escapeHtml(CallFlowI18n.t("noReportBlocks", state.settings.language || "es"))}</p>`;
+  }
+
   function renderBlocks() {
     const todayCalls = CallFlowReports.ensureDailySequences(CallFlowReports.callsForToday(state.calls, state.settings));
     const groups = CallFlowReports.groupByBlock(todayCalls);
@@ -961,19 +1117,7 @@
           .join("")
       : '<p class="muted">Todavía no hay llamadas registradas hoy.</p>';
 
-    $("#reportBlocks").innerHTML = entries.length
-      ? entries
-          .map(([block, calls]) => `
-            <article class="report-item">
-              <header>
-                <label><input type="checkbox" data-block="${escapeHtml(block)}" ${state.selectedBlocks.has(block) ? "checked" : ""} /> ${block}</label>
-                <span class="tag">${calls.length} llamadas</span>
-              </header>
-              <code>${escapeHtml(calls.map((call) => CallFlowReports.buildCallLine(call, state.settings)).join("\n"))}</code>
-            </article>
-          `)
-          .join("")
-      : '<p class="muted">No hay bloques para copiar.</p>';
+    renderReportBlocks();
   }
 
   function statsCards(stats) {
@@ -1128,16 +1272,50 @@
   }
 
   async function copySelectedBlocks() {
-    const todayCalls = CallFlowReports.ensureDailySequences(CallFlowReports.callsForToday(state.calls, state.settings));
-    const groups = CallFlowReports.groupByBlock(todayCalls);
+    const groupsByDate = reportGroupsForRange();
     const reports = [...state.selectedBlocks]
       .sort()
-      .filter((block) => groups[block])
-      .map((block) => CallFlowReports.buildSupervisorReport(block, groups[block], state.settings));
+      .map((key) => {
+        const [isoDate, block] = key.split("|");
+        const calls = groupsByDate[isoDate] && groupsByDate[isoDate][block];
+        return calls ? CallFlowReports.buildSupervisorReport(block, calls, state.settings) : "";
+      })
+      .filter(Boolean);
 
     if (reports.length) {
       await window.callflow.copyText(reports.join("\n\n"));
     }
+  }
+
+  function callsForReportBlockKey(key) {
+    const [isoDate, block] = String(key || "").split("|");
+    const groupsByDate = reportGroupsForRange();
+    return groupsByDate[isoDate] && groupsByDate[isoDate][block] ? groupsByDate[isoDate][block] : [];
+  }
+
+  async function saveReportBlockEdit(key) {
+    const editor = $$("[data-report-editor]").find((node) => node.dataset.reportEditor === key);
+    if (!editor) return;
+    const calls = callsForReportBlockKey(key);
+    const lines = editor.value.split("\n").map((line) => line.trim());
+    calls.forEach((call, index) => {
+      call.reportLineOverride = lines[index] || "";
+      if (!call.reportLineOverride) delete call.reportLineOverride;
+    });
+    state.editingReportBlockKey = null;
+    await CallFlowStorage.write("calls", state.calls);
+    render();
+  }
+
+  async function deleteReportBlock(key) {
+    const language = state.settings.language || "es";
+    if (!window.confirm(CallFlowI18n.t("confirmDeleteBlock", language))) return;
+    const ids = new Set(callsForReportBlockKey(key).map((call) => call.id));
+    state.calls = state.calls.filter((call) => !ids.has(call.id));
+    state.selectedBlocks.delete(key);
+    if (state.editingReportBlockKey === key) state.editingReportBlockKey = null;
+    await CallFlowStorage.write("calls", state.calls);
+    render();
   }
 
   async function saveReminder(event) {
@@ -1274,6 +1452,26 @@
     $("#callForm input[name='description']").addEventListener("focus", () => renderStatusOptions(true));
     $("#callForm input[name='description']").addEventListener("input", () => renderStatusOptions(true));
     $("#copySelectedBlocks").addEventListener("click", copySelectedBlocks);
+    $("#reportRangePreset").addEventListener("change", (event) => {
+      state.reportRange.preset = event.target.value;
+      state.selectedBlocks.clear();
+      state.editingReportBlockKey = null;
+      render();
+    });
+    $("#reportDateFrom").addEventListener("change", (event) => {
+      state.reportRange.preset = "custom";
+      state.reportRange.from = event.target.value;
+      state.selectedBlocks.clear();
+      state.editingReportBlockKey = null;
+      render();
+    });
+    $("#reportDateTo").addEventListener("change", (event) => {
+      state.reportRange.preset = "custom";
+      state.reportRange.to = event.target.value;
+      state.selectedBlocks.clear();
+      state.editingReportBlockKey = null;
+      render();
+    });
     $("#reminderForm").addEventListener("submit", saveReminder);
     $("#reminderFilter").addEventListener("change", render);
     $("#noteForm").addEventListener("submit", saveNote);
@@ -1354,9 +1552,9 @@
     });
 
     document.addEventListener("change", (event) => {
-      if (event.target.matches("[data-block]")) {
-        if (event.target.checked) state.selectedBlocks.add(event.target.dataset.block);
-        else state.selectedBlocks.delete(event.target.dataset.block);
+      if (event.target.matches("[data-report-block]")) {
+        if (event.target.checked) state.selectedBlocks.add(event.target.dataset.reportBlock);
+        else state.selectedBlocks.delete(event.target.dataset.reportBlock);
       }
     });
 
@@ -1375,6 +1573,10 @@
       const removeListId = event.target.dataset.removeListItem;
       const presetListId = event.target.dataset.presetListItem;
       const dashboardCallTypeToRemove = event.target.dataset.removeDashboardCallType;
+      const editReportBlockKey = event.target.dataset.editReportBlock;
+      const saveReportBlockKey = event.target.dataset.saveReportBlock;
+      const cancelReportEditKey = event.target.dataset.cancelReportEdit;
+      const deleteReportBlockKey = event.target.dataset.deleteReportBlock;
       const timezoneToggleId = timezoneToggle ? timezoneToggle.dataset.timezoneToggle : null;
       const timezonePickerId = timezoneOption ? timezoneOption.dataset.timezonePickerOption : null;
       const reminderId = event.target.dataset.completeReminder;
@@ -1390,6 +1592,20 @@
       }
       if (dashboardCallTypeToRemove) {
         removeDashboardCallType(dashboardCallTypeToRemove);
+      }
+      if (editReportBlockKey) {
+        state.editingReportBlockKey = editReportBlockKey;
+        renderReportBlocks();
+      }
+      if (saveReportBlockKey) {
+        saveReportBlockEdit(saveReportBlockKey);
+      }
+      if (cancelReportEditKey) {
+        state.editingReportBlockKey = null;
+        renderReportBlocks();
+      }
+      if (deleteReportBlockKey) {
+        deleteReportBlock(deleteReportBlockKey);
       }
       if (timezoneToggleId) {
         const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);

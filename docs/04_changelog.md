@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.12 - Improve report range and block editing
+
+- Moved the current hourly block label below the active view title and made it more visible.
+- Added report period controls for today, yesterday, day before yesterday, and custom date ranges.
+- Kept reports defaulted to today's calls while allowing older days to be reviewed.
+- Aligned report block checkboxes with the hourly block title.
+- Added per-block edit and delete actions in Reports.
+- Stored edited report lines as per-call report overrides without changing the global line format.
+
 ## v0.1.11 - Add persistent work and break timer
 
 - Added a compact work/break timer beside the live work clock.
