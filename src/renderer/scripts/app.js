@@ -1378,7 +1378,8 @@
     const form = $("#callForm");
     form.callId.value = callId;
     captureCurrentCallTime();
-    form.description.focus();
+    renderStatusOptions(false);
+    form.callId.focus();
   }
 
   async function copySelectedBlocks() {
