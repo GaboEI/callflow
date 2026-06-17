@@ -40,10 +40,16 @@
   function buildStats(calls, reminders, settings) {
     const pendingReminders = reminders.filter((reminder) => reminder.status !== "completed").length;
     const noAnswer = noAnswerLabel(settings);
+    const callsWithOutcome = calls.filter((call) => call.primaryOutcome && call.primaryOutcome.category);
+    const callsWithoutOutcome = calls.filter((call) => !call.primaryOutcome || !call.primaryOutcome.category);
     return {
       total: calls.length,
-      success: countMatching(calls, settings.successLabel),
-      rejections: countMatching(calls, settings.rejectionLabel),
+      success:
+        callsWithOutcome.filter((call) => call.primaryOutcome.category === "success").length +
+        countMatching(callsWithoutOutcome, settings.successLabel),
+      rejections:
+        callsWithOutcome.filter((call) => call.primaryOutcome.category === "rejection").length +
+        countMatching(callsWithoutOutcome, settings.rejectionLabel),
       noAnswer: countMatching(calls, noAnswer),
       statusCounts: countFrequentStatuses(calls, settings, [
         settings.successLabel,

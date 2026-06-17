@@ -9,6 +9,8 @@
     selectedNoteId: null,
     lastCall: null,
     pendingCallCapturedAt: null,
+    selectedPrimaryOutcome: null,
+    openOutcomeMenu: null,
     selectedBlocks: new Set(),
     editingReportBlockKey: null,
     reportRange: {
@@ -158,7 +160,10 @@
 
   function linesToArray(value) {
     if (Array.isArray(value)) {
-      return value.map((item) => String(item).trim()).filter(Boolean);
+      return value
+        .filter((item) => item !== null && item !== undefined)
+        .map((item) => String(item).trim())
+        .filter(Boolean);
     }
     return String(value || "")
       .split(/\n|,/)
@@ -182,6 +187,54 @@
     return presetForLanguage(language).rejectionLabel;
   }
 
+  function defaultCallbackLabel(language) {
+    return { es: "Rellamada", en: "Callback", ru: "Повторный_звонок" }[language] || "Rellamada";
+  }
+
+  function rejectionPresetsForLanguage(language) {
+    return {
+      es: ["Rechazo", "No_interesado", "Precio_alto", "No_tiene_dinero", "No_autoriza"],
+      en: ["Rejected", "Not_interested", "Price_too_high", "No_money", "Not_authorized"],
+      ru: ["Отказ", "Не_интересно", "Высокая_цена", "Нет_денег", "Не_разрешает"]
+    }[language] || ["Rechazo", "No_interesado", "Precio_alto", "No_tiene_dinero"];
+  }
+
+  function defaultOutcomePresets(settings) {
+    const language = settings.language || "es";
+    const successItems = uniqueItems([settings.successLabel, ...presetForLanguage(language).successLabels]);
+    const rejectionItems = uniqueItems([settings.rejectionLabel, ...rejectionPresetsForLanguage(language)]);
+    const callbackLabel = defaultCallbackLabel(language);
+    return {
+      success: {
+        default: settings.successLabel || defaultSuccessLabel(language),
+        items: successItems
+      },
+      rejection: {
+        default: settings.rejectionLabel || defaultRejectionLabel(language),
+        items: rejectionItems
+      },
+      callback: {
+        default: callbackLabel,
+        items: [callbackLabel]
+      }
+    };
+  }
+
+  function normalizeOutcomePresets(settings) {
+    const defaults = defaultOutcomePresets(settings);
+    const existing = settings.outcomePresets || {};
+    return ["success", "rejection", "callback"].reduce((result, category) => {
+      const current = existing[category] || {};
+      const items = uniqueItems([...uniqueItems(current.items), ...(defaults[category].items || [])]);
+      const fallbackDefault = current.default || defaults[category].default || items[0] || "";
+      result[category] = {
+        default: items.includes(fallbackDefault) ? fallbackDefault : items[0] || fallbackDefault,
+        items
+      };
+      return result;
+    }, {});
+  }
+
   function isSystemDefaultSuccessLabel(value) {
     return Object.values(presets).some((preset) => preset.successLabels[0] === value);
   }
@@ -198,6 +251,7 @@
       frequentStatuses: uniqueItems(settings.frequentStatuses || settings.callStatuses),
       successLabel: settings.successLabel || defaultSuccessLabel(settings.language),
       rejectionLabel: settings.rejectionLabel || defaultRejectionLabel(settings.language),
+      outcomePresets: normalizeOutcomePresets(settings),
       linePrefixMode: settings.linePrefixMode || "hash",
       clockFormat: settings.clockFormat || "24h"
     };
@@ -766,6 +820,143 @@
     input.focus();
   }
 
+  function mostUsedOutcomeLabel(category) {
+    const counts = state.calls.reduce((result, call) => {
+      if (!call.primaryOutcome || call.primaryOutcome.category !== category || !call.primaryOutcome.label) return result;
+      result[call.primaryOutcome.label] = (result[call.primaryOutcome.label] || 0) + 1;
+      return result;
+    }, {});
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+  }
+
+  function defaultOutcomeLabel(category) {
+    const presetsForCategory = state.settings.outcomePresets[category] || { items: [] };
+    return mostUsedOutcomeLabel(category) || presetsForCategory.default || presetsForCategory.items[0] || "";
+  }
+
+  function selectedOutcomeLabel(category) {
+    return state.selectedPrimaryOutcome && state.selectedPrimaryOutcome.category === category
+      ? state.selectedPrimaryOutcome.label
+      : defaultOutcomeLabel(category);
+  }
+
+  function callbackOutcomePayload() {
+    const form = $("#callForm");
+    const selected = state.selectedPrimaryOutcome;
+    if (!selected || selected.category !== "callback") return null;
+    return {
+      category: "callback",
+      label: selected.label,
+      callbackDate: form.callbackDate.value,
+      callbackTime: form.callbackTime.value
+    };
+  }
+
+  function currentPrimaryOutcomePayload() {
+    if (!state.selectedPrimaryOutcome) return null;
+    if (state.selectedPrimaryOutcome.category === "callback") return callbackOutcomePayload();
+    return {
+      category: state.selectedPrimaryOutcome.category,
+      label: state.selectedPrimaryOutcome.label,
+      callbackDate: null,
+      callbackTime: null
+    };
+  }
+
+  function selectPrimaryOutcome(category, label) {
+    state.selectedPrimaryOutcome = { category, label };
+    state.openOutcomeMenu = null;
+    renderOutcomeControls();
+  }
+
+  function clearPrimaryOutcome() {
+    state.selectedPrimaryOutcome = null;
+    state.openOutcomeMenu = null;
+    const form = $("#callForm");
+    form.callbackDate.value = "";
+    form.callbackTime.value = "";
+    renderOutcomeControls();
+  }
+
+  async function updateOutcomePresets(outcomePresets) {
+    state.settings = normalizeSettings({
+      ...state.settings,
+      outcomePresets
+    });
+    await CallFlowStorage.write("settings", state.settings);
+    renderOutcomeControls();
+  }
+
+  async function addOutcomePreset(category) {
+    const input = document.querySelector(`[data-new-outcome="${category}"]`);
+    const value = String(input?.value || "").trim();
+    if (!value) return;
+    const presetsCopy = structuredClone(state.settings.outcomePresets);
+    presetsCopy[category].items = uniqueItems([...presetsCopy[category].items, value]);
+    presetsCopy[category].default = presetsCopy[category].default || value;
+    await updateOutcomePresets(presetsCopy);
+    selectPrimaryOutcome(category, value);
+  }
+
+  async function removeOutcomePreset(category, label) {
+    const language = state.settings.language || "es";
+    if (!window.confirm(CallFlowI18n.t("confirmRemoveOutcome", language))) return;
+    const presetsCopy = structuredClone(state.settings.outcomePresets);
+    presetsCopy[category].items = presetsCopy[category].items.filter((item) => item !== label);
+    if (!presetsCopy[category].items.length) {
+      presetsCopy[category].items = [defaultOutcomePresets(state.settings)[category].default];
+    }
+    if (presetsCopy[category].default === label) {
+      presetsCopy[category].default = presetsCopy[category].items[0];
+    }
+    if (state.selectedPrimaryOutcome?.category === category && state.selectedPrimaryOutcome.label === label) {
+      state.selectedPrimaryOutcome = null;
+    }
+    await updateOutcomePresets(presetsCopy);
+  }
+
+  function renderOutcomeMenu(category) {
+    const language = state.settings.language || "es";
+    const presetsForCategory = state.settings.outcomePresets[category] || { items: [] };
+    return `
+      <div class="outcome-menu-list">
+        ${presetsForCategory.items
+          .map(
+            (item) => `
+              <div class="outcome-menu-item">
+                <button type="button" data-select-outcome="${category}" data-value="${escapeHtml(item)}">${escapeHtml(item)}</button>
+                <button type="button" class="outcome-remove" data-remove-outcome="${category}" data-value="${escapeHtml(item)}" title="${CallFlowI18n.t("removeOutcome", language)}">×</button>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+      <div class="outcome-menu-actions">
+        <input data-new-outcome="${category}" placeholder="${escapeHtml(CallFlowI18n.t("newOutcome", language))}" />
+        <button type="button" data-add-outcome="${category}">${escapeHtml(CallFlowI18n.t("addOutcome", language))}</button>
+      </div>
+      <button type="button" class="outcome-clear" data-clear-outcome>${escapeHtml(CallFlowI18n.t("clearOutcome", language))}</button>
+    `;
+  }
+
+  function renderOutcomeControls() {
+    if (!state.settings) return;
+    ["success", "rejection", "callback"].forEach((category) => {
+      const button = document.querySelector(`[data-outcome-toggle="${category}"]`);
+      const label = document.querySelector(`[data-outcome-label="${category}"]`);
+      const menu = document.querySelector(`[data-outcome-menu="${category}"]`);
+      const selected = state.selectedPrimaryOutcome?.category === category;
+      if (!button || !label || !menu) return;
+      label.textContent = selectedOutcomeLabel(category);
+      button.classList.toggle("selected", selected);
+      menu.classList.toggle("open", state.openOutcomeMenu === category);
+      menu.innerHTML = state.openOutcomeMenu === category ? renderOutcomeMenu(category) : "";
+    });
+
+    const callbackSelected = state.selectedPrimaryOutcome?.category === "callback";
+    $("#callbackFields").classList.toggle("hidden", !callbackSelected);
+  }
+
   function renderDashboardInlineManagers() {
     const language = state.settings.language || "es";
     $("#dashboardCallTypeList").innerHTML = state.settings.callTypes.length
@@ -1313,6 +1504,7 @@
     renderHeader();
     renderCapturedCallTime();
     renderCallOptions();
+    renderOutcomeControls();
     renderDashboardInlineManagers();
     renderListEditors();
     renderBlocks();
@@ -1326,10 +1518,21 @@
     event.preventDefault();
     const submitter = event.submitter;
     const form = event.currentTarget;
+    const primaryOutcome = currentPrimaryOutcomePayload();
+    if (
+      primaryOutcome &&
+      primaryOutcome.category === "callback" &&
+      (!primaryOutcome.callbackDate || !primaryOutcome.callbackTime)
+    ) {
+      $("#lastSavedLabel").textContent = CallFlowI18n.t("selectCallbackDateTime", state.settings.language || "es");
+      return;
+    }
+
     const call = CallFlowReports.createCallRecord(
       {
         callId: form.callId.value,
         callType: form.callType.value,
+        primaryOutcome,
         description: form.description.value.trim(),
         customComment: form.customComment.value.trim(),
         capturedAt: state.pendingCallCapturedAt,
@@ -1340,7 +1543,24 @@
 
     state.calls.push(call);
     state.lastCall = call;
+    if (primaryOutcome && primaryOutcome.category === "callback") {
+      state.reminders.push({
+        id: crypto.randomUUID(),
+        callId: call.callId,
+        relatedCallId: call.id,
+        callType: call.callType,
+        operator: call.operatorName,
+        date: primaryOutcome.callbackDate,
+        time: primaryOutcome.callbackTime,
+        note: call.description || primaryOutcome.label,
+        status: "pending",
+        createdAt: new Date().toISOString()
+      });
+    }
     await CallFlowStorage.write("calls", state.calls);
+    if (primaryOutcome && primaryOutcome.category === "callback") {
+      await CallFlowStorage.write("reminders", state.reminders);
+    }
 
     if (submitter && ["saveCopy", "saveCopyReminder"].includes(submitter.dataset.action)) {
       await window.callflow.copyText(call.crmLine);
@@ -1352,7 +1572,11 @@
     form.callId.value = "";
     form.description.value = "";
     form.customComment.value = "";
+    form.callbackDate.value = "";
+    form.callbackTime.value = "";
     state.pendingCallCapturedAt = null;
+    state.selectedPrimaryOutcome = null;
+    state.openOutcomeMenu = null;
     form.callId.focus();
     render();
 
@@ -1569,6 +1793,13 @@
     });
     $("#callForm input[name='description']").addEventListener("focus", () => renderStatusOptions(true));
     $("#callForm input[name='description']").addEventListener("input", () => renderStatusOptions(true));
+    $("#callForm").addEventListener("keydown", (event) => {
+      const input = event.target.closest("[data-new-outcome]");
+      if (input && event.key === "Enter") {
+        event.preventDefault();
+        addOutcomePreset(input.dataset.newOutcome);
+      }
+    });
     $("#copySelectedBlocks").addEventListener("click", copySelectedBlocks);
     $("#reportRangePreset").addEventListener("change", (event) => {
       state.reportRange.preset = event.target.value;
@@ -1715,10 +1946,15 @@
       const timezoneToggle = event.target.closest("[data-timezone-toggle]");
       const timezoneOption = event.target.closest("[data-timezone-picker-option]");
       const statusOption = event.target.closest("[data-status-option]");
+      const outcomeToggle = event.target.closest("[data-outcome-toggle]");
       const addListId = event.target.dataset.addListItem;
       const removeListId = event.target.dataset.removeListItem;
       const presetListId = event.target.dataset.presetListItem;
       const dashboardCallTypeToRemove = event.target.dataset.removeDashboardCallType;
+      const selectOutcomeCategory = event.target.dataset.selectOutcome;
+      const addOutcomeCategory = event.target.dataset.addOutcome;
+      const removeOutcomeCategory = event.target.dataset.removeOutcome;
+      const clearOutcome = event.target.closest("[data-clear-outcome]");
       const editReportBlockKey = event.target.dataset.editReportBlock;
       const saveReportBlockKey = event.target.dataset.saveReportBlock;
       const cancelReportEditKey = event.target.dataset.cancelReportEdit;
@@ -1738,6 +1974,26 @@
       }
       if (dashboardCallTypeToRemove) {
         removeDashboardCallType(dashboardCallTypeToRemove);
+      }
+      if (outcomeToggle) {
+        const category = outcomeToggle.dataset.outcomeToggle;
+        if (state.selectedPrimaryOutcome?.category !== category) {
+          selectPrimaryOutcome(category, defaultOutcomeLabel(category));
+        }
+        state.openOutcomeMenu = state.openOutcomeMenu === category ? null : category;
+        renderOutcomeControls();
+      }
+      if (selectOutcomeCategory) {
+        selectPrimaryOutcome(selectOutcomeCategory, event.target.dataset.value);
+      }
+      if (addOutcomeCategory) {
+        addOutcomePreset(addOutcomeCategory);
+      }
+      if (removeOutcomeCategory) {
+        removeOutcomePreset(removeOutcomeCategory, event.target.dataset.value);
+      }
+      if (clearOutcome) {
+        clearPrimaryOutcome();
       }
       if (editReportBlockKey) {
         state.editingReportBlockKey = editReportBlockKey;
@@ -1766,6 +2022,10 @@
       }
       if (!event.target.closest(".status-combobox")) {
         renderStatusOptions(false);
+      }
+      if (!event.target.closest(".outcome-control")) {
+        state.openOutcomeMenu = null;
+        renderOutcomeControls();
       }
       if (!event.target.closest(".timezone-picker")) {
         closeTimezoneDropdown("onboarding");

@@ -34,8 +34,33 @@
     return `${start}:00 - ${end}:00`;
   }
 
-  function buildDescription(description, customComment) {
-    return [description, customComment].filter(Boolean).join(" — ");
+  function callbackDateTimeLabel(callbackDate, callbackTime, settings) {
+    if (!callbackDate || !callbackTime) return "";
+    const [year, month, day] = String(callbackDate).split("-");
+    const [hourValue, minuteValue] = String(callbackTime).split(":");
+    if (!year || !month || !day || !hourValue || !minuteValue) return "";
+
+    const language = settings.language || "es";
+    if (language === "en") {
+      const hour = Number(hourValue);
+      const period = hour >= 12 ? "PM" : "AM";
+      const displayHour = String(hour % 12 || 12).padStart(2, "0");
+      return `${month}/${day} ${displayHour}:${minuteValue} ${period}`;
+    }
+
+    return `${day}.${month} ${hourValue}:${minuteValue}`;
+  }
+
+  function primaryOutcomeText(primaryOutcome, settings) {
+    if (!primaryOutcome || !primaryOutcome.label) return "";
+    if (primaryOutcome.category !== "callback") return primaryOutcome.label;
+    return [primaryOutcome.label, callbackDateTimeLabel(primaryOutcome.callbackDate, primaryOutcome.callbackTime, settings)]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  function buildDescription(primaryOutcome, description, customComment, settings) {
+    return [primaryOutcomeText(primaryOutcome, settings), description, customComment].filter(Boolean).join(" — ");
   }
 
   function linePrefix(call, settings) {
@@ -61,7 +86,8 @@
   function createCallRecord(formData, settings) {
     const now = formData.capturedAt ? new Date(formData.capturedAt) : new Date();
     const stamp = formatCallTimestamp(now, settings);
-    const description = buildDescription(formData.description, formData.customComment);
+    const primaryOutcome = formData.primaryOutcome || null;
+    const description = buildDescription(primaryOutcome, formData.description, formData.customComment, settings);
     const call = {
       id: crypto.randomUUID(),
       callId: formData.callId.trim(),
@@ -69,6 +95,7 @@
       description,
       rawDescription: formData.description,
       customComment: formData.customComment,
+      primaryOutcome,
       operatorName: settings.operatorName,
       date: stamp.date,
       time: stamp.time,

@@ -15,6 +15,8 @@
 - Pending reminder counter.
 - Reminder creation and completion.
 - Overdue reminder grouping.
+- Full statistics by primary outcome subtype.
+- Full Onboarding and Settings management for success, rejection, and callback presets.
 
 ## MVP 3: Chuleta Markdown
 

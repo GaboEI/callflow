@@ -20,6 +20,10 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - Fast call registration where only call ID is required; call type, frequent status, and custom comment are optional.
 - Quick registration can import a call ID from the system clipboard through the secure preload bridge.
 - Operators can capture the incoming call time before saving so the final call record uses the real entry time instead of the moment the CRM comment is copied.
+- Quick registration includes a primary call outcome layer with success, rejection, and callback categories.
+- Primary outcome is separate from call type, frequent status, and custom comment.
+- Generated descriptions follow this hierarchy: primary outcome, frequent status/description, then custom comment.
+- Callback outcome requires callback date/time and automatically creates a pending reminder linked to the saved call.
 - Frequent statuses are shortcuts/presets, not mandatory fields.
 - Call types and frequent statuses can be managed from both Dashboard and Settings using one shared settings source of truth.
 - Dashboard includes a live green work-time clock using the configured work timezone, with 24-hour, 12-hour, and military display options.
@@ -27,6 +31,7 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - Full internal call line format: `# ID TYPE DD.MM HH:mm Operator: Description`.
 - Line prefix is configurable: `#` by default, no prefix, or daily numbering such as `001`.
 - CRM copy format: `DD.MM HH:mm Operator: Description`.
+- CRM copy still starts from the original call date/time, even when the description includes callback date/time.
 - Hourly grouping by configured timezone.
 - Today's hourly blocks use a compact grid and can visually mark the most productive hour in green and the least productive hour in red when enough data exists.
 - Supervisor report copy in Markdown with one or more selected hourly blocks; calls inside a block are listed on consecutive lines without blank spacing.
@@ -37,6 +42,13 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - Callback reminders with pending, completed, and overdue states.
 - Quick registration can hand off a saved call to Reminders by copying CRM text and preloading the call ID.
 - Markdown cheat sheet with create, edit, delete, search, preview, and export to `.md` or `.txt`.
+
+## Configuration Notes
+
+- Outcome presets are stored under `outcomePresets` with success, rejection, and callback categories.
+- Dashboard can manage outcome presets inline for the current MVP.
+- TODO: expose full success/rejection/callback preset management in Onboarding and Settings with the same data model.
+- Existing call records without `primaryOutcome` are treated as compatible legacy records.
 
 ## Out of Scope for v0.1.0
 

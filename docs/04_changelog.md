@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.16 - Add primary call outcome controls and callback reminders
+
+- Added Dashboard primary outcome controls for success, rejection, and callback.
+- Added outcome preset storage with dashboard add/remove/select behavior.
+- Generated call descriptions in the order primary outcome, frequent status, custom comment.
+- Added callback date/time validation when callback is selected.
+- Automatically creates a pending reminder when a callback outcome is saved.
+- Preserved old calls without `primaryOutcome` as compatible records.
+- Updated daily success/rejection stats to count primary outcome categories for new calls while preserving legacy matching.
+
 ## v0.1.15 - Add call ID clipboard import and compact hour blocks
 
 - Added secure clipboard import for the quick registration call ID field.

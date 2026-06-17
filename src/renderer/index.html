@@ -157,19 +157,54 @@
                 </div>
                 <div class="chip-list" id="dashboardCallTypeList"></div>
               </div>
-              <label>
-                <span class="field-heading">
-                  <span data-i18n="description">Descripción / estado</span>
-                  <span class="inline-icon-actions">
-                    <button class="icon-button" type="button" id="addCurrentStatus" data-i18n-title="addStatus" title="Agregar estado">+</button>
-                    <button class="icon-button" type="button" id="removeCurrentStatus" data-i18n-title="removeStatus" title="Eliminar estado">−</button>
+              <div class="status-outcome-row span-2">
+                <label class="status-field">
+                  <span class="field-heading">
+                    <span data-i18n="description">Descripción / estado</span>
+                    <span class="inline-icon-actions">
+                      <button class="icon-button" type="button" id="addCurrentStatus" data-i18n-title="addStatus" title="Agregar estado">+</button>
+                      <button class="icon-button" type="button" id="removeCurrentStatus" data-i18n-title="removeStatus" title="Eliminar estado">−</button>
+                    </span>
                   </span>
-                </span>
-                <div class="status-combobox">
-                  <input name="description" id="descriptionInput" autocomplete="off" />
-                  <div class="status-options" id="statusOptions"></div>
+                  <div class="status-combobox">
+                    <input name="description" id="descriptionInput" autocomplete="off" />
+                    <div class="status-options" id="statusOptions"></div>
+                  </div>
+                </label>
+                <div class="primary-outcomes" aria-label="Primary outcomes">
+                  <div class="outcome-control" data-outcome-control="success">
+                    <button class="outcome-button outcome-success" type="button" data-outcome-toggle="success">
+                      <span data-outcome-label="success">Exitosa</span>
+                      <span aria-hidden="true">⌄</span>
+                    </button>
+                    <div class="outcome-menu" data-outcome-menu="success"></div>
+                  </div>
+                  <div class="outcome-control" data-outcome-control="rejection">
+                    <button class="outcome-button outcome-rejection" type="button" data-outcome-toggle="rejection">
+                      <span data-outcome-label="rejection">Rechazo</span>
+                      <span aria-hidden="true">⌄</span>
+                    </button>
+                    <div class="outcome-menu" data-outcome-menu="rejection"></div>
+                  </div>
+                  <div class="outcome-control" data-outcome-control="callback">
+                    <button class="outcome-button outcome-callback" type="button" data-outcome-toggle="callback">
+                      <span data-outcome-label="callback">Rellamada</span>
+                      <span aria-hidden="true">⌄</span>
+                    </button>
+                    <div class="outcome-menu" data-outcome-menu="callback"></div>
+                  </div>
                 </div>
-              </label>
+              </div>
+              <div class="callback-fields span-2 hidden" id="callbackFields">
+                <label>
+                  <span data-i18n="callbackDate">Fecha de rellamada</span>
+                  <input name="callbackDate" type="date" />
+                </label>
+                <label>
+                  <span data-i18n="callbackTime">Hora de rellamada</span>
+                  <input name="callbackTime" type="time" />
+                </label>
+              </div>
               <label class="span-2">
                 <span data-i18n="customComment">Comentario personalizado</span>
                 <input name="customComment" autocomplete="off" />

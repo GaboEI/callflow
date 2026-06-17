@@ -53,6 +53,8 @@ Responsibilities:
 Settings compatibility:
 
 - `callTypes` and `frequentStatuses` are stored as arrays.
+- `outcomePresets` stores primary outcome labels for success, rejection, and callback categories.
+- Calls may include `primaryOutcome`; missing `primaryOutcome` is treated as `null` for backward compatibility.
 - Legacy multiline strings are converted to arrays in the renderer.
 - Legacy `callStatuses` values are migrated to `frequentStatuses`.
 - Onboarding separates system presets, user-created values, and saved settings so language switching can translate untouched presets without rewriting custom user data.
@@ -61,6 +63,7 @@ Settings compatibility:
 - `Intl.supportedValuesOf("timeZone")` is used when available, with a fallback list for older runtimes.
 - The special `local` value resolves through `Intl.DateTimeFormat().resolvedOptions().timeZone` at runtime.
 - Dashboard inline call type and frequent status edits write back to `settings.json`; Settings and Dashboard share one source of truth.
+- Dashboard inline outcome preset edits also write back to `settings.json`.
 - The dashboard work clock reads the configured timezone and `clockFormat` from settings.
 - The work/break timer is stored separately in `work_timer.json` so future statistics can calculate worked time, breaks, and compensation without mixing timer state into calls.
 

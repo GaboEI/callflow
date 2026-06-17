@@ -11,6 +11,20 @@
   ],
   "successLabel": "Exitosa",
   "rejectionLabel": "Rechazo",
+  "outcomePresets": {
+    "success": {
+      "default": "Exitosa",
+      "items": ["Exitosa", "Venta", "Cita_agendada", "Caso_resuelto"]
+    },
+    "rejection": {
+      "default": "Rechazo",
+      "items": ["Rechazo", "No_interesado", "Precio_alto", "No_tiene_dinero"]
+    },
+    "callback": {
+      "default": "Rellamada",
+      "items": ["Rellamada"]
+    }
+  },
   "reportHeaderFormat": "##### **REPORTE {OPERATOR} DE {BLOCK}**",
   "linePrefixMode": "hash",
   "clockFormat": "24h",
