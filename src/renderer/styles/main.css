@@ -370,7 +370,7 @@ nav {
 
 .call-form > label {
   display: grid;
-  grid-template-rows: 32px auto;
+  grid-template-rows: 32px auto auto;
   gap: 6px;
   align-self: start;
 }
@@ -415,6 +415,12 @@ nav {
   padding: 0;
   font-size: 18px;
   line-height: 1;
+}
+
+.call-time-helper {
+  min-height: 17px;
+  margin-bottom: 0;
+  color: var(--green);
 }
 
 .status-manager {
@@ -546,11 +552,39 @@ code {
   gap: 10px;
 }
 
+.block-list {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
 .block-item,
 .report-item,
 .list-item {
   display: grid;
   gap: 8px;
+}
+
+.compact-hour-block {
+  min-height: 72px;
+}
+
+.compact-hour-block.best-block {
+  border-color: rgba(34, 197, 94, 0.7);
+  background: rgba(34, 197, 94, 0.13);
+}
+
+.compact-hour-block.best-block strong,
+.compact-hour-block.best-block .muted {
+  color: var(--green);
+}
+
+.compact-hour-block.worst-block {
+  border-color: rgba(239, 68, 68, 0.72);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.compact-hour-block.worst-block strong,
+.compact-hour-block.worst-block .muted {
+  color: #fecaca;
 }
 
 .report-item header,

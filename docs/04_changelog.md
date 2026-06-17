@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.15 - Add call ID clipboard import and compact hour blocks
+
+- Added secure clipboard import for the quick registration call ID field.
+- Added a call time capture action so saved calls can use the actual incoming-call time instead of the final save time.
+- Displayed the captured call time in the Dashboard form before saving.
+- Changed today's hourly blocks to a compact grid layout.
+- Highlighted the most productive hour in green when enough blocks exist, and the least productive hour in red when comparison is meaningful.
+
 ## v0.1.14 - Add report text search navigation
 
 - Added a report search bar for finding words or phrases inside the selected report period.

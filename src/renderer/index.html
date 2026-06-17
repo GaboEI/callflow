@@ -133,8 +133,15 @@
             </div>
             <form id="callForm" class="call-form">
               <label>
-                <span data-i18n="callId">ID de llamada</span>
+                <span class="field-heading">
+                  <span data-i18n="callId">ID de llamada</span>
+                  <span class="inline-icon-actions">
+                    <button class="icon-button" type="button" id="importCallIdClipboard" data-i18n-title="importCallIdClipboard" title="Importar ID del portapapeles">⇩</button>
+                    <button class="icon-button" type="button" id="captureCallTime" data-i18n-title="captureCallTime" title="Registrar hora de entrada">◷</button>
+                  </span>
+                </span>
                 <input name="callId" autocomplete="off" required />
+                <small class="helper call-time-helper" id="capturedCallTimeLabel"></small>
               </label>
               <label>
                 <span class="field-heading">

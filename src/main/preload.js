@@ -19,5 +19,6 @@ contextBridge.exposeInMainWorld("callflow", {
     return ipcRenderer.invoke("storage:write", key, value);
   },
   copyText: (text) => ipcRenderer.invoke("clipboard:writeText", text),
+  readClipboardText: () => ipcRenderer.invoke("clipboard:readText"),
   exportNote: (payload) => ipcRenderer.invoke("export:note", payload)
 });

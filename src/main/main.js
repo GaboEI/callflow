@@ -136,6 +136,8 @@ ipcMain.handle("clipboard:writeText", (_event, text) => {
   return true;
 });
 
+ipcMain.handle("clipboard:readText", () => clipboard.readText());
+
 ipcMain.handle("export:note", async (_event, { fileName, content, extension }) => {
   const safeExtension = extension === "txt" ? "txt" : "md";
   const defaultPath = `${fileName || "callflow-note"}.${safeExtension}`;

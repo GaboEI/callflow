@@ -14,6 +14,7 @@ Responsibilities:
 - Configure Electron security defaults.
 - Read and write local JSON files in `app.getPath("userData")`.
 - Write text to the system clipboard.
+- Read text from the system clipboard for explicit user-triggered import actions.
 - Export note files through a native save dialog.
 
 Security configuration:
@@ -29,6 +30,7 @@ Security configuration:
 - `read(key)`
 - `write(key, value)`
 - `copyText(text)`
+- `readClipboardText()`
 - `exportNote(payload)`
 - `getDataDir()`
 

@@ -59,7 +59,7 @@
   }
 
   function createCallRecord(formData, settings) {
-    const now = new Date();
+    const now = formData.capturedAt ? new Date(formData.capturedAt) : new Date();
     const stamp = formatCallTimestamp(now, settings);
     const description = buildDescription(formData.description, formData.customComment);
     const call = {
@@ -75,6 +75,7 @@
       hour: stamp.hour,
       block: blockFromHour(stamp.hour),
       dailySequence: formData.dailySequence || null,
+      capturedAt: formData.capturedAt || null,
       createdAt: now.toISOString()
     };
     call.fullLine = buildCallLine(call, settings);

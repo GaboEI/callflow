@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.14` adds report text search with match counts, previous/next navigation, and visual highlighting inside the selected period.
+Version `0.1.15` adds call ID clipboard import, call time capture for real incoming-call timestamps, and compact productive-hour blocks on the Dashboard.
 
 The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
 

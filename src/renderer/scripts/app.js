@@ -8,6 +8,7 @@
     clockTimer: null,
     selectedNoteId: null,
     lastCall: null,
+    pendingCallCapturedAt: null,
     selectedBlocks: new Set(),
     editingReportBlockKey: null,
     reportRange: {
@@ -877,6 +878,19 @@
     clock.textContent = formatWorkClock(new Date());
   }
 
+  function renderCapturedCallTime() {
+    const label = $("#capturedCallTimeLabel");
+    if (!label || !state.settings) return;
+
+    if (!state.pendingCallCapturedAt) {
+      label.textContent = "";
+      return;
+    }
+
+    const stamp = CallFlowReports.formatCallTimestamp(new Date(state.pendingCallCapturedAt), state.settings);
+    label.textContent = `${CallFlowI18n.t("capturedCallTime", state.settings.language || "es")}: ${stamp.date} ${stamp.time}`;
+  }
+
   function startWorkClock() {
     if (state.clockTimer) clearInterval(state.clockTimer);
     renderWorkClock();
@@ -1174,15 +1188,24 @@
     const todayCalls = CallFlowReports.ensureDailySequences(CallFlowReports.callsForToday(state.calls, state.settings));
     const groups = CallFlowReports.groupByBlock(todayCalls);
     const entries = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+    const counts = entries.map(([, calls]) => calls.length);
+    const maxCount = counts.length ? Math.max(...counts) : 0;
+    const minCount = counts.length ? Math.min(...counts) : 0;
+    const shouldMarkBest = entries.length > 2;
+    const shouldMarkWorst = entries.length > 3 && minCount < maxCount;
 
     $("#hourBlocks").innerHTML = entries.length
       ? entries
-          .map(([block, calls]) => `
-            <article class="block-item">
+          .map(([block, calls]) => {
+            const best = shouldMarkBest && calls.length === maxCount;
+            const worst = shouldMarkWorst && calls.length === minCount;
+            return `
+            <article class="block-item compact-hour-block${best ? " best-block" : ""}${worst ? " worst-block" : ""}">
               <strong>${block}</strong>
               <span class="muted">${calls.length} llamadas</span>
             </article>
-          `)
+          `;
+          })
           .join("")
       : '<p class="muted">Todavía no hay llamadas registradas hoy.</p>';
 
@@ -1283,6 +1306,7 @@
   function render() {
     if (!state.settings) return;
     renderHeader();
+    renderCapturedCallTime();
     renderCallOptions();
     renderDashboardInlineManagers();
     renderListEditors();
@@ -1303,6 +1327,7 @@
         callType: form.callType.value,
         description: form.description.value.trim(),
         customComment: form.customComment.value.trim(),
+        capturedAt: state.pendingCallCapturedAt,
         dailySequence: CallFlowReports.callsForToday(state.calls, state.settings).length + 1
       },
       state.settings
@@ -1322,6 +1347,7 @@
     form.callId.value = "";
     form.description.value = "";
     form.customComment.value = "";
+    state.pendingCallCapturedAt = null;
     form.callId.focus();
     render();
 
@@ -1338,6 +1364,21 @@
     if (!state.lastCall) return;
     await window.callflow.copyText(state.lastCall.crmLine);
     $("#lastSavedLabel").textContent = CallFlowI18n.t("lastCrmCopied", state.settings.language);
+  }
+
+  function captureCurrentCallTime() {
+    state.pendingCallCapturedAt = new Date().toISOString();
+    renderCapturedCallTime();
+  }
+
+  async function importCallIdFromClipboard() {
+    const text = await window.callflow.readClipboardText();
+    const callId = String(text || "").split(/\r?\n/)[0].trim();
+    if (!callId) return;
+    const form = $("#callForm");
+    form.callId.value = callId;
+    captureCurrentCallTime();
+    form.description.focus();
   }
 
   async function copySelectedBlocks() {
@@ -1487,6 +1528,8 @@
 
     $("#callForm").addEventListener("submit", saveCall);
     $("#copyLastCrm").addEventListener("click", copyLastCrm);
+    $("#importCallIdClipboard").addEventListener("click", importCallIdFromClipboard);
+    $("#captureCallTime").addEventListener("click", captureCurrentCallTime);
     $("#shiftTimerToggle").addEventListener("click", toggleShiftTimer);
     $("#sidebarToggle").addEventListener("click", () => {
       const app = $("#app");

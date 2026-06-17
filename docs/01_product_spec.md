@@ -18,6 +18,8 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - Frequent status presets are language-aware; user-created statuses are preserved exactly as typed.
 - Success and rejection labels are language-aware defaults with editable custom values.
 - Fast call registration where only call ID is required; call type, frequent status, and custom comment are optional.
+- Quick registration can import a call ID from the system clipboard through the secure preload bridge.
+- Operators can capture the incoming call time before saving so the final call record uses the real entry time instead of the moment the CRM comment is copied.
 - Frequent statuses are shortcuts/presets, not mandatory fields.
 - Call types and frequent statuses can be managed from both Dashboard and Settings using one shared settings source of truth.
 - Dashboard includes a live green work-time clock using the configured work timezone, with 24-hour, 12-hour, and military display options.
@@ -26,6 +28,7 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - Line prefix is configurable: `#` by default, no prefix, or daily numbering such as `001`.
 - CRM copy format: `DD.MM HH:mm Operator: Description`.
 - Hourly grouping by configured timezone.
+- Today's hourly blocks use a compact grid and can visually mark the most productive hour in green and the least productive hour in red when enough data exists.
 - Supervisor report copy in Markdown with one or more selected hourly blocks; calls inside a block are listed on consecutive lines without blank spacing.
 - Reports default to today's calls and can be filtered by yesterday, last 7 days, last 30 days, or a custom date range.
 - Reports include an in-section text search with match count, previous/next navigation, and visual highlighting for reviewing repeated words or exact phrases.
