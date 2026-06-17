@@ -684,14 +684,14 @@
   }
 
   function renderCallOptions() {
-    const language = state.settings.language || "es";
     const callType = $("#callForm select[name='callType']");
     const currentCallType = callType.value;
-    callType.innerHTML = [
-      `<option value="">${escapeHtml(CallFlowI18n.t("optionalCallType", language))}</option>`,
-      ...state.settings.callTypes.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`)
-    ].join("");
+    callType.innerHTML = state.settings.callTypes
+      .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`)
+      .join("");
+    callType.disabled = !state.settings.callTypes.length;
     if (state.settings.callTypes.includes(currentCallType)) callType.value = currentCallType;
+    else callType.value = "";
 
     $("#statusList").innerHTML = state.settings.frequentStatuses
       .map((status) => `<option value="${escapeHtml(status)}"></option>`)

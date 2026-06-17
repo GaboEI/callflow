@@ -60,6 +60,11 @@ textarea {
   resize: vertical;
 }
 
+select:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 label span {
   display: block;
   margin-bottom: 6px;
