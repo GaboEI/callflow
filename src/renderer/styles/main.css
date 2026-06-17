@@ -306,6 +306,18 @@ nav {
   gap: 14px;
 }
 
+.call-form > label {
+  display: grid;
+  grid-template-rows: 32px auto;
+  gap: 6px;
+  align-self: start;
+}
+
+.call-form > label > span {
+  align-self: end;
+  margin-bottom: 0;
+}
+
 .stack {
   display: grid;
   gap: 12px;
