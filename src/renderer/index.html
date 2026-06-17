@@ -158,8 +158,10 @@
                     <button class="icon-button" type="button" id="removeCurrentStatus" data-i18n-title="removeStatus" title="Eliminar estado">−</button>
                   </span>
                 </span>
-                <input name="description" list="statusList" autocomplete="off" />
-                <datalist id="statusList"></datalist>
+                <div class="status-combobox">
+                  <input name="description" id="descriptionInput" autocomplete="off" />
+                  <div class="status-options" id="statusOptions"></div>
+                </div>
               </label>
               <label class="span-2">
                 <span data-i18n="customComment">Comentario personalizado</span>

@@ -481,6 +481,12 @@
       .replaceAll("'", "&#039;");
   }
 
+  function compactStatusLabel(value) {
+    const text = String(value || "");
+    if (text.length <= 72) return text;
+    return `${text.slice(0, 48)}...${text.slice(-18)}`;
+  }
+
   function markdownPreview(markdown) {
     const escaped = escapeHtml(markdown);
     return escaped
@@ -713,9 +719,35 @@
     if (state.settings.callTypes.includes(currentCallType)) callType.value = currentCallType;
     else callType.value = "";
 
-    $("#statusList").innerHTML = state.settings.frequentStatuses
-      .map((status) => `<option value="${escapeHtml(status)}"></option>`)
+    renderStatusOptions(false);
+  }
+
+  function renderStatusOptions(open = true) {
+    const input = $("#descriptionInput");
+    const list = $("#statusOptions");
+    if (!input || !list) return;
+    const query = input.value.trim().toLowerCase();
+    const options = state.settings.frequentStatuses.filter((status) =>
+      String(status).toLowerCase().includes(query)
+    );
+    list.classList.toggle("open", open && options.length > 0);
+    list.innerHTML = options
+      .map(
+        (status) => `
+          <button type="button" class="status-option" data-status-option="${escapeHtml(status)}" title="${escapeHtml(status)}">
+            <span>${escapeHtml(compactStatusLabel(status))}</span>
+          </button>
+        `
+      )
       .join("");
+  }
+
+  function selectStatusOption(value) {
+    const input = $("#descriptionInput");
+    if (!input) return;
+    input.value = value;
+    renderStatusOptions(false);
+    input.focus();
   }
 
   function renderDashboardInlineManagers() {
@@ -1230,11 +1262,17 @@
     $("#addCurrentStatus").addEventListener("click", addCurrentDashboardStatus);
     $("#removeCurrentStatus").addEventListener("click", removeCurrentDashboardStatus);
     $("#callForm input[name='description']").addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        renderStatusOptions(false);
+        return;
+      }
       if (event.key === "Enter") {
         event.preventDefault();
         addCurrentDashboardStatus();
       }
     });
+    $("#callForm input[name='description']").addEventListener("focus", () => renderStatusOptions(true));
+    $("#callForm input[name='description']").addEventListener("input", () => renderStatusOptions(true));
     $("#copySelectedBlocks").addEventListener("click", copySelectedBlocks);
     $("#reminderForm").addEventListener("submit", saveReminder);
     $("#reminderFilter").addEventListener("change", render);
@@ -1332,6 +1370,7 @@
       if (sidebarToggle) return;
       const timezoneToggle = event.target.closest("[data-timezone-toggle]");
       const timezoneOption = event.target.closest("[data-timezone-picker-option]");
+      const statusOption = event.target.closest("[data-status-option]");
       const addListId = event.target.dataset.addListItem;
       const removeListId = event.target.dataset.removeListItem;
       const presetListId = event.target.dataset.presetListItem;
@@ -1359,6 +1398,12 @@
       }
       if (timezonePickerId) {
         selectTimezone(timezonePickerId, timezoneOption.dataset.value);
+      }
+      if (statusOption) {
+        selectStatusOption(statusOption.dataset.statusOption);
+      }
+      if (!event.target.closest(".status-combobox")) {
+        renderStatusOptions(false);
       }
       if (!event.target.closest(".timezone-picker")) {
         closeTimezoneDropdown("onboarding");

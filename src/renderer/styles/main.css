@@ -416,6 +416,54 @@ nav {
   gap: 8px;
 }
 
+.status-combobox {
+  position: relative;
+}
+
+.status-options {
+  display: none;
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 210px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #07101f;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.status-options.open {
+  display: grid;
+}
+
+.status-option {
+  min-height: 32px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  padding: 7px 10px;
+  text-align: left;
+}
+
+.status-option:last-child {
+  border-bottom: 0;
+}
+
+.status-option:hover {
+  background: rgba(59, 130, 246, 0.16);
+}
+
+.status-option span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .generated-line {
   display: grid;
   gap: 8px;
