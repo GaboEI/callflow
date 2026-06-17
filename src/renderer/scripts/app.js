@@ -849,17 +849,20 @@
 
   function statsCards(stats) {
     const base = [
-      ["Total de llamadas", stats.total],
-      [state.settings.successLabel, stats.success],
-      [state.settings.rejectionLabel, stats.rejections],
-      ["Sin respuesta", stats.noAnswer],
-      ["Recordatorios pendientes", stats.pendingReminders]
+      ["Total de llamadas", stats.total, ""],
+      [state.settings.successLabel, stats.success, "success-metric"],
+      [state.settings.rejectionLabel, stats.rejections, "rejection-metric"],
+      ["Sin respuesta", stats.noAnswer, ""],
+      ["Recordatorios pendientes", stats.pendingReminders, ""]
     ];
 
-    const byType = Object.entries(stats.byType).map(([key, value]) => [`Tipo ${key}`, value]);
-    const byHour = Object.entries(stats.byHour).map(([key, value]) => [`Hora ${key}`, value]);
-    return [...base, ...byType, ...byHour]
-      .map(([label, value]) => `<article class="card"><span class="muted">${escapeHtml(label)}</span><strong>${value}</strong></article>`)
+    const byType = Object.entries(stats.byType).map(([key, value]) => [`Tipo ${key}`, value, ""]);
+    const byStatus = Object.entries(stats.statusCounts).map(([key, value]) => [key, value, ""]);
+    return [...base, ...byType, ...byStatus]
+      .map(
+        ([label, value, className]) =>
+          `<article class="card ${className}"><span class="muted">${escapeHtml(label)}</span><strong>${value}</strong></article>`
+      )
       .join("");
   }
 

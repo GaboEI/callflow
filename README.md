@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.9` adds a quick reminder handoff from call registration. Operators can save a call, copy the CRM text, and jump to Reminders with the call ID prefilled.
+Version `0.1.10` refines dashboard daily statistics by removing duplicated hourly cards, ignoring empty call types, adding active frequent-status counts, and coloring success/rejection metrics.
 
 The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
 

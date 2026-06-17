@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.10 - Refine dashboard daily statistics
+
+- Removed duplicated hourly block metrics from daily statistics.
+- Stopped showing empty call type values as `Tipo N/A`.
+- Added daily counts for configured frequent statuses when they have activity.
+- Colored successful call counts green and rejection counts red.
+
 ## v0.1.9 - Add quick reminder handoff from registration
 
 - Added an `Añadir recordatorio` action beside quick registration CRM actions.

@@ -426,6 +426,14 @@ code {
   margin-top: 6px;
 }
 
+.card.success-metric strong {
+  color: var(--green);
+}
+
+.card.rejection-metric strong {
+  color: var(--red);
+}
+
 .block-list,
 .report-list,
 .item-list {

@@ -26,7 +26,7 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - CRM copy format: `DD.MM HH:mm Operator: Description`.
 - Hourly grouping by configured timezone.
 - Supervisor report copy in Markdown with one or more selected hourly blocks; calls inside a block are listed on consecutive lines without blank spacing.
-- Daily statistics for total calls, successes, rejections, no answer, provider totals, hourly totals, and pending reminders.
+- Daily statistics for total calls, successes, rejections, no answer, provider totals, frequent status counts with activity, and pending reminders.
 - Callback reminders with pending, completed, and overdue states.
 - Quick registration can hand off a saved call to Reminders by copying CRM text and preloading the call ID.
 - Markdown cheat sheet with create, edit, delete, search, preview, and export to `.md` or `.txt`.
