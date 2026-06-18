@@ -262,6 +262,7 @@
       language: sanitized.language,
       timezone: sanitized.timezone,
       activeTimezones: sanitized.activeTimezones,
+      pinnedClockTimezones: sanitized.pinnedClockTimezones,
       lastReminderTimezone: sanitized.lastReminderTimezone,
       callTypes: sanitized.callTypes,
       frequentStatuses: sanitized.frequentStatuses,
@@ -753,6 +754,9 @@
       language,
       timezone: form.timezone.value,
       activeTimezones: uniqueItems([form.timezone.value, ...(state.settings.activeTimezones || [])]).slice(0, V.MAX_ACTIVE_TIMEZONES),
+      pinnedClockTimezones: (state.settings.pinnedClockTimezones || []).filter((timezone) =>
+        uniqueItems([form.timezone.value, ...(state.settings.activeTimezones || [])]).includes(timezone)
+      ),
       lastReminderTimezone: state.settings.lastReminderTimezone,
       operatorName: form.operatorName.value.trim(),
       callTypes: [...state.formLists[`${listPrefix}CallTypes`]],
@@ -873,6 +877,11 @@
     return V.uniqueItems([state.settings.timezone || "local", ...(state.settings.activeTimezones || [])]).slice(0, V.MAX_ACTIVE_TIMEZONES);
   }
 
+  function pinnedClockTimezones() {
+    const zones = activeTimezones();
+    return (state.settings.pinnedClockTimezones || []).filter((timezone) => zones.includes(timezone));
+  }
+
   function renderActiveTimezoneEditors() {
     ["onboarding", "settings"].forEach((pickerId) => {
       const output = document.querySelector(`[data-active-timezones-output="${pickerId}"]`);
@@ -900,6 +909,7 @@
     state.settings = normalizeSettings({
       ...state.settings,
       activeTimezones: zones,
+      pinnedClockTimezones: (state.settings.pinnedClockTimezones || []).filter((timezone) => zones.includes(timezone)),
       lastReminderTimezone: zones.includes(lastReminderTimezone) ? lastReminderTimezone : zones[0]
     });
     await runAction(async () => {
@@ -917,6 +927,25 @@
 
   async function removeActiveTimezone(value) {
     await updateActiveTimezones(activeTimezones().filter((timezone) => timezone !== value));
+  }
+
+  async function updatePinnedClockTimezones(timezones) {
+    const zones = activeTimezones();
+    state.settings = normalizeSettings({
+      ...state.settings,
+      pinnedClockTimezones: V.uniqueItems(timezones).filter((timezone) => zones.includes(timezone))
+    });
+    await runAction(async () => {
+      await CallFlowStorage.write("settings", state.settings);
+      renderWorkClock();
+    });
+  }
+
+  async function togglePinnedClock(timezone) {
+    const pinned = pinnedClockTimezones();
+    await updatePinnedClockTimezones(
+      pinned.includes(timezone) ? pinned.filter((item) => item !== timezone) : [...pinned, timezone]
+    );
   }
 
   function renderListEditors() {
@@ -1306,13 +1335,45 @@
     const clock = $("#workClock");
     if (!clock || !state.settings) return;
     const now = new Date();
-    clock.innerHTML = activeTimezones()
+    const pinned = pinnedClockTimezones();
+    clock.innerHTML = pinned.length
+      ? pinned
       .map((timezone) => {
         const label = `${timezoneFlag(timezone)} ${shortTimezoneName(timezone)}`;
         const value = formatWorkClockForTimezone(now, timezone);
         return `<span class="clock-chip" title="${escapeHtml(timezone)}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></span>`;
       })
-      .join("");
+          .join("")
+      : `<span class="clock-empty">${escapeHtml(CallFlowI18n.t("noPinnedClocks", state.settings.language || "es"))}</span>`;
+    renderClockPanel(now);
+  }
+
+  function renderClockPanel(now = new Date()) {
+    const panel = $("#clockPanel");
+    const toggle = $("#clockPanelToggle");
+    if (!panel || !toggle || !state.settings) return;
+    const pinned = new Set(pinnedClockTimezones());
+    const zones = activeTimezones();
+    toggle.textContent = zones.length > 1 ? `${pinned.size}/${zones.length} ⌄` : "⌄";
+    panel.innerHTML = `
+      <header>
+        <strong>${escapeHtml(CallFlowI18n.t("allClocks", state.settings.language || "es"))}</strong>
+      </header>
+      <div class="clock-panel-list">
+        ${zones
+          .map((timezone) => {
+            const isPinned = pinned.has(timezone);
+            return `
+              <button type="button" class="clock-panel-item" data-toggle-pinned-clock="${escapeHtml(timezone)}">
+                <span>${escapeHtml(`${timezoneFlag(timezone)} ${shortTimezoneName(timezone)}`)}</span>
+                <strong>${escapeHtml(formatWorkClockForTimezone(now, timezone))}</strong>
+                <small>${escapeHtml(CallFlowI18n.t(isPinned ? "unpinClock" : "pinClock", state.settings.language || "es"))}</small>
+              </button>
+            `;
+          })
+          .join("")}
+      </div>
+    `;
   }
 
   function formatWorkClockForTimezone(date, timezone) {
@@ -2556,6 +2617,9 @@
     $("#captureCallTime").addEventListener("click", captureCurrentCallTime);
     $("#shiftTimerToggle").addEventListener("click", toggleShiftTimer);
     $("#shiftTimerStop").addEventListener("click", stopShiftTimer);
+    $("#clockPanelToggle").addEventListener("click", () => {
+      $("#clockPanel").classList.toggle("hidden");
+    });
     $("#sidebarToggle").addEventListener("click", () => {
       const app = $("#app");
       app.classList.toggle("sidebar-open");
@@ -2765,6 +2829,7 @@
       const reminderDateShortcut = event.target.dataset.reminderDateShortcut;
       const addActiveTimezonePicker = event.target.dataset.addActiveTimezone;
       const removeActiveTimezoneValue = event.target.dataset.removeActiveTimezone;
+      const togglePinnedClockValue = event.target.dataset.togglePinnedClock;
       const noteId = event.target.dataset.selectNote;
       if (addListId) {
         addListItem(addListId, document.querySelector(`[data-list-input="${addListId}"]`).value);
@@ -2840,6 +2905,10 @@
       if (reminderDateShortcut) setReminderDateShortcut(reminderDateShortcut);
       if (addActiveTimezonePicker) addActiveTimezoneFromPicker(addActiveTimezonePicker);
       if (removeActiveTimezoneValue) removeActiveTimezone(removeActiveTimezoneValue);
+      if (togglePinnedClockValue) togglePinnedClock(togglePinnedClockValue);
+      if (!event.target.closest("#workClockShell")) {
+        $("#clockPanel").classList.add("hidden");
+      }
       if (noteId) {
         state.selectedNoteId = noteId;
         renderNotes();

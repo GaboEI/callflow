@@ -86,15 +86,28 @@ test("normalizes active timezones with primary first and a max of ten", () => {
       "Europe/Paris",
       "Europe/Berlin",
       "Asia/Tokyo",
-      "UTC"
+    "UTC"
     ],
-    lastReminderTimezone: "America/Bogota"
+    lastReminderTimezone: "America/Bogota",
+    pinnedClockTimezones: ["Europe/Madrid", "America/Bogota", "UTC"]
   });
 
   assert.equal(result.activeTimezones.length, 10);
   assert.equal(result.activeTimezones[0], "Europe/Madrid");
   assert.equal(result.lastReminderTimezone, "America/Bogota");
   assert.equal(result.activeTimezones.includes("UTC"), false);
+  assert.deepEqual(result.pinnedClockTimezones, ["Europe/Madrid", "America/Bogota"]);
+});
+
+test("allows no pinned clocks while keeping active timezones available", () => {
+  const result = validators.normalizeSettings({
+    timezone: "Europe/Madrid",
+    activeTimezones: ["Europe/Rome"],
+    pinnedClockTimezones: []
+  });
+
+  assert.deepEqual(result.activeTimezones, ["Europe/Madrid", "Europe/Rome"]);
+  assert.deepEqual(result.pinnedClockTimezones, []);
 });
 
 test("normalizes legacy call records without throwing", () => {

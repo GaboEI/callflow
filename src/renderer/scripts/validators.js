@@ -178,12 +178,17 @@
       0,
       MAX_ACTIVE_TIMEZONES
     );
+    const hasPinnedClockTimezones = Object.prototype.hasOwnProperty.call(merged, "pinnedClockTimezones");
+    const pinnedClockTimezones = (
+      hasPinnedClockTimezones ? uniqueItems(merged.pinnedClockTimezones, LIMITS.shortText) : activeTimezones.slice(0, 1)
+    ).filter((timezone) => activeTimezones.includes(timezone));
     const lastReminderTimezone = text(merged.lastReminderTimezone, LIMITS.shortText);
     const normalized = {
       ...merged,
       language,
       timezone: primaryTimezone,
       activeTimezones,
+      pinnedClockTimezones,
       lastReminderTimezone: activeTimezones.includes(lastReminderTimezone) ? lastReminderTimezone : activeTimezones[0] || primaryTimezone,
       operatorName: text(merged.operatorName, LIMITS.shortText),
       callTypes: uniqueItems(merged.callTypes, LIMITS.shortText),

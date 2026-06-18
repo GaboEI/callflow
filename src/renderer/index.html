@@ -138,7 +138,11 @@
                 <strong id="shiftTimerValue">00:00:00</strong>
               </div>
             </div>
-            <div class="work-clock" id="workClock">--:--:--</div>
+            <div class="work-clock-shell" id="workClockShell">
+              <div class="work-clock" id="workClock">--:--:--</div>
+              <button class="clock-panel-toggle" type="button" id="clockPanelToggle" data-i18n-title="allClocks" title="Todos los relojes">⌄</button>
+              <div class="clock-panel hidden" id="clockPanel"></div>
+            </div>
             <div class="status-pill" id="operatorLabel"></div>
           </div>
         </header>
