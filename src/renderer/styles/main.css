@@ -492,8 +492,9 @@ nav {
   text-align: left;
 }
 
-.clock-panel-item small {
-  grid-column: 1 / -1;
+.clock-panel-item.pinned {
+  border-color: rgba(34, 197, 94, 0.42);
+  background: rgba(34, 197, 94, 0.13);
 }
 
 .clock-panel-item span {
@@ -509,7 +510,22 @@ nav {
 }
 
 .clock-panel-item small {
-  color: var(--muted);
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  color: #64748b;
+  filter: grayscale(1);
+  opacity: 0.62;
+}
+
+.clock-panel-item.pinned small {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+  filter: none;
+  opacity: 1;
 }
 
 .timezone-chip-list {

@@ -1364,10 +1364,10 @@
           .map((timezone) => {
             const isPinned = pinned.has(timezone);
             return `
-              <button type="button" class="clock-panel-item" data-toggle-pinned-clock="${escapeHtml(timezone)}">
+              <button type="button" class="clock-panel-item${isPinned ? " pinned" : ""}" data-toggle-pinned-clock="${escapeHtml(timezone)}" title="${escapeHtml(CallFlowI18n.t(isPinned ? "unpinClock" : "pinClock", state.settings.language || "es"))}">
                 <span>${escapeHtml(`${timezoneFlag(timezone)} ${shortTimezoneName(timezone)}`)}</span>
                 <strong>${escapeHtml(formatWorkClockForTimezone(now, timezone))}</strong>
-                <small>${escapeHtml(CallFlowI18n.t(isPinned ? "unpinClock" : "pinClock", state.settings.language || "es"))}</small>
+                <small aria-hidden="true">📌</small>
               </button>
             `;
           })
@@ -2829,7 +2829,8 @@
       const reminderDateShortcut = event.target.dataset.reminderDateShortcut;
       const addActiveTimezonePicker = event.target.dataset.addActiveTimezone;
       const removeActiveTimezoneValue = event.target.dataset.removeActiveTimezone;
-      const togglePinnedClockValue = event.target.dataset.togglePinnedClock;
+      const togglePinnedClockButton = event.target.closest("[data-toggle-pinned-clock]");
+      const togglePinnedClockValue = togglePinnedClockButton ? togglePinnedClockButton.dataset.togglePinnedClock : null;
       const noteId = event.target.dataset.selectNote;
       if (addListId) {
         addListItem(addListId, document.querySelector(`[data-list-input="${addListId}"]`).value);
