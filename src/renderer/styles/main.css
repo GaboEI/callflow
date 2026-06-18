@@ -1143,6 +1143,38 @@ code {
   min-width: 30px;
 }
 
+.reminder-form {
+  display: grid;
+  gap: 10px;
+}
+
+.reminder-form label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.reminder-form label > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.reminder-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.reminder-repeat-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 240px);
+}
+
+.reminder-note-field textarea {
+  min-height: 76px;
+}
+
 .reminder-date-shortcuts {
   display: flex;
   flex-wrap: wrap;

@@ -337,27 +337,46 @@
                 <h2 data-i18n="newReminder">Crear recordatorio</h2>
                 <button type="button" class="icon-button" id="toggleReminderForm" data-i18n-title="hide" title="Ocultar">▴</button>
               </div>
-              <form id="reminderForm" class="stack">
-                <input name="callId" placeholder="ID de llamada opcional" />
-                <input name="date" type="date" required />
-                <label class="reminder-timezone-field hidden" id="reminderTimezoneField">
-                  <span data-i18n="reminderTimezone">Zona del recordatorio</span>
-                  <select name="timezone"></select>
+              <form id="reminderForm" class="reminder-form">
+                <label class="reminder-main-field">
+                  <span data-i18n="callId">ID de llamada</span>
+                  <input name="callId" placeholder="ID de llamada opcional" />
                 </label>
+                <div class="reminder-fields-grid">
+                  <label>
+                    <span data-i18n="callbackDate">Fecha de rellamada</span>
+                    <input name="date" type="date" required />
+                  </label>
+                  <label>
+                    <span data-i18n="callbackTime">Hora de rellamada</span>
+                    <input name="time" type="time" required />
+                  </label>
+                  <label class="reminder-timezone-field hidden" id="reminderTimezoneField">
+                    <span data-i18n="reminderTimezone">Zona del recordatorio</span>
+                    <select name="timezone"></select>
+                  </label>
+                </div>
                 <div class="reminder-date-shortcuts">
                   <button type="button" data-reminder-date-shortcut="today" data-i18n="reportToday">Hoy</button>
                   <button type="button" data-reminder-date-shortcut="tomorrow" data-i18n="reportTomorrow">Mañana</button>
                   <button type="button" data-reminder-date-shortcut="nextWeek" data-i18n="nextWeek">Próxima semana</button>
                 </div>
-                <input name="time" type="time" required />
-                <select name="repeat">
-                  <option value="once" data-i18n="repeatOnce">Una sola vez</option>
-                  <option value="daily" data-i18n="repeatDaily">Todos los días</option>
-                  <option value="weekdays" data-i18n="repeatWeekdays">Días laborables</option>
-                  <option value="weekly" data-i18n="repeatWeekly">Cada semana</option>
-                  <option value="monthly" data-i18n="repeatMonthly">Cada mes</option>
-                </select>
-                <textarea name="note" rows="4" placeholder="Nota" required></textarea>
+                <div class="reminder-repeat-row">
+                  <label>
+                    <span data-i18n="repeat">Repetición</span>
+                    <select name="repeat">
+                      <option value="once" data-i18n="repeatOnce">Una sola vez</option>
+                      <option value="daily" data-i18n="repeatDaily">Todos los días</option>
+                      <option value="weekdays" data-i18n="repeatWeekdays">Días laborables</option>
+                      <option value="weekly" data-i18n="repeatWeekly">Cada semana</option>
+                      <option value="monthly" data-i18n="repeatMonthly">Cada mes</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="reminder-note-field">
+                  <span data-i18n="note">Nota</span>
+                  <textarea name="note" rows="2" data-i18n-placeholder="note" placeholder="Nota" required></textarea>
+                </label>
                 <div class="button-row">
                   <button class="primary" id="saveReminderButton" type="submit" data-i18n="saveReminder">Guardar recordatorio</button>
                   <button class="hidden" id="cancelReminderEdit" type="button" data-i18n="cancel">Cancelar</button>
