@@ -1863,6 +1863,27 @@ code {
   justify-content: flex-end;
 }
 
+.report-copy-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-color: rgba(34, 197, 94, 0.42);
+  background: rgba(34, 197, 94, 0.13);
+  color: #bbf7d0;
+  font-weight: 700;
+}
+
+.report-copy-action:hover {
+  border-color: rgba(34, 197, 94, 0.76);
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.report-copy-action span {
+  color: #86efac;
+  font-size: 15px;
+  line-height: 1;
+}
+
 .report-export-actions {
   border: 1px solid var(--border);
   border-radius: 8px;
