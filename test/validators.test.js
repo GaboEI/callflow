@@ -8,6 +8,7 @@ test("normalizes malformed settings into production-safe defaults", () => {
     language: "bad",
     callTypes: "Ventas, Ventas, Soporte",
     frequentStatuses: [null, " Sin_respuesta ", "sin_respuesta"],
+    customComments: [" Cliente ocupado ", "Cliente ocupado", "No llamar más"],
     notifyBeforeMinutes: -10,
     reminderSound: "loud",
     linePrefixMode: "bad",
@@ -17,6 +18,7 @@ test("normalizes malformed settings into production-safe defaults", () => {
   assert.equal(result.language, "es");
   assert.deepEqual(result.callTypes, ["Ventas", "Soporte"]);
   assert.deepEqual(result.frequentStatuses, ["Sin_respuesta"]);
+  assert.deepEqual(result.customComments, ["Cliente ocupado", "No llamar más"]);
   assert.equal(result.notifyBeforeMinutes, 0);
   assert.equal(result.reminderSound, "soft");
   assert.equal(result.linePrefixMode, "hash");

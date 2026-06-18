@@ -688,6 +688,7 @@ Africa/Harare ZW
       lastReminderTimezone: sanitized.lastReminderTimezone,
       callTypes: sanitized.callTypes,
       frequentStatuses: sanitized.frequentStatuses,
+      customComments: sanitized.customComments,
       successLabel: sanitized.successLabel || defaultSuccessLabel(sanitized.language),
       rejectionLabel: sanitized.rejectionLabel || defaultRejectionLabel(sanitized.language),
       outcomePresets: normalizeOutcomePresets(sanitized),
@@ -1183,6 +1184,7 @@ Africa/Harare ZW
       operatorName: form.operatorName.value.trim(),
       callTypes: [...state.formLists[`${listPrefix}CallTypes`]],
       frequentStatuses: [...state.formLists[`${listPrefix}FrequentStatuses`]],
+      customComments: state.settings.customComments || [],
       successLabel: outcomePresets.success.default || defaultSuccessLabel(language),
       rejectionLabel: outcomePresets.rejection.default || defaultRejectionLabel(language),
       outcomePresets,
@@ -1425,6 +1427,19 @@ Africa/Harare ZW
     else callType.value = "";
 
     renderStatusOptions(false);
+    renderCustomCommentOptions(false);
+  }
+
+  function renderOptionButtons(options, dataName, optionsConfig = {}) {
+    return options
+      .map(
+        (value) => `
+          <button type="button" class="status-option${optionsConfig.fullText ? " full-text" : ""}" data-${dataName}="${escapeHtml(value)}" title="${escapeHtml(value)}">
+            <span>${escapeHtml(optionsConfig.fullText ? value : compactStatusLabel(value))}</span>
+          </button>
+        `
+      )
+      .join("");
   }
 
   function renderStatusOptions(open = true) {
@@ -1436,15 +1451,19 @@ Africa/Harare ZW
       String(status).toLowerCase().includes(query)
     );
     list.classList.toggle("open", open && options.length > 0);
-    list.innerHTML = options
-      .map(
-        (status) => `
-          <button type="button" class="status-option" data-status-option="${escapeHtml(status)}" title="${escapeHtml(status)}">
-            <span>${escapeHtml(compactStatusLabel(status))}</span>
-          </button>
-        `
-      )
-      .join("");
+    list.innerHTML = renderOptionButtons(options, "status-option");
+  }
+
+  function renderCustomCommentOptions(open = true) {
+    const input = $("#customCommentInput");
+    const list = $("#customCommentOptions");
+    if (!input || !list) return;
+    const query = input.value.trim().toLowerCase();
+    const options = (state.settings.customComments || []).filter((comment) =>
+      String(comment).toLowerCase().includes(query)
+    );
+    list.classList.toggle("open", open && options.length > 0);
+    list.innerHTML = renderOptionButtons(options, "custom-comment-option", { fullText: true });
   }
 
   function selectStatusOption(value) {
@@ -1452,6 +1471,14 @@ Africa/Harare ZW
     if (!input) return;
     input.value = value;
     renderStatusOptions(false);
+    input.focus();
+  }
+
+  function selectCustomCommentOption(value) {
+    const input = $("#customCommentInput");
+    if (!input) return;
+    input.value = value;
+    renderCustomCommentOptions(false);
     input.focus();
   }
 
@@ -1685,6 +1712,36 @@ Africa/Harare ZW
     const language = state.settings.language || "es";
     if (!window.confirm(CallFlowI18n.t("confirmRemoveStatus", language))) return;
     await updateFrequentStatusesFromDashboard(state.settings.frequentStatuses.filter((status) => status !== value));
+    input.focus();
+  }
+
+  async function updateCustomCommentsFromDashboard(customComments) {
+    state.settings = normalizeSettings({
+      ...state.settings,
+      customComments: uniqueItems(customComments)
+    });
+    await runAction(async () => {
+      await CallFlowStorage.write("settings", state.settings);
+      renderCustomCommentOptions(false);
+      render();
+    });
+  }
+
+  async function addCurrentCustomComment() {
+    const input = $("#customCommentInput");
+    const value = input.value.trim();
+    if (!value) return;
+    await updateCustomCommentsFromDashboard([...(state.settings.customComments || []), value]);
+    input.focus();
+  }
+
+  async function removeCurrentCustomComment() {
+    const input = $("#customCommentInput");
+    const value = input.value.trim();
+    if (!value || !(state.settings.customComments || []).includes(value)) return;
+    const language = state.settings.language || "es";
+    if (!window.confirm(CallFlowI18n.t("confirmRemoveCustomComment", language))) return;
+    await updateCustomCommentsFromDashboard((state.settings.customComments || []).filter((comment) => comment !== value));
     input.focus();
   }
 
@@ -3065,6 +3122,8 @@ Africa/Harare ZW
     });
     $("#addCurrentStatus").addEventListener("click", addCurrentDashboardStatus);
     $("#removeCurrentStatus").addEventListener("click", removeCurrentDashboardStatus);
+    $("#addCurrentCustomComment").addEventListener("click", addCurrentCustomComment);
+    $("#removeCurrentCustomComment").addEventListener("click", removeCurrentCustomComment);
     $("#callForm input[name='description']").addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         renderStatusOptions(false);
@@ -3077,6 +3136,18 @@ Africa/Harare ZW
     });
     $("#callForm input[name='description']").addEventListener("focus", () => renderStatusOptions(true));
     $("#callForm input[name='description']").addEventListener("input", () => renderStatusOptions(true));
+    $("#customCommentInput").addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        renderCustomCommentOptions(false);
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addCurrentCustomComment();
+      }
+    });
+    $("#customCommentInput").addEventListener("focus", () => renderCustomCommentOptions(true));
+    $("#customCommentInput").addEventListener("input", () => renderCustomCommentOptions(true));
     $("#callForm").addEventListener("keydown", (event) => {
       const input = event.target.closest("[data-new-outcome]");
       if (input && event.key === "Enter") {
@@ -3233,6 +3304,7 @@ Africa/Harare ZW
       const timezoneToggle = event.target.closest("[data-timezone-toggle]");
       const timezoneOption = event.target.closest("[data-timezone-picker-option]");
       const statusOption = event.target.closest("[data-status-option]");
+      const customCommentOption = event.target.closest("[data-custom-comment-option]");
       const outcomeToggle = event.target.closest("[data-outcome-toggle]");
       const addListId = event.target.dataset.addListItem;
       const removeListId = event.target.dataset.removeListItem;
@@ -3314,8 +3386,14 @@ Africa/Harare ZW
       if (statusOption) {
         selectStatusOption(statusOption.dataset.statusOption);
       }
+      if (customCommentOption) {
+        selectCustomCommentOption(customCommentOption.dataset.customCommentOption);
+      }
       if (!event.target.closest(".status-combobox")) {
         renderStatusOptions(false);
+      }
+      if (!event.target.closest(".custom-comment-combobox")) {
+        renderCustomCommentOptions(false);
       }
       if (!event.target.closest(".outcome-control")) {
         state.openOutcomeMenu = null;

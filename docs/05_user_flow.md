@@ -38,6 +38,8 @@ If both frequent status and custom comment are present, they are combined:
 # 20506955 Soporte 16.06 14:05 Ana: Sin_respuesta — Cliente pidió rellamada
 ```
 
+Custom comments can be saved from the Dashboard with `+`, selected through search, and removed with `-`. They start empty for a new user and are only text shortcuts; they do not count toward daily statistics.
+
 The prefix before the call ID is configurable in Settings. The default is `#`, but the operator can choose no prefix or a daily counter such as `001`.
 
 ## Copia para CRM

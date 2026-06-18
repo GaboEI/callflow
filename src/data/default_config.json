@@ -9,6 +9,7 @@
     "Contesta_cuelga",
     "Teléfono_apagado"
   ],
+  "customComments": [],
   "successLabel": "Exitosa",
   "rejectionLabel": "Rechazo",
   "outcomePresets": {

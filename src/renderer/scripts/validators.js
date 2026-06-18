@@ -193,6 +193,7 @@
       operatorName: text(merged.operatorName, LIMITS.shortText),
       callTypes: uniqueItems(merged.callTypes, LIMITS.shortText),
       frequentStatuses: uniqueItems(merged.frequentStatuses || merged.callStatuses, LIMITS.shortText),
+      customComments: uniqueItems(merged.customComments, LIMITS.mediumText),
       successLabel: text(merged.successLabel, LIMITS.shortText) || "Exitosa",
       rejectionLabel: text(merged.rejectionLabel, LIMITS.shortText) || "Rechazo",
       reportHeaderFormat: text(merged.reportHeaderFormat, LIMITS.reportHeader) || "##### **REPORTE {OPERATOR} DE {BLOCK}**",

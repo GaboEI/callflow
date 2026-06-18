@@ -23,6 +23,7 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - Quick registration includes a primary call outcome layer with success, rejection, and callback categories.
 - Primary outcome is separate from call type, frequent status, and custom comment.
 - Generated descriptions follow this hierarchy: primary outcome, frequent status/description, then custom comment.
+- Custom comments can be saved as user-managed presets from Dashboard, start empty by default, are searchable, and do not affect statistics.
 - Callback outcome requires callback date/time and automatically creates a pending reminder linked to the saved call.
 - Frequent statuses are shortcuts/presets, not mandatory fields.
 - Call types and frequent statuses can be managed from both Dashboard and Settings using one shared settings source of truth.

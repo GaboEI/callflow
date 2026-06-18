@@ -234,9 +234,18 @@
                   <select name="callbackTimezone"></select>
                 </label>
               </div>
-              <label class="span-2">
-                <span data-i18n="customComment">Comentario personalizado</span>
-                <input name="customComment" autocomplete="off" />
+              <label class="span-2 custom-comment-field">
+                <span class="field-heading">
+                  <span data-i18n="customComment">Comentario personalizado</span>
+                  <span class="inline-icon-actions">
+                    <button class="icon-button" type="button" id="addCurrentCustomComment" data-i18n-title="addCustomComment" title="Agregar comentario">+</button>
+                    <button class="icon-button" type="button" id="removeCurrentCustomComment" data-i18n-title="removeCustomComment" title="Eliminar comentario">−</button>
+                  </span>
+                </span>
+                <div class="custom-comment-combobox">
+                  <input name="customComment" id="customCommentInput" autocomplete="off" />
+                  <div class="status-options" id="customCommentOptions"></div>
+                </div>
               </label>
               <div class="button-row span-2">
                 <button class="primary" type="submit" data-action="save" data-i18n="save">Guardar</button>

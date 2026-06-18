@@ -660,7 +660,8 @@ nav {
   gap: 8px;
 }
 
-.status-combobox {
+.status-combobox,
+.custom-comment-combobox {
   position: relative;
 }
 
@@ -851,6 +852,13 @@ nav {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.status-option.full-text span {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .generated-line {
