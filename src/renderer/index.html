@@ -319,10 +319,6 @@
                 <input id="reportDateTo" type="date" />
               </label>
             </div>
-            <div class="report-bulk-actions">
-              <button type="button" id="selectAllReportBlocks">Seleccionar todo</button>
-              <button type="button" id="clearReportSelection">Deseleccionar todo</button>
-            </div>
             <div class="report-searchbar">
               <label>
                 <span data-i18n="reportSearch">Buscar en reportes</span>
@@ -334,6 +330,10 @@
                 <button type="button" id="reportSearchNext" data-i18n-title="nextMatch" title="Siguiente coincidencia">›</button>
                 <button type="button" id="reportSearchClear" data-i18n="clearSearch">Limpiar</button>
               </div>
+            </div>
+            <div class="report-bulk-actions">
+              <button type="button" id="selectAllReportBlocks"><span aria-hidden="true">☑</span> Seleccionar todo</button>
+              <button type="button" id="clearReportSelection"><span aria-hidden="true">☐</span> Deseleccionar todo</button>
             </div>
             <div id="reportBlocks" class="report-list"></div>
           </div>

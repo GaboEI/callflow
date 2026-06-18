@@ -3,7 +3,7 @@
     settings: null,
     calls: [],
     reminders: [],
-    reminderFormCollapsed: false,
+    reminderFormCollapsed: true,
     activeAlarmReminderId: null,
     activeAlarmPhase: null,
     activeAlarmSoundKey: null,
