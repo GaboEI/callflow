@@ -650,10 +650,29 @@ nav {
   padding-right: 78px;
 }
 
+.select-action-shell select {
+  appearance: none;
+  padding-right: 78px;
+}
+
+.select-action-shell::after {
+  content: "⌄";
+  position: absolute;
+  top: 50%;
+  right: 42px;
+  z-index: 1;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
 .input-actions {
   position: absolute;
   top: 50%;
   right: 6px;
+  z-index: 2;
   transform: translateY(-50%);
 }
 
@@ -718,6 +737,9 @@ nav {
 }
 
 .status-field {
+  display: grid;
+  grid-template-rows: 32px auto;
+  gap: 6px;
   min-width: 0;
 }
 
