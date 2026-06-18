@@ -2367,7 +2367,7 @@ Africa/Harare ZW
       : '<p class="muted">No hay recordatorios en esta vista.</p>';
   }
 
-  function prepareReminderFormDefaults() {
+  function prepareReminderFormDefaults(options = {}) {
     const form = $("#reminderForm");
     if (!form) return;
     if (state.editingReminderId) return;
@@ -2381,7 +2381,7 @@ Africa/Harare ZW
       form.timezone.value = state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
     }
     const timezone = form.timezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
-    if (!form.date.value) form.date.value = currentDateInputValue(timezone);
+    if (options.refreshDate || !form.date.value) form.date.value = currentDateInputValue(timezone);
     if (!form.time.value) form.time.value = currentTimeInputValue(timezone);
     if (!form.repeat.value) form.repeat.value = "once";
   }
@@ -2410,7 +2410,7 @@ Africa/Harare ZW
   function setReminderFormCollapsed(collapsed) {
     state.reminderFormCollapsed = collapsed;
     renderReminderFormVisibility();
-    if (!collapsed) prepareReminderFormDefaults();
+    if (!collapsed) prepareReminderFormDefaults({ refreshDate: true });
   }
 
   function editReminder(id) {

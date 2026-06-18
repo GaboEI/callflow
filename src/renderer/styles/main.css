@@ -1584,7 +1584,7 @@ code {
 
   .primary-outcomes {
     grid-template-columns: repeat(3, minmax(108px, 1fr));
-    padding-top: 32px;
+    padding-top: 38px;
   }
 
   .callback-fields {
