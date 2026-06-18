@@ -1,4 +1,7 @@
 (function () {
+  const validators =
+    typeof window !== "undefined" ? window.CallFlowValidators : typeof require !== "undefined" ? require("./validators") : null;
+
   function startOfDay(date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
@@ -11,7 +14,8 @@
     if (reminder.status === "completed") {
       return reminder;
     }
-    const due = new Date(`${reminder.date}T${reminder.time || "00:00"}`);
+    const due = validators ? validators.reminderDueDate(reminder) : new Date(`${reminder.date}T${reminder.time || "00:00"}`);
+    if (!due) return { ...reminder, status: "invalid" };
     return { ...reminder, status: due < new Date() ? "overdue" : "pending" };
   }
 
@@ -22,6 +26,7 @@
       if (filter === "overdue") return reminder.status === "overdue";
       if (reminder.status === "completed") return false;
 
+      if (reminder.status === "invalid") return filter === "invalid" || filter === "all";
       const diff = daysBetween(new Date(`${reminder.date}T00:00`));
       if (filter === "today") return diff === 0;
       if (filter === "tomorrow") return diff === 1;
@@ -30,5 +35,13 @@
     });
   }
 
-  window.CallFlowReminders = { normalizeReminder, filterReminders };
+  const api = { normalizeReminder, filterReminders };
+
+  if (typeof window !== "undefined") {
+    window.CallFlowReminders = api;
+  }
+
+  if (typeof module !== "undefined") {
+    module.exports = api;
+  }
 })();

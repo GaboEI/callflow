@@ -34,25 +34,17 @@ The default window opens in a compact work-helper size optimized for side-by-sid
 
 User data is stored in Electron's `app.getPath("userData")`, not inside the source tree.
 
-## GitHub Private Repository
+## GitHub Repository
 
-The GitHub CLI is not currently available in this environment. The private repository is `https://github.com/GaboEI/callflow`. Push the local history with:
+The repository is `https://github.com/GaboEI/callflow`.
 
-```bash
-git --git-dir=.git-local --work-tree=. remote set-url origin git@github.com:GaboEI/callflow.git
-git --git-dir=.git-local --work-tree=. branch -M main
-git --git-dir=.git-local --work-tree=. push -u origin main
-```
-
-HTTPS alternative:
+The local workspace uses a normal `.git` directory and tracks `origin/main`:
 
 ```bash
-git --git-dir=.git-local --work-tree=. remote set-url origin https://github.com/GaboEI/callflow.git
-git --git-dir=.git-local --work-tree=. branch -M main
-git --git-dir=.git-local --work-tree=. push -u origin main
+git status --short --branch
+git remote -v
+git push
 ```
-
-This workspace contains a reserved `.git` directory from the execution environment, so the local repository is stored in `.git-local`. The pushed GitHub repository will have normal Git history.
 
 ## Roadmap
 

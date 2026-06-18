@@ -29,22 +29,65 @@ let mainWindow;
 let notificationTimer;
 let keepRunningInBackground = false;
 const notificationThrottle = new Map();
+const dataHealthEvents = [];
+
+function backupTimestamp() {
+  return new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "").replace("T", "-");
+}
+
+function cloneFallback(fallback) {
+  if (fallback === null || fallback === undefined) return fallback;
+  return JSON.parse(JSON.stringify(fallback));
+}
+
+async function backupCorruptFile(filePath, reason) {
+  const backupPath = `${filePath}.corrupt-${backupTimestamp()}.json`;
+  try {
+    await fs.rename(filePath, backupPath);
+    dataHealthEvents.push({
+      type: "corrupt-json-recovered",
+      file: path.basename(filePath),
+      backupFile: path.basename(backupPath),
+      message: reason.message || String(reason),
+      createdAt: new Date().toISOString()
+    });
+    return backupPath;
+  } catch (error) {
+    dataHealthEvents.push({
+      type: "corrupt-json-backup-failed",
+      file: path.basename(filePath),
+      message: error.message || String(error),
+      createdAt: new Date().toISOString()
+    });
+    return null;
+  }
+}
 
 async function readJson(filePath, fallback) {
   try {
     const raw = await fs.readFile(filePath, "utf8");
     return JSON.parse(raw);
   } catch (error) {
-    if (error.code !== "ENOENT") {
+    if (error.code === "ENOENT") {
+      return cloneFallback(fallback);
+    }
+    if (error instanceof SyntaxError) {
+      console.error(`Corrupt JSON recovered from ${filePath}`, error);
+      await backupCorruptFile(filePath, error);
+    } else {
       console.error(`Failed to read ${filePath}`, error);
     }
-    return fallback;
+    return cloneFallback(fallback);
   }
 }
 
 async function writeJson(filePath, value) {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  const json = `${JSON.stringify(value, null, 2)}\n`;
+  JSON.parse(json);
+  const tempPath = `${filePath}.tmp-${process.pid}-${Date.now()}`;
+  await fs.writeFile(tempPath, json, "utf8");
+  await fs.rename(tempPath, filePath);
   return value;
 }
 
@@ -64,8 +107,29 @@ function getDataFile(key) {
   return path.join(getDataDir(), DATA_FILES[key]);
 }
 
+function validateStorageValue(key, value) {
+  if (["calls", "templates", "reminders", "knowledgeBase"].includes(key) && !Array.isArray(value)) {
+    throw new Error(`Invalid ${key} payload: expected array`);
+  }
+  if (["settings", "workTimer"].includes(key) && (!value || typeof value !== "object" || Array.isArray(value))) {
+    throw new Error(`Invalid ${key} payload: expected object`);
+  }
+  return value;
+}
+
 function reminderDueDate(reminder) {
   return new Date(`${reminder.date}T${reminder.time || "00:00"}`);
+}
+
+function isValidDate(date) {
+  return date instanceof Date && !Number.isNaN(date.getTime());
+}
+
+function isValidReminder(reminder) {
+  if (!reminder || reminder.status === "completed") return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(reminder.date || ""))) return false;
+  if (!/^\d{2}:\d{2}$/.test(String(reminder.time || "00:00"))) return false;
+  return isValidDate(reminderDueDate(reminder));
 }
 
 async function loadSettings() {
@@ -142,7 +206,7 @@ async function checkReminderNotifications() {
   const beforeMs = Math.max(0, Number(settings.notifyBeforeMinutes) || 0) * 60 * 1000;
 
   reminders
-    .filter((reminder) => reminder.status !== "completed")
+    .filter(isValidReminder)
     .forEach((reminder) => {
       if (isReminderSuppressed(reminder, now)) return;
       const due = reminderDueDate(reminder);
@@ -171,7 +235,7 @@ async function ensureDataFiles() {
   const settingsPath = getDataFile("settings");
   const settings = await readJson(settingsPath, null);
 
-  if (!settings) {
+  if (!settings || !(await fileExists(settingsPath))) {
     await writeJson(settingsPath, defaultConfig);
   }
 
@@ -179,11 +243,20 @@ async function ensureDataFiles() {
     Object.entries(DEFAULT_DATA).map(async ([key, value]) => {
       const filePath = getDataFile(key);
       const existing = await readJson(filePath, null);
-      if (!existing) {
+      if (!existing || !(await fileExists(filePath))) {
         await writeJson(filePath, value);
       }
     })
   );
+}
+
+async function fileExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch (_error) {
+    return false;
+  }
 }
 
 function createWindow() {
@@ -236,6 +309,8 @@ app.on("before-quit", () => {
 
 ipcMain.handle("storage:getDataDir", () => getDataDir());
 
+ipcMain.handle("storage:getHealth", () => dataHealthEvents);
+
 ipcMain.handle("storage:read", async (_event, key) => {
   if (key === "settings") {
     return loadSettings();
@@ -244,7 +319,7 @@ ipcMain.handle("storage:read", async (_event, key) => {
 });
 
 ipcMain.handle("storage:write", async (_event, key, value) => {
-  const saved = await writeJson(getDataFile(key), value);
+  const saved = await writeJson(getDataFile(key), validateStorageValue(key, value));
   if (key === "settings") {
     applySystemSettings(saved);
   }

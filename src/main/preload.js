@@ -10,6 +10,7 @@ function assertKey(key) {
 
 contextBridge.exposeInMainWorld("callflow", {
   getDataDir: () => ipcRenderer.invoke("storage:getDataDir"),
+  getHealth: () => ipcRenderer.invoke("storage:getHealth"),
   read: (key) => {
     assertKey(key);
     return ipcRenderer.invoke("storage:read", key);

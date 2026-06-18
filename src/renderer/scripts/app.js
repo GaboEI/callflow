@@ -9,6 +9,7 @@
     activeAlarmSoundKey: null,
     alarmSoundTimer: null,
     knowledgeBase: [],
+    health: [],
     workTimer: null,
     clockTimer: null,
     reminderTimer: null,
@@ -145,6 +146,7 @@
 
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+  const V = window.CallFlowValidators;
 
   function defaultWorkTimer() {
     return {
@@ -251,21 +253,26 @@
   }
 
   function normalizeSettings(settings) {
+    const sanitized = V.normalizeSettings(settings);
     const normalized = {
+      ...sanitized,
       ...settings,
-      timezone: settings.timezone || "local",
-      callTypes: uniqueItems(settings.callTypes),
-      frequentStatuses: uniqueItems(settings.frequentStatuses || settings.callStatuses),
-      successLabel: settings.successLabel || defaultSuccessLabel(settings.language),
-      rejectionLabel: settings.rejectionLabel || defaultRejectionLabel(settings.language),
-      outcomePresets: normalizeOutcomePresets(settings),
-      linePrefixMode: settings.linePrefixMode || "hash",
-      clockFormat: settings.clockFormat || "24h",
-      startOnLogin: Boolean(settings.startOnLogin),
-      runInBackground: Boolean(settings.runInBackground),
-      notifyBeforeMinutes: Number(settings.notifyBeforeMinutes) || 0,
-      notifyAtExactTime: settings.notifyAtExactTime !== false,
-      reminderSound: settings.reminderSound || "soft"
+      language: sanitized.language,
+      timezone: sanitized.timezone,
+      callTypes: sanitized.callTypes,
+      frequentStatuses: sanitized.frequentStatuses,
+      successLabel: sanitized.successLabel || defaultSuccessLabel(sanitized.language),
+      rejectionLabel: sanitized.rejectionLabel || defaultRejectionLabel(sanitized.language),
+      outcomePresets: normalizeOutcomePresets(sanitized),
+      linePrefixMode: sanitized.linePrefixMode,
+      clockFormat: sanitized.clockFormat,
+      startOnLogin: sanitized.startOnLogin,
+      runInBackground: sanitized.runInBackground,
+      notifyBeforeMinutes: sanitized.notifyBeforeMinutes,
+      notifyAtExactTime: sanitized.notifyAtExactTime,
+      reminderSound: sanitized.reminderSound,
+      theme: sanitized.theme,
+      onboardingCompleted: sanitized.onboardingCompleted
     };
 
     if (!normalized.onboardingCompleted && !normalized.frequentStatuses.length) {
@@ -274,6 +281,43 @@
 
     delete normalized.callStatuses;
     return normalized;
+  }
+
+  function normalizeRuntimeData() {
+    state.calls = V.normalizeCollection(state.calls, V.normalizeCall, state.settings);
+    state.reminders = V.normalizeCollection(state.reminders, V.normalizeReminder);
+    state.knowledgeBase = V.normalizeCollection(state.knowledgeBase, V.normalizeNote);
+    state.workTimer = V.normalizeWorkTimer(state.workTimer);
+    state.health = Array.isArray(state.health) ? state.health : [];
+  }
+
+  function setStatusMessage(message, tone = "info") {
+    const target = $("#lastSavedLabel");
+    if (target) target.textContent = message || "";
+    const notice = $("#systemNotice");
+    if (!notice) return;
+    const showNotice = message && ["warning", "error"].includes(tone);
+    notice.textContent = showNotice ? message : "";
+    notice.classList.toggle("hidden", !showNotice);
+    notice.dataset.tone = tone;
+  }
+
+  function showHealthNotice() {
+    const recovered = state.health.find((event) => event.type && event.type.includes("corrupt-json"));
+    if (!recovered) return;
+    const file = recovered.file || "datos";
+    const backup = recovered.backupFile || "backup";
+    setStatusMessage(`Se recuperaron datos de ${file}. Backup: ${backup}`, "warning");
+  }
+
+  async function runAction(action, options = {}) {
+    try {
+      return await action();
+    } catch (error) {
+      console.error(options.logMessage || "CallFlow action failed", error);
+      setStatusMessage(options.userMessage || CallFlowI18n.t("actionFailed", state.settings?.language || "es"), "error");
+      return null;
+    }
   }
 
   function languageLocale(language) {
@@ -952,8 +996,10 @@
       ...state.settings,
       outcomePresets
     });
-    await CallFlowStorage.write("settings", state.settings);
-    renderOutcomeControls();
+    await runAction(async () => {
+      await CallFlowStorage.write("settings", state.settings);
+      renderOutcomeControls();
+    });
   }
 
   async function addOutcomePreset(category) {
@@ -1048,9 +1094,11 @@
     });
     state.formLists.settingsFrequentStatuses = [...state.settings.frequentStatuses];
     state.formLists.onboardingFrequentStatuses = [...state.settings.frequentStatuses];
-    await CallFlowStorage.write("settings", state.settings);
-    applySettingsToForms();
-    render();
+    await runAction(async () => {
+      await CallFlowStorage.write("settings", state.settings);
+      applySettingsToForms();
+      render();
+    });
   }
 
   async function addCurrentDashboardStatus() {
@@ -1078,9 +1126,11 @@
     });
     state.formLists.settingsCallTypes = [...state.settings.callTypes];
     state.formLists.onboardingCallTypes = [...state.settings.callTypes];
-    await CallFlowStorage.write("settings", state.settings);
-    applySettingsToForms();
-    render();
+    await runAction(async () => {
+      await CallFlowStorage.write("settings", state.settings);
+      applySettingsToForms();
+      render();
+    });
   }
 
   async function addDashboardCallType() {
@@ -1503,7 +1553,7 @@
   }
 
   function reminderDueDate(reminder) {
-    return new Date(`${reminder.date}T${reminder.time || "00:00"}`);
+    return V.reminderDueDate(reminder) || new Date(8640000000000000);
   }
 
   function sortedReminders(reminders) {
@@ -1546,8 +1596,10 @@
   }
 
   function reminderStatusKey(reminder) {
+    if (!V.reminderDueDate(reminder) && reminder.status !== "completed") return "invalid";
     if (reminder.status === "completed") return "completed";
     if (reminder.status === "overdue") return "overdue";
+    if (reminder.status === "invalid") return "invalid";
     return "pending";
   }
 
@@ -1556,6 +1608,7 @@
     const labels = {
       completed: CallFlowI18n.t("reminderCompleted", state.settings.language || "es"),
       overdue: CallFlowI18n.t("reminderOverdue", state.settings.language || "es"),
+      invalid: CallFlowI18n.t("reminderInvalid", state.settings.language || "es"),
       pending: CallFlowI18n.t("reminderPending", state.settings.language || "es")
     };
     return labels[key];
@@ -1705,7 +1758,7 @@
 
   function renderLastCall() {
     if (!state.lastCall) {
-      const latest = [...state.calls].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+      const latest = [...state.calls].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))[0];
       state.lastCall = latest || null;
     }
     $("#lastFullLine").textContent = state.lastCall
@@ -1734,10 +1787,15 @@
     const submitter = event.submitter;
     const form = event.currentTarget;
     const primaryOutcome = currentPrimaryOutcomePayload();
+    const validation = V.validateCallForm({ callId: form.callId.value });
+    if (!validation.ok) {
+      setStatusMessage(CallFlowI18n.t(validation.messageKey, state.settings.language || "es"), "error");
+      return;
+    }
     if (
       primaryOutcome &&
       primaryOutcome.category === "callback" &&
-      (!primaryOutcome.callbackDate || !primaryOutcome.callbackTime)
+      (!V.validIsoDate(primaryOutcome.callbackDate) || !V.validTime(primaryOutcome.callbackTime))
     ) {
       $("#lastSavedLabel").textContent = CallFlowI18n.t("selectCallbackDateTime", state.settings.language || "es");
       return;
@@ -1745,7 +1803,7 @@
 
     const call = CallFlowReports.createCallRecord(
       {
-        callId: form.callId.value,
+        callId: validation.value.callId,
         callType: form.callType.value,
         primaryOutcome,
         description: form.description.value.trim(),
@@ -1756,10 +1814,10 @@
       state.settings
     );
 
-    state.calls.push(call);
-    state.lastCall = call;
+    const nextCalls = [...state.calls, call];
+    let nextReminders = state.reminders;
     if (primaryOutcome && primaryOutcome.category === "callback") {
-      state.reminders.push({
+      nextReminders = [...state.reminders, {
         id: crypto.randomUUID(),
         callId: call.callId,
         relatedCallId: call.id,
@@ -1770,44 +1828,54 @@
         note: call.description || primaryOutcome.label,
         status: "pending",
         createdAt: new Date().toISOString()
-      });
-    }
-    await CallFlowStorage.write("calls", state.calls);
-    if (primaryOutcome && primaryOutcome.category === "callback") {
-      await CallFlowStorage.write("reminders", state.reminders);
+      }];
     }
 
-    if (submitter && ["saveCopy", "saveCopyReminder"].includes(submitter.dataset.action)) {
-      await window.callflow.copyText(call.crmLine);
-      $("#lastSavedLabel").textContent = CallFlowI18n.t("savedAndCopiedCrm", state.settings.language);
-    } else {
-      $("#lastSavedLabel").textContent = CallFlowI18n.t("saved", state.settings.language);
-    }
+    await runAction(
+      async () => {
+        await CallFlowStorage.write("calls", nextCalls);
+        if (primaryOutcome && primaryOutcome.category === "callback") {
+          await CallFlowStorage.write("reminders", nextReminders);
+        }
+        if (submitter && ["saveCopy", "saveCopyReminder"].includes(submitter.dataset.action)) {
+          await window.callflow.copyText(call.crmLine);
+          setStatusMessage(CallFlowI18n.t("savedAndCopiedCrm", state.settings.language), "success");
+        } else {
+          setStatusMessage(CallFlowI18n.t("saved", state.settings.language), "success");
+        }
+        state.calls = nextCalls;
+        state.reminders = nextReminders;
+        state.lastCall = call;
 
-    form.callId.value = "";
-    form.description.value = "";
-    form.customComment.value = "";
-    form.callbackDate.value = "";
-    form.callbackTime.value = "";
-    state.pendingCallCapturedAt = null;
-    state.selectedPrimaryOutcome = null;
-    state.openOutcomeMenu = null;
-    form.callId.focus();
-    render();
+        form.callId.value = "";
+        form.description.value = "";
+        form.customComment.value = "";
+        form.callbackDate.value = "";
+        form.callbackTime.value = "";
+        state.pendingCallCapturedAt = null;
+        state.selectedPrimaryOutcome = null;
+        state.openOutcomeMenu = null;
+        form.callId.focus();
+        render();
 
-    if (submitter && submitter.dataset.action === "saveCopyReminder") {
-      const reminderForm = $("#reminderForm");
-      reminderForm.callId.value = call.callId;
-      $("#lastSavedLabel").textContent = CallFlowI18n.t("savedCopiedReminder", state.settings.language);
-      setView("reminders");
-      reminderForm.date.focus();
-    }
+        if (submitter && submitter.dataset.action === "saveCopyReminder") {
+          const reminderForm = $("#reminderForm");
+          reminderForm.callId.value = call.callId;
+          setStatusMessage(CallFlowI18n.t("savedCopiedReminder", state.settings.language), "success");
+          setView("reminders");
+          reminderForm.date.focus();
+        }
+      },
+      { userMessage: CallFlowI18n.t("saveFailed", state.settings.language || "es"), logMessage: "Failed to save call" }
+    );
   }
 
   async function copyLastCrm() {
     if (!state.lastCall) return;
-    await window.callflow.copyText(state.lastCall.crmLine);
-    $("#lastSavedLabel").textContent = CallFlowI18n.t("lastCrmCopied", state.settings.language);
+    await runAction(async () => {
+      await window.callflow.copyText(state.lastCall.crmLine);
+      setStatusMessage(CallFlowI18n.t("lastCrmCopied", state.settings.language), "success");
+    });
   }
 
   function captureCurrentCallTime() {
@@ -1816,8 +1884,8 @@
   }
 
   async function importCallIdFromClipboard() {
-    const text = await window.callflow.readClipboardText();
-    const callId = String(text || "").split(/\r?\n/)[0].trim();
+    const text = await runAction(() => window.callflow.readClipboardText());
+    const callId = V.cleanClipboardCallId(text);
     if (!callId) return;
     const form = $("#callForm");
     form.callId.value = callId;
@@ -1838,7 +1906,10 @@
       .filter(Boolean);
 
     if (reports.length) {
-      await window.callflow.copyText(reports.join("\n\n"));
+      await runAction(async () => {
+        await window.callflow.copyText(reports.join("\n\n"));
+        setStatusMessage(CallFlowI18n.t("copied", state.settings.language || "es"), "success");
+      });
     }
   }
 
@@ -1854,6 +1925,7 @@
     const calls = callsForReportBlockKey(key);
     const lines = editor.value.split("\n").map((line) => line.trim());
     calls.forEach((call, index) => {
+      if (index >= lines.length) return;
       call.reportLineOverride = lines[index] || "";
       if (!call.reportLineOverride) delete call.reportLineOverride;
     });
@@ -1876,39 +1948,52 @@
   async function saveReminder(event) {
     event.preventDefault();
     const form = event.currentTarget;
-    const reminderPayload = {
+    const validation = V.validateReminderPayload({
       callId: form.callId.value.trim(),
       date: form.date.value,
       time: form.time.value,
       repeat: form.repeat.value || "once",
       note: form.note.value.trim()
-    };
+    });
+    if (!validation.ok) {
+      setStatusMessage(CallFlowI18n.t(validation.messageKey, state.settings.language || "es"), "error");
+      return;
+    }
+    const reminderPayload = validation.value;
+    let nextReminders;
     if (state.editingReminderId) {
-      state.reminders = state.reminders.map((reminder) =>
+      nextReminders = state.reminders.map((reminder) =>
         reminder.id === state.editingReminderId
           ? { ...reminder, ...reminderPayload, updatedAt: new Date().toISOString() }
           : reminder
       );
-      state.editingReminderId = null;
-      $("#cancelReminderEdit").classList.add("hidden");
-      $("#saveReminderButton").textContent = CallFlowI18n.t("saveReminder", state.settings.language || "es");
     } else {
-      state.reminders.push({
+      nextReminders = [...state.reminders, {
         id: crypto.randomUUID(),
         ...reminderPayload,
         status: "pending",
         createdAt: new Date().toISOString()
-      });
+      }];
     }
-    await CallFlowStorage.write("reminders", state.reminders);
-    form.reset();
-    prepareReminderFormDefaults();
-    render();
+    await runAction(
+      async () => {
+        await CallFlowStorage.write("reminders", nextReminders);
+        state.reminders = nextReminders;
+        state.editingReminderId = null;
+        $("#cancelReminderEdit").classList.add("hidden");
+        $("#saveReminderButton").textContent = CallFlowI18n.t("saveReminder", state.settings.language || "es");
+        form.reset();
+        prepareReminderFormDefaults();
+        render();
+        setStatusMessage(CallFlowI18n.t("reminderSaved", state.settings.language || "es"), "success");
+      },
+      { userMessage: CallFlowI18n.t("saveFailed", state.settings.language || "es"), logMessage: "Failed to save reminder" }
+    );
   }
 
   async function copyReminderCallId(callId) {
     if (!callId) return;
-    await window.callflow.copyText(callId);
+    await runAction(() => window.callflow.copyText(callId));
   }
 
   function isoDateValue(date) {
@@ -2027,12 +2112,15 @@
   }
 
   async function updateReminderSuppression(id, fields) {
-    state.reminders = state.reminders.map((reminder) =>
+    const nextReminders = state.reminders.map((reminder) =>
       reminder.id === id ? { ...reminder, ...fields, updatedAt: new Date().toISOString() } : reminder
     );
-    await CallFlowStorage.write("reminders", state.reminders);
-    clearReminderAlarm();
-    render();
+    await runAction(async () => {
+      await CallFlowStorage.write("reminders", nextReminders);
+      state.reminders = nextReminders;
+      clearReminderAlarm();
+      render();
+    });
   }
 
   async function snoozeActiveAlarm(minutes) {
@@ -2078,6 +2166,7 @@
     const repeat = reminder.repeat || "once";
     if (repeat === "once") return null;
     const next = reminderDueDate(reminder);
+    if (!next || Number.isNaN(next.getTime())) return null;
     const now = new Date();
     do {
       if (repeat === "daily") {
@@ -2113,61 +2202,85 @@
     const current = state.reminders.find((reminder) => reminder.id === id);
     const next = current ? nextRecurringReminder(current) : null;
     if (state.activeAlarmReminderId === id) clearReminderAlarm();
-    state.reminders = state.reminders.map((reminder) =>
+    const nextReminders = state.reminders.map((reminder) =>
       reminder.id === id ? { ...reminder, status: "completed", completedAt: new Date().toISOString() } : reminder
     );
-    if (next) state.reminders.push(next);
-    await CallFlowStorage.write("reminders", state.reminders);
-    render();
+    if (next) nextReminders.push(next);
+    await runAction(async () => {
+      await CallFlowStorage.write("reminders", nextReminders);
+      state.reminders = nextReminders;
+      render();
+    });
   }
 
   async function saveNote(event) {
     event.preventDefault();
     const form = event.currentTarget;
+    const validation = V.validateNotePayload({ title: form.title.value, content: form.content.value });
+    if (!validation.ok) {
+      setStatusMessage(CallFlowI18n.t(validation.messageKey, state.settings.language || "es"), "error");
+      return;
+    }
     const existing = state.knowledgeBase.find((note) => note.id === state.selectedNoteId);
+    let nextKnowledgeBase;
+    let nextSelectedNoteId = state.selectedNoteId;
     if (existing) {
-      existing.title = form.title.value.trim();
-      existing.content = form.content.value;
-      existing.updatedAt = new Date().toISOString();
+      nextKnowledgeBase = state.knowledgeBase.map((note) =>
+        note.id === state.selectedNoteId
+          ? { ...note, title: validation.value.title, content: validation.value.content, updatedAt: new Date().toISOString() }
+          : note
+      );
     } else {
       const note = {
         id: crypto.randomUUID(),
-        title: form.title.value.trim(),
-        content: form.content.value,
+        title: validation.value.title,
+        content: validation.value.content,
         createdAt: new Date().toISOString()
       };
-      state.knowledgeBase.push(note);
-      state.selectedNoteId = note.id;
+      nextKnowledgeBase = [...state.knowledgeBase, note];
+      nextSelectedNoteId = note.id;
     }
-    await CallFlowStorage.write("knowledgeBase", state.knowledgeBase);
-    render();
+    await runAction(async () => {
+      await CallFlowStorage.write("knowledgeBase", nextKnowledgeBase);
+      state.knowledgeBase = nextKnowledgeBase;
+      state.selectedNoteId = nextSelectedNoteId;
+      render();
+      setStatusMessage(CallFlowI18n.t("noteSaved", state.settings.language || "es"), "success");
+    });
   }
 
   async function deleteNote() {
     if (!state.selectedNoteId) return;
-    state.knowledgeBase = state.knowledgeBase.filter((note) => note.id !== state.selectedNoteId);
-    state.selectedNoteId = null;
-    await CallFlowStorage.write("knowledgeBase", state.knowledgeBase);
-    render();
+    const nextKnowledgeBase = state.knowledgeBase.filter((note) => note.id !== state.selectedNoteId);
+    await runAction(async () => {
+      await CallFlowStorage.write("knowledgeBase", nextKnowledgeBase);
+      state.knowledgeBase = nextKnowledgeBase;
+      state.selectedNoteId = null;
+      render();
+    });
   }
 
   async function exportNote(extension) {
     const note = state.knowledgeBase.find((item) => item.id === state.selectedNoteId);
     if (!note) return;
-    await window.callflow.exportNote({
-      fileName: note.title.replace(/[^a-z0-9_-]+/gi, "-").toLowerCase(),
-      content: note.content,
-      extension
-    });
+    await runAction(() =>
+      window.callflow.exportNote({
+        fileName: note.title.replace(/[^a-z0-9_-]+/gi, "-").toLowerCase() || "callflow-note",
+        content: note.content,
+        extension
+      })
+    );
   }
 
   function bindEvents() {
     $$(".nav-link").forEach((button) => button.addEventListener("click", () => setView(button.dataset.view)));
     $("#onboardingForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      await saveSettings(settingsFromForm(event.currentTarget, true));
-      $("#onboarding").classList.add("hidden");
-      $("#app").classList.remove("hidden");
+      await runAction(async () => {
+        await saveSettings(settingsFromForm(event.currentTarget, true));
+        $("#onboarding").classList.add("hidden");
+        $("#app").classList.remove("hidden");
+      });
     });
     $("#onboardingForm select[name='language']").addEventListener("change", (event) => {
       handleLanguageChange($("#onboardingForm"), event.target.value);
@@ -2175,7 +2288,7 @@
 
     $("#settingsForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      await saveSettings(settingsFromForm(event.currentTarget, true));
+      await runAction(() => saveSettings(settingsFromForm(event.currentTarget, true)));
     });
     $("#previewReminderSound").addEventListener("click", () => {
       playReminderSound($("#settingsForm select[name='reminderSound']").value);
@@ -2496,7 +2609,7 @@
     const data = await CallFlowStorage.readAll();
     Object.assign(state, data);
     state.settings = normalizeSettings(state.settings);
-    state.workTimer = normalizeWorkTimer(state.workTimer);
+    normalizeRuntimeData();
     CallFlowI18n.applyI18n(state.settings.language);
     applySettingsToForms();
     const dataDir = await window.callflow.getDataDir();
@@ -2504,6 +2617,7 @@
     startWorkClock();
     state.reminderTimer = setInterval(renderReminders, 1000);
     prepareReminderFormDefaults();
+    showHealthNotice();
 
     if (state.settings.onboardingCompleted) {
       $("#app").classList.remove("hidden");

@@ -160,6 +160,35 @@ h2 {
   border-color: var(--red);
 }
 
+.system-notice {
+  margin-bottom: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.36);
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #bfdbfe;
+  padding: 9px 12px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.system-notice[data-tone="success"] {
+  border-color: rgba(34, 197, 94, 0.36);
+  background: rgba(34, 197, 94, 0.12);
+  color: #bbf7d0;
+}
+
+.system-notice[data-tone="warning"] {
+  border-color: rgba(250, 204, 21, 0.42);
+  background: rgba(250, 204, 21, 0.13);
+  color: #fef08a;
+}
+
+.system-notice[data-tone="error"] {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.13);
+  color: #fecaca;
+}
+
 .onboarding {
   min-height: 100vh;
   display: grid;
@@ -764,6 +793,10 @@ code {
   opacity: 0.82;
 }
 
+.reminder-invalid {
+  border-left-color: rgba(148, 163, 184, 0.82);
+}
+
 .reminder-main {
   display: grid;
   gap: 3px;
@@ -828,6 +861,13 @@ code {
   border-color: rgba(34, 197, 94, 0.38);
   background: rgba(34, 197, 94, 0.13);
   color: #86efac;
+}
+
+.reminder-invalid .reminder-state,
+.reminder-invalid .reminder-countdown {
+  border-color: rgba(148, 163, 184, 0.38);
+  background: rgba(148, 163, 184, 0.13);
+  color: #cbd5e1;
 }
 
 .reminder-id-row {

@@ -139,6 +139,7 @@
             <div class="status-pill" id="operatorLabel"></div>
           </div>
         </header>
+        <div id="systemNotice" class="system-notice hidden" role="status"></div>
 
         <section id="dashboardView" class="view active">
           <div class="panel">
@@ -337,6 +338,7 @@
                   <option value="tomorrow">Mañana</option>
                   <option value="week">Esta semana</option>
                   <option value="overdue">Vencidos</option>
+                  <option value="invalid">Inválidos</option>
                   <option value="completed">Completados</option>
                 </select>
               </div>
@@ -519,6 +521,7 @@
     </div>
 
     <script src="./scripts/i18n.js"></script>
+    <script src="./scripts/validators.js"></script>
     <script src="./scripts/storage.js"></script>
     <script src="./scripts/reports.js"></script>
     <script src="./scripts/reminders.js"></script>

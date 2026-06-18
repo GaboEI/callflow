@@ -1,4 +1,7 @@
 (function () {
+  const validators =
+    typeof window !== "undefined" ? window.CallFlowValidators : typeof require !== "undefined" ? require("./validators") : null;
+
   function resolveTimezone(settings) {
     if (!settings || settings.timezone === "local") {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -90,13 +93,13 @@
     const description = buildDescription(primaryOutcome, formData.description, formData.customComment, settings);
     const call = {
       id: crypto.randomUUID(),
-      callId: formData.callId.trim(),
+      callId: validators ? validators.text(formData.callId, validators.LIMITS.callId) : formData.callId.trim(),
       callType: String(formData.callType || "").trim(),
       description,
-      rawDescription: formData.description,
-      customComment: formData.customComment,
+      rawDescription: validators ? validators.text(formData.description) : formData.description,
+      customComment: validators ? validators.text(formData.customComment) : formData.customComment,
       primaryOutcome,
-      operatorName: settings.operatorName,
+      operatorName: validators ? validators.text(settings.operatorName, validators.LIMITS.shortText) : settings.operatorName,
       date: stamp.date,
       time: stamp.time,
       hour: stamp.hour,
@@ -119,7 +122,7 @@
 
     Object.values(groups).forEach((items) => {
       items
-        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+        .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")))
         .forEach((call, index) => {
           if (!call.dailySequence) call.dailySequence = index + 1;
         });
@@ -154,7 +157,7 @@
     return `${header}\n\n\`\`\`\n${body}\n\`\`\``;
   }
 
-  window.CallFlowReports = {
+  const api = {
     createCallRecord,
     callsForToday,
     groupByBlock,
@@ -165,4 +168,12 @@
     resolveTimezone,
     formatCallTimestamp
   };
+
+  if (typeof window !== "undefined") {
+    window.CallFlowReports = api;
+  }
+
+  if (typeof module !== "undefined") {
+    module.exports = api;
+  }
 })();

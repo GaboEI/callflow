@@ -2,7 +2,7 @@
   function countMatching(calls, label) {
     const needle = String(label || "").toLowerCase();
     if (!needle) return 0;
-    return calls.filter((call) => call.description.toLowerCase().includes(needle)).length;
+    return calls.filter((call) => String(call.description || "").toLowerCase().includes(needle)).length;
   }
 
   function countBy(calls, key) {
@@ -61,5 +61,13 @@
     };
   }
 
-  window.CallFlowStats = { buildStats };
+  const api = { buildStats };
+
+  if (typeof window !== "undefined") {
+    window.CallFlowStats = api;
+  }
+
+  if (typeof module !== "undefined") {
+    module.exports = api;
+  }
 })();
