@@ -1166,6 +1166,16 @@ nav {
   background: rgba(59, 130, 246, 0.16);
 }
 
+.status-option.recommended {
+  border-left: 3px solid rgba(34, 197, 94, 0.82);
+  background: rgba(34, 197, 94, 0.08);
+  color: #bbf7d0;
+}
+
+.status-option.recommended:hover {
+  background: rgba(34, 197, 94, 0.14);
+}
+
 .status-option span {
   display: block;
   overflow: hidden;

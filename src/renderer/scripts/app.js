@@ -1845,7 +1845,7 @@ Africa/Harare ZW
     return options
       .map(
         (value) => `
-          <button type="button" class="status-option${optionsConfig.fullText ? " full-text" : ""}" data-${dataName}="${escapeHtml(value)}" title="${escapeHtml(value)}">
+          <button type="button" class="status-option${optionsConfig.fullText ? " full-text" : ""}${optionsConfig.recommended === value ? " recommended" : ""}" data-${dataName}="${escapeHtml(value)}" title="${escapeHtml(value)}">
             <span>${escapeHtml(optionsConfig.fullText ? value : compactStatusLabel(value))}</span>
           </button>
         `
@@ -1853,16 +1853,37 @@ Africa/Harare ZW
       .join("");
   }
 
+  function statusUsageCounts(statuses) {
+    const activeStatuses = new Set(statuses);
+    return state.calls.reduce((result, call) => {
+      const rawDescription = String(call.rawDescription || "").trim();
+      if (activeStatuses.has(rawDescription)) {
+        result[rawDescription] = (result[rawDescription] || 0) + 1;
+        return result;
+      }
+      statuses.forEach((status) => {
+        if (!status) return;
+        if (String(call.description || "").toLowerCase().includes(String(status).toLowerCase())) {
+          result[status] = (result[status] || 0) + 1;
+        }
+      });
+      return result;
+    }, {});
+  }
+
   function renderStatusOptions(open = true) {
     const input = $("#descriptionInput");
     const list = $("#statusOptions");
     if (!input || !list) return;
     const query = input.value.trim().toLowerCase();
-    const options = state.settings.frequentStatuses.filter((status) =>
+    const activeStatuses = state.settings.frequentStatuses || [];
+    const counts = statusUsageCounts(activeStatuses);
+    const options = activeStatuses.filter((status) =>
       String(status).toLowerCase().includes(query)
-    );
+    ).sort((a, b) => (counts[b] || 0) - (counts[a] || 0) || activeStatuses.indexOf(a) - activeStatuses.indexOf(b));
+    const topStatus = options.find((status) => counts[status] > 0) || "";
     list.classList.toggle("open", open && options.length > 0);
-    list.innerHTML = renderOptionButtons(options, "status-option");
+    list.innerHTML = renderOptionButtons(options, "status-option", { recommended: topStatus });
   }
 
   function renderCustomCommentOptions(open = true) {
@@ -1893,9 +1914,20 @@ Africa/Harare ZW
     input.focus();
   }
 
+  function activeOutcomeLabels(category) {
+    const presetsForCategory = state.settings.outcomePresets[category] || { items: [] };
+    return uniqueItems(presetsForCategory.items || []);
+  }
+
+  function activeOutcomeLabelSet(category) {
+    return new Set(activeOutcomeLabels(category).map((label) => String(label).toLowerCase()));
+  }
+
   function mostUsedOutcomeLabel(category) {
+    const activeLabels = activeOutcomeLabelSet(category);
     const counts = state.calls.reduce((result, call) => {
       if (!call.primaryOutcome || call.primaryOutcome.category !== category || !call.primaryOutcome.label) return result;
+      if (!activeLabels.has(String(call.primaryOutcome.label).toLowerCase())) return result;
       result[call.primaryOutcome.label] = (result[call.primaryOutcome.label] || 0) + 1;
       return result;
     }, {});
@@ -1904,7 +1936,9 @@ Africa/Harare ZW
 
   function defaultOutcomeLabel(category) {
     const presetsForCategory = state.settings.outcomePresets[category] || { items: [] };
-    return mostUsedOutcomeLabel(category) || presetsForCategory.default || presetsForCategory.items[0] || "";
+    const activeLabels = activeOutcomeLabels(category);
+    const activeDefault = activeLabels.includes(presetsForCategory.default) ? presetsForCategory.default : "";
+    return mostUsedOutcomeLabel(category) || activeDefault || activeLabels[0] || "";
   }
 
   function selectedOutcomeLabel(category) {
@@ -2656,25 +2690,49 @@ Africa/Harare ZW
     renderReportSearchStatus();
   }
 
-  function callProductivityScore(call) {
+  function callProductivityCategory(call) {
     const category = call.primaryOutcome?.category;
-    if (category === "success") return 5;
-    if (category === "callback") return 2;
-    if (category === "rejection") return -3;
+    if (["success", "callback", "rejection"].includes(category)) return category;
 
     const description = String(call.description || "").toLowerCase();
-    const successLabel = String(state.settings.successLabel || "").toLowerCase();
-    const rejectionLabel = String(state.settings.rejectionLabel || "").toLowerCase();
-    if (successLabel && description.includes(successLabel)) return 4;
-    if (rejectionLabel && description.includes(rejectionLabel)) return -3;
-    return 0.5;
+    const matchesActiveOutcome = (outcomeCategory) =>
+      activeOutcomeLabels(outcomeCategory).some((label) => {
+        const normalized = String(label || "").toLowerCase();
+        return normalized && description.includes(normalized);
+      });
+
+    if (matchesActiveOutcome("success")) return "success";
+    if (matchesActiveOutcome("rejection")) return "rejection";
+    if (matchesActiveOutcome("callback")) return "callback";
+    return "neutral";
   }
 
   function blockProductivity(calls) {
-    const score = calls.reduce((total, call) => total + callProductivityScore(call), 0);
-    const volumeSignal = calls.length * 0.25;
-    const qualityRatio = calls.length ? score / calls.length : 0;
-    return Number((score + volumeSignal + qualityRatio).toFixed(3));
+    const metrics = calls.reduce(
+      (result, call) => {
+        result.total += 1;
+        result[callProductivityCategory(call)] += 1;
+        return result;
+      },
+      { total: 0, success: 0, callback: 0, rejection: 0, neutral: 0 }
+    );
+    const outcomeScore =
+      metrics.success * 5 +
+      metrics.callback * 2 +
+      metrics.neutral * 0.5 -
+      metrics.rejection * 3;
+    const qualityRatio = metrics.total
+      ? (metrics.success * 3 + metrics.callback - metrics.rejection * 2) / metrics.total
+      : 0;
+    const volumeSignal = Math.min(metrics.total * 0.2, 2);
+    return {
+      ...metrics,
+      score: Number((outcomeScore + qualityRatio + volumeSignal).toFixed(3))
+    };
+  }
+
+  function uniqueScore(score, entries) {
+    return entries.filter((entry) => entry.productivity.score === score).length === 1;
   }
 
   function renderBlocks() {
@@ -2684,21 +2742,23 @@ Africa/Harare ZW
     const currentBlock = CallFlowReports.blockFromHour(CallFlowReports.formatCallTimestamp(new Date(), state.settings).hour);
     const scoredClosedEntries = entries
       .filter(([block]) => block !== currentBlock)
-      .map(([block, calls]) => ({ block, score: blockProductivity(calls) }));
-    const scores = scoredClosedEntries.map((entry) => entry.score);
+      .map(([block, calls]) => ({ block, productivity: blockProductivity(calls) }));
+    const scores = scoredClosedEntries.map((entry) => entry.productivity.score);
     const maxScore = scores.length ? Math.max(...scores) : 0;
     const minScore = scores.length ? Math.min(...scores) : 0;
-    const shouldMarkBest = scoredClosedEntries.length > 1;
-    const shouldMarkWorst = scoredClosedEntries.length > 2 && minScore < maxScore;
+    const shouldMarkBest = scoredClosedEntries.length > 1 && uniqueScore(maxScore, scoredClosedEntries);
+    const shouldMarkWorst = scoredClosedEntries.length > 2 && minScore < maxScore && uniqueScore(minScore, scoredClosedEntries);
 
     $("#hourBlocks").innerHTML = entries.length
       ? entries
           .map(([block, calls]) => {
             const current = block === currentBlock;
-            const score = current ? null : blockProductivity(calls);
-            const best = !current && shouldMarkBest && score === maxScore;
-            const worst = !current && shouldMarkWorst && score === minScore;
-            const title = current ? "Bloque actual en curso" : `Score de productividad: ${score}`;
+            const productivity = current ? null : blockProductivity(calls);
+            const best = !current && shouldMarkBest && productivity.score === maxScore;
+            const worst = !current && shouldMarkWorst && productivity.score === minScore;
+            const title = current
+              ? "Bloque actual en curso"
+              : `Score ${productivity.score}: ${productivity.success} positivas, ${productivity.callback} callbacks, ${productivity.rejection} rechazos, ${productivity.neutral} neutras`;
             return `
             <article class="block-item compact-hour-block${current ? " current-block" : ""}${best ? " best-block" : ""}${worst ? " worst-block" : ""}" title="${escapeHtml(title)}">
               <strong>${block}</strong>
