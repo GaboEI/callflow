@@ -1842,8 +1842,9 @@ code {
 }
 
 .report-toolbar {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -1993,6 +1994,15 @@ code {
 
 .report-toolbar label span {
   margin-bottom: 0;
+}
+
+.report-range-field {
+  flex: 0 0 172px;
+  max-width: 172px;
+}
+
+.report-range-field input {
+  min-width: 0;
 }
 
 .report-searchbar {
@@ -2459,6 +2469,11 @@ code {
   .block-list,
   .cards.compact {
     grid-template-columns: 1fr;
+  }
+
+  .report-range-field {
+    flex-basis: 100%;
+    max-width: 100%;
   }
 
   #statsCards.cards {
