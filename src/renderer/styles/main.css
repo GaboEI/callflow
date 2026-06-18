@@ -405,16 +405,15 @@ nav {
 .work-clock-shell {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(118px, 1fr) 44px;
+  grid-template-columns: minmax(118px, auto) 44px;
   align-items: stretch;
   gap: 0;
-  flex: 1 1 460px;
-  min-width: 240px;
+  flex: 0 1 auto;
   max-width: min(580px, 100%);
 }
 
 .work-clock {
-  max-width: 100%;
+  max-width: min(520px, calc(100vw - 118px));
   min-width: 118px;
   border: 1px solid rgba(34, 197, 94, 0.35);
   border-right: 0;
