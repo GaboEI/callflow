@@ -1216,6 +1216,10 @@ code {
   gap: 8px;
 }
 
+#dashboardStats.cards.compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .card,
 .block-item,
 .report-item,
@@ -1236,10 +1240,19 @@ code {
   padding: 9px 10px;
 }
 
+#dashboardStats.cards.compact .card {
+  min-width: 0;
+  padding: 8px 9px;
+}
+
 .cards.compact .card strong {
   margin-top: 3px;
   font-size: 20px;
   line-height: 1.05;
+}
+
+#dashboardStats.cards.compact .card strong {
+  font-size: 18px;
 }
 
 .cards.compact .stat-label {
