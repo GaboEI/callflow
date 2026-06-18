@@ -2321,6 +2321,11 @@ Africa/Harare ZW
     return labels[repeat] || labels.once;
   }
 
+  function reminderTimezoneLabel(reminder) {
+    const timezone = reminder.timezone || V.resolveTimezone(state.settings);
+    return `${timezoneFlag(timezone)} ${timezone}`;
+  }
+
   function renderReminders() {
     const filter = $("#reminderFilter").value;
     const reminders = sortedReminders(CallFlowReminders.filterReminders(state.reminders, filter, state.settings));
@@ -2332,7 +2337,7 @@ Africa/Harare ZW
                 <p class="reminder-title">${escapeHtml(reminder.note)}</p>
                 <div class="reminder-details">
                   <span>${escapeHtml(reminder.date)} ${escapeHtml(reminder.time)}</span>
-                  <span>${escapeHtml(reminder.timezone || V.resolveTimezone(state.settings))}</span>
+                  <span class="reminder-timezone">${escapeHtml(reminderTimezoneLabel(reminder))}</span>
                   <span>${escapeHtml(reminderRepeatLabel(reminder))}</span>
                 </div>
               </div>

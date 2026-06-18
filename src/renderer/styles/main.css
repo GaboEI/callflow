@@ -988,6 +988,13 @@ code {
   line-height: 1.2;
 }
 
+.reminder-timezone {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .reminder-meta,
 .reminder-actions {
   display: flex;
