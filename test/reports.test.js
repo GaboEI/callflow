@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const reports = require("../src/renderer/scripts/reports");
+const reports = require("../src/shared/reports");
 
 const settings = {
   timezone: "UTC",

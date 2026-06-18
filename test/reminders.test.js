@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const reminders = require("../src/renderer/scripts/reminders");
+const reminders = require("../src/shared/reminders");
 
 test("normalizes non-completed reminders based on due date", () => {
   const originalNow = Date;

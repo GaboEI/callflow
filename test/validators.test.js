@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const validators = require("../src/renderer/scripts/validators");
+const validators = require("../src/shared/validators");
 
 test("normalizes malformed settings into production-safe defaults", () => {
   const result = validators.normalizeSettings({

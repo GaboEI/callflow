@@ -847,13 +847,6 @@ Africa/Harare ZW
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  function monthLabel(year, month) {
-    const language = state.settings?.language || "es";
-    const label = new Intl.DateTimeFormat(languageLocale(language), { month: "long", year: "numeric" })
-      .format(new Date(Date.UTC(year, month, 1)));
-    return label.charAt(0).toUpperCase() + label.slice(1);
-  }
-
   function monthName(month) {
     const language = state.settings?.language || "es";
     const label = new Intl.DateTimeFormat(languageLocale(language), { month: "long" })
@@ -1244,7 +1237,7 @@ Africa/Harare ZW
   }
 
   function localizedCity(city, language) {
-    const cleanCity = city.replaceAll("_", "_");
+    const cleanCity = city.replaceAll("_", " ");
     const ruCities = {
       Madrid: "Мадрид",
       London: "Лондон",
@@ -1568,7 +1561,7 @@ Africa/Harare ZW
     renderActiveTimezoneEditors();
   }
 
-  function outcomePresetsFromForm(listPrefix, language) {
+  function outcomePresetsFromForm(listPrefix) {
     const successItems = uniqueItems(state.formLists[`${listPrefix}SuccessOutcomes`]);
     const rejectionItems = uniqueItems(state.formLists[`${listPrefix}RejectionOutcomes`]);
     const callbackItems = uniqueItems(state.formLists[`${listPrefix}CallbackOutcomes`]);
@@ -1591,7 +1584,7 @@ Africa/Harare ZW
   function settingsFromForm(form, onboardingCompleted) {
     const listPrefix = form.id === "onboardingForm" ? "onboarding" : "settings";
     const language = form.language.value;
-    const outcomePresets = outcomePresetsFromForm(listPrefix, language);
+    const outcomePresets = outcomePresetsFromForm(listPrefix);
     return {
       ...state.settings,
       language,
@@ -2234,31 +2227,6 @@ Africa/Harare ZW
     $("#currentBlockLabel").textContent = CallFlowReports.blockFromHour(now.hour);
     $("#operatorLabel").textContent = state.settings.operatorName || "Sin operador";
     renderWorkClock();
-  }
-
-  function formatWorkClock(date) {
-    const timezone = CallFlowReports.resolveTimezone(state.settings);
-    const format = state.settings.clockFormat || "24h";
-
-    if (format === "military") {
-      const parts = new Intl.DateTimeFormat("en-GB", {
-        timeZone: timezone,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
-      }).formatToParts(date);
-      const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-      return `${values.hour}${values.minute}${values.second}`;
-    }
-
-    return new Intl.DateTimeFormat(languageLocale(state.settings.language), {
-      timeZone: timezone,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: format === "12h"
-    }).format(date);
   }
 
   function renderWorkClock() {
@@ -3426,10 +3394,6 @@ Africa/Harare ZW
   async function copyReminderCallId(callId) {
     if (!callId) return;
     await runAction(() => window.callflow.copyText(callId));
-  }
-
-  function isoDateValue(date) {
-    return V.isoDateInTimezone(date, state.settings || "local");
   }
 
   function setReminderDateShortcut(shortcut) {

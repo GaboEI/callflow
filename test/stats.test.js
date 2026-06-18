@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const stats = require("../src/renderer/scripts/stats");
+const stats = require("../src/shared/stats");
 
 test("builds daily stats from primary outcomes and legacy descriptions", () => {
   const calls = [
