@@ -163,12 +163,14 @@
               <label>
                 <span class="field-heading">
                   <span data-i18n="callId">ID de llamada</span>
-                  <span class="inline-icon-actions">
+                </span>
+                <div class="input-action-shell">
+                  <input name="callId" autocomplete="off" required />
+                  <span class="inline-icon-actions input-actions">
                     <button class="icon-button" type="button" id="importCallIdClipboard" data-i18n-title="importCallIdClipboard" title="Importar ID del portapapeles">⇩</button>
                     <button class="icon-button" type="button" id="captureCallTime" data-i18n-title="captureCallTime" title="Registrar hora de entrada">◷</button>
                   </span>
-                </span>
-                <input name="callId" autocomplete="off" required />
+                </div>
                 <small class="helper call-time-helper" id="capturedCallTimeLabel"></small>
               </label>
               <label>
@@ -188,13 +190,15 @@
                 <label class="status-field">
                   <span class="field-heading">
                     <span data-i18n="description">Descripción / estado</span>
-                    <span class="inline-icon-actions">
-                      <button class="icon-button" type="button" id="addCurrentStatus" data-i18n-title="addStatus" title="Agregar estado">+</button>
-                      <button class="icon-button" type="button" id="removeCurrentStatus" data-i18n-title="removeStatus" title="Eliminar estado">−</button>
-                    </span>
                   </span>
                   <div class="status-combobox">
-                    <input name="description" id="descriptionInput" autocomplete="off" />
+                    <div class="input-action-shell">
+                      <input name="description" id="descriptionInput" autocomplete="off" />
+                      <span class="inline-icon-actions input-actions">
+                        <button class="icon-button" type="button" id="addCurrentStatus" data-i18n-title="addStatus" title="Agregar estado">+</button>
+                        <button class="icon-button" type="button" id="removeCurrentStatus" data-i18n-title="removeStatus" title="Eliminar estado">−</button>
+                      </span>
+                    </div>
                     <div class="status-options" id="statusOptions"></div>
                   </div>
                 </label>
@@ -239,13 +243,15 @@
               <label class="span-2 custom-comment-field">
                 <span class="field-heading">
                   <span data-i18n="customComment">Comentario personalizado</span>
-                  <span class="inline-icon-actions">
-                    <button class="icon-button" type="button" id="addCurrentCustomComment" data-i18n-title="addCustomComment" title="Agregar comentario">+</button>
-                    <button class="icon-button" type="button" id="removeCurrentCustomComment" data-i18n-title="removeCustomComment" title="Eliminar comentario">−</button>
-                  </span>
                 </span>
                 <div class="custom-comment-combobox">
-                  <input name="customComment" id="customCommentInput" autocomplete="off" />
+                  <div class="input-action-shell">
+                    <input name="customComment" id="customCommentInput" autocomplete="off" />
+                    <span class="inline-icon-actions input-actions">
+                      <button class="icon-button" type="button" id="addCurrentCustomComment" data-i18n-title="addCustomComment" title="Agregar comentario">+</button>
+                      <button class="icon-button" type="button" id="removeCurrentCustomComment" data-i18n-title="removeCustomComment" title="Eliminar comentario">−</button>
+                    </span>
+                  </div>
                   <div class="status-options" id="customCommentOptions"></div>
                 </div>
               </label>

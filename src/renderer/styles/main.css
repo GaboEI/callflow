@@ -641,6 +641,22 @@ nav {
   flex: 0 0 auto;
 }
 
+.input-action-shell {
+  position: relative;
+  min-width: 0;
+}
+
+.input-action-shell input {
+  padding-right: 78px;
+}
+
+.input-actions {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+}
+
 .icon-button {
   width: 30px;
   height: 30px;
@@ -652,6 +668,14 @@ nav {
   color: var(--muted);
   font-size: 16px;
   line-height: 1;
+}
+
+.input-actions .icon-button {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  font-size: 14px;
 }
 
 .icon-button:hover {
