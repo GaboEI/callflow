@@ -2348,8 +2348,8 @@ Africa/Harare ZW
               ${
                 reminder.callId
                   ? `<div class="reminder-id-row">
-                      <span class="reminder-id" title="${escapeHtml(reminder.callId)}">ID: ${escapeHtml(reminder.callId)}</span>
                       <button type="button" class="icon-button" data-copy-reminder-call-id="${escapeHtml(reminder.callId)}" title="${escapeHtml(CallFlowI18n.t("copyCallId", state.settings.language || "es"))}">⇩</button>
+                      <span class="reminder-id" title="${escapeHtml(reminder.callId)}">ID: ${escapeHtml(reminder.callId)}</span>
                     </div>`
                   : ""
               }
