@@ -1040,6 +1040,23 @@ code {
   border-left-color: rgba(148, 163, 184, 0.82);
 }
 
+.reminder-deleted {
+  border-left-color: #64748b;
+  opacity: 0.55;
+}
+
+.reminder-deleted .reminder-state {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+}
+
+.reminder-deleted .reminder-countdown {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+}
+
 .reminder-main {
   display: grid;
   gap: 3px;
@@ -1154,6 +1171,11 @@ code {
   min-width: 0;
 }
 
+.reminder-main-field {
+  max-width: 240px;
+}
+
+
 .reminder-form label > span {
   color: var(--muted);
   font-size: 12px;
@@ -1196,25 +1218,203 @@ code {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.reminder-list-panel .panel-header {
+}/* ── Reminder filter chip bar ─────────────────────────────── */
+.reminder-filter-bar {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  min-width: 0;
 }
 
-.reminder-list-panel .panel-header select,
-.reminder-list-panel .panel-header .icon-button,
+.reminder-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* ── Base filter button ──────────────────────────────────────
+   Square-ish, system-feel, left accent stripe like reminder cards
+   ──────────────────────────────────────────────────────────── */
+.reminder-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-left-width: 3px;
+  background: rgba(15, 23, 42, 0.45);
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.reminder-chip:hover {
+  background: rgba(30, 41, 59, 0.7);
+  color: #e2e8f0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.reminder-chip:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ── Accent colors by filter (left border, rest state) ───── */
+
+/* Todos — neutral slate */
+.reminder-chip[data-filter="all"] {
+  border-left-color: #475569;
+}
+.reminder-chip[data-filter="all"].reminder-chip--active {
+  border-left-color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.35);
+  background: rgba(71, 85, 105, 0.45);
+  color: #e2e8f0;
+  box-shadow: inset 0 0 0 0 transparent, 0 0 0 1px rgba(148, 163, 184, 0.15);
+}
+.reminder-chip[data-filter="all"]:hover {
+  border-left-color: #94a3b8;
+}
+
+/* Hoy — blue */
+.reminder-chip[data-filter="today"] {
+  border-left-color: #2563eb;
+}
+.reminder-chip[data-filter="today"]:hover {
+  border-left-color: #3b82f6;
+  color: #93c5fd;
+}
+.reminder-chip[data-filter="today"].reminder-chip--active {
+  border-left-color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(37, 99, 235, 0.18);
+  color: #bfdbfe;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.12);
+}
+
+/* Mañana — cyan */
+.reminder-chip[data-filter="tomorrow"] {
+  border-left-color: #0e7490;
+}
+.reminder-chip[data-filter="tomorrow"]:hover {
+  border-left-color: #22d3ee;
+  color: #67e8f9;
+}
+.reminder-chip[data-filter="tomorrow"].reminder-chip--active {
+  border-left-color: #22d3ee;
+  border-color: rgba(34, 211, 238, 0.3);
+  background: rgba(14, 116, 144, 0.18);
+  color: #a5f3fc;
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.1);
+}
+
+/* Esta semana — indigo */
+.reminder-chip[data-filter="week"] {
+  border-left-color: #4338ca;
+}
+.reminder-chip[data-filter="week"]:hover {
+  border-left-color: #818cf8;
+  color: #a5b4fc;
+}
+.reminder-chip[data-filter="week"].reminder-chip--active {
+  border-left-color: #818cf8;
+  border-color: rgba(129, 140, 248, 0.3);
+  background: rgba(67, 56, 202, 0.18);
+  color: #c7d2fe;
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.12);
+}
+
+/* Vencidos — amber/red alert */
+.reminder-chip[data-filter="overdue"] {
+  border-left-color: #b45309;
+}
+.reminder-chip[data-filter="overdue"]:hover {
+  border-left-color: #f97316;
+  color: #fdba74;
+}
+.reminder-chip[data-filter="overdue"].reminder-chip--active {
+  border-left-color: #fb923c;
+  border-color: rgba(251, 146, 60, 0.35);
+  background: rgba(180, 83, 9, 0.18);
+  color: #fed7aa;
+  box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.12);
+}
+
+/* Inválidos — slate muted */
+.reminder-chip[data-filter="invalid"] {
+  border-left-color: rgba(100, 116, 139, 0.82);
+}
+.reminder-chip[data-filter="invalid"]:hover {
+  border-left-color: #94a3b8;
+  color: #cbd5e1;
+}
+.reminder-chip[data-filter="invalid"].reminder-chip--active {
+  border-left-color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(100, 116, 139, 0.22);
+  color: #e2e8f0;
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.1);
+}
+
+/* Completados — green */
+.reminder-chip[data-filter="completed"] {
+  border-left-color: #15803d;
+}
+.reminder-chip[data-filter="completed"]:hover {
+  border-left-color: #34d399;
+  color: #6ee7b7;
+}
+.reminder-chip[data-filter="completed"].reminder-chip--active {
+  border-left-color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(21, 128, 61, 0.18);
+  color: #a7f3d0;
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.1);
+}
+
+/* Basura — red muted */
+.reminder-chip[data-filter="deleted"] {
+  border-left-color: #991b1b;
+}
+.reminder-chip[data-filter="deleted"]:hover {
+  border-left-color: #f87171;
+  color: #fca5a5;
+}
+.reminder-chip[data-filter="deleted"].reminder-chip--active {
+  border-left-color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+  background: rgba(153, 27, 27, 0.18);
+  color: #fecaca;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.1);
+}
+
+/* Config button inside filter bar */
+.reminder-filter-bar .icon-button {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
 .reminder-create-panel .panel-header .icon-button {
   height: 34px;
   min-height: 34px;
-}
-
-.reminder-list-panel .panel-header select {
-  min-width: 118px;
-}
-
-.reminder-list-panel .panel-header .icon-button,
-.reminder-create-panel .panel-header .icon-button {
   width: 34px;
   min-width: 34px;
   padding: 0;

@@ -384,20 +384,18 @@
               </form>
             </div>
             <div class="panel reminder-list-panel">
-              <div class="panel-header">
-                <div class="panel-title-actions">
-                  <h2 data-i18n="reminderList">Lista</h2>
-                  <button type="button" class="icon-button hidden" id="showReminderForm" data-i18n-title="newReminder" title="Crear recordatorio">✎</button>
+              <div class="reminder-filter-bar">
+                <div class="reminder-chips" role="group" aria-label="Filtrar recordatorios">
+                  <button type="button" class="reminder-chip reminder-chip--active" data-filter="all" data-i18n="filterAll">Todos</button>
+                  <button type="button" class="reminder-chip reminder-chip--today" data-filter="today" data-i18n="filterToday">Hoy</button>
+                  <button type="button" class="reminder-chip reminder-chip--tomorrow" data-filter="tomorrow" data-i18n="filterTomorrow">Mañana</button>
+                  <button type="button" class="reminder-chip reminder-chip--week" data-filter="week" data-i18n="filterWeek">Esta semana</button>
+                  <button type="button" class="reminder-chip reminder-chip--overdue" data-filter="overdue" data-i18n="filterOverdue">Vencidos</button>
+                  <button type="button" class="reminder-chip reminder-chip--invalid" data-filter="invalid" data-i18n="filterInvalid">Inválidos</button>
+                  <button type="button" class="reminder-chip reminder-chip--completed" data-filter="completed" data-i18n="filterCompleted">Completados</button>
+                  <button type="button" class="reminder-chip reminder-chip--deleted" data-filter="deleted" data-i18n="filterDeleted">🗑 Basura</button>
                 </div>
-                <select id="reminderFilter">
-                  <option value="all" selected>Todos</option>
-                  <option value="today">Hoy</option>
-                  <option value="tomorrow">Mañana</option>
-                  <option value="week">Esta semana</option>
-                  <option value="overdue">Vencidos</option>
-                  <option value="invalid">Inválidos</option>
-                  <option value="completed">Completados</option>
-                </select>
+                <button type="button" class="icon-button hidden" id="showReminderForm" data-i18n-title="newReminder" title="Crear recordatorio">✎</button>
               </div>
               <div id="reminderList" class="item-list"></div>
             </div>

@@ -38,7 +38,7 @@
   }
 
   function buildStats(calls, reminders, settings) {
-    const pendingReminders = reminders.filter((reminder) => reminder.status !== "completed").length;
+    const pendingReminders = reminders.filter((reminder) => reminder.status !== "completed" && reminder.status !== "deleted").length;
     const noAnswer = noAnswerLabel(settings);
     const callsWithOutcome = calls.filter((call) => call.primaryOutcome && call.primaryOutcome.category);
     const callsWithoutOutcome = calls.filter((call) => !call.primaryOutcome || !call.primaryOutcome.category);

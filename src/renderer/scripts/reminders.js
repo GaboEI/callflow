@@ -9,7 +9,7 @@
   }
 
   function normalizeReminder(reminder, settings) {
-    if (reminder.status === "completed") {
+    if (reminder.status === "completed" || reminder.status === "deleted") {
       return reminder;
     }
     const due = validators ? validators.reminderDueDate(reminder, settings) : new Date(`${reminder.date}T${reminder.time || "00:00"}`);
@@ -20,6 +20,9 @@
   function filterReminders(reminders, filter, settings) {
     const normalized = reminders.map((reminder) => normalizeReminder(reminder, settings));
     return normalized.filter((reminder) => {
+      if (filter === "deleted") return reminder.status === "deleted";
+      if (reminder.status === "deleted") return false;
+
       if (filter === "completed") return reminder.status === "completed";
       if (filter === "overdue") return reminder.status === "overdue";
       if (reminder.status === "completed") return false;

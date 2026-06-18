@@ -177,7 +177,22 @@
       newNote: "Nueva nota",
       saveNote: "Guardar nota",
       delete: "Eliminar",
-      saveSettings: "Guardar configuración"
+      saveSettings: "Guardar configuración",
+      filterAll: "Todos",
+      filterToday: "Hoy",
+      filterTomorrow: "Mañana",
+      filterWeek: "Esta semana",
+      filterOverdue: "Vencidos",
+      filterInvalid: "Inválidos",
+      filterCompleted: "Completados",
+      filterDeleted: "Basura",
+      confirmDeleteReminder: "¿Mover este recordatorio a la basura? Podrás restaurarlo durante un periodo de 30 días.",
+      confirmPermanentDeleteReminder: "¿Eliminar definitivamente este recordatorio?",
+      deleteReminder: "Eliminar",
+      restoreReminder: "Restaurar",
+      permanentDeleteReminder: "Eliminar definitivamente",
+      reminderDeletedLabel: "En basura",
+      deletedAtLabel: "Eliminado el"
     },
     en: {
       onboardingTitle: "Initial setup",
@@ -352,7 +367,22 @@
       alarmSilence30: "Silence 30 min",
       dismissReminderAlarm: "Dismiss alert",
       settings: "Settings",
-      saveSettings: "Save settings"
+      saveSettings: "Save settings",
+      filterAll: "All",
+      filterToday: "Today",
+      filterTomorrow: "Tomorrow",
+      filterWeek: "This week",
+      filterOverdue: "Overdue",
+      filterInvalid: "Invalid",
+      filterCompleted: "Completed",
+      filterDeleted: "Trash",
+      confirmDeleteReminder: "Move this reminder to trash? You can restore it within 30 days.",
+      confirmPermanentDeleteReminder: "Permanently delete this reminder?",
+      deleteReminder: "Delete",
+      restoreReminder: "Restore",
+      permanentDeleteReminder: "Delete permanently",
+      reminderDeletedLabel: "In Trash",
+      deletedAtLabel: "Deleted on"
     },
     ru: {
       onboardingTitle: "Начальная настройка",
@@ -527,7 +557,22 @@
       alarmSilence30: "Выключить на 30 мин",
       dismissReminderAlarm: "Закрыть сигнал",
       settings: "Настройки",
-      saveSettings: "Сохранить настройки"
+      saveSettings: "Сохранить настройки",
+      filterAll: "Все",
+      filterToday: "Сегодня",
+      filterTomorrow: "Завтра",
+      filterWeek: "На этой неделе",
+      filterOverdue: "Просроченные",
+      filterInvalid: "Неверные",
+      filterCompleted: "Завершенные",
+      filterDeleted: "Корзина",
+      confirmDeleteReminder: "Переместить напоминание в корзину? Вы сможете восстановить его в течение 30 дней.",
+      confirmPermanentDeleteReminder: "Удалить это напоминание навсегда?",
+      deleteReminder: "Удалить",
+      restoreReminder: "Восстановить",
+      permanentDeleteReminder: "Удалить навсегда",
+      reminderDeletedLabel: "В корзине",
+      deletedAtLabel: "Удалено"
     }
   };
 

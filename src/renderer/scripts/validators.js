@@ -14,7 +14,7 @@
   const linePrefixModes = new Set(["hash", "none", "dailyNumber"]);
   const clockFormats = new Set(["24h", "12h", "military"]);
   const reminderSounds = new Set(["soft", "ping", "bell", "alert", "chime", "none"]);
-  const reminderStatuses = new Set(["pending", "overdue", "completed"]);
+  const reminderStatuses = new Set(["pending", "overdue", "completed", "deleted"]);
 
   function isPlainObject(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);

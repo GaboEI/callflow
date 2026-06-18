@@ -713,7 +713,15 @@ Africa/Harare ZW
 
   function normalizeRuntimeData() {
     state.calls = V.normalizeCollection(state.calls, V.normalizeCall, state.settings);
-    state.reminders = V.normalizeCollection(state.reminders, V.normalizeReminder, state.settings);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    state.reminders = V.normalizeCollection(state.reminders, V.normalizeReminder, state.settings)
+      .filter((reminder) => {
+        if (reminder.status === "deleted" && reminder.deletedAt) {
+          return new Date(reminder.deletedAt) > thirtyDaysAgo;
+        }
+        return true;
+      });
     state.knowledgeBase = V.normalizeCollection(state.knowledgeBase, V.normalizeNote);
     state.workTimer = V.normalizeWorkTimer(state.workTimer);
     state.health = Array.isArray(state.health) ? state.health : [];
@@ -2369,6 +2377,18 @@ Africa/Harare ZW
 
   function reminderCountdownLabel(reminder) {
     if (reminder.status === "completed") return "Completado";
+    if (reminder.status === "deleted") {
+      if (reminder.deletedAt) {
+        const delDate = new Date(reminder.deletedAt);
+        const day = String(delDate.getDate()).padStart(2, "0");
+        const month = String(delDate.getMonth() + 1).padStart(2, "0");
+        const hours = String(delDate.getHours()).padStart(2, "0");
+        const minutes = String(delDate.getMinutes()).padStart(2, "0");
+        const label = CallFlowI18n.t("deletedAtLabel", state.settings.language || "es");
+        return `${label} ${day}.${month} ${hours}:${minutes}`;
+      }
+      return CallFlowI18n.t("reminderDeletedLabel", state.settings.language || "es");
+    }
     const due = reminderDueDate(reminder);
     const diff = due - new Date();
     if (diff < 0) return `Vencido hace ${compactDuration(Math.abs(diff))}`;
@@ -2376,6 +2396,7 @@ Africa/Harare ZW
   }
 
   function reminderStatusKey(reminder) {
+    if (reminder.status === "deleted") return "deleted";
     if (!V.reminderDueDate(reminder, state.settings) && reminder.status !== "completed") return "invalid";
     if (reminder.status === "completed") return "completed";
     if (reminder.status === "overdue") return "overdue";
@@ -2389,7 +2410,8 @@ Africa/Harare ZW
       completed: CallFlowI18n.t("reminderCompleted", state.settings.language || "es"),
       overdue: CallFlowI18n.t("reminderOverdue", state.settings.language || "es"),
       invalid: CallFlowI18n.t("reminderInvalid", state.settings.language || "es"),
-      pending: CallFlowI18n.t("reminderPending", state.settings.language || "es")
+      pending: CallFlowI18n.t("reminderPending", state.settings.language || "es"),
+      deleted: CallFlowI18n.t("reminderDeletedLabel", state.settings.language || "es")
     };
     return labels[key];
   }
@@ -2411,8 +2433,20 @@ Africa/Harare ZW
     return `${timezoneFlag(timezone)} ${timezone}`;
   }
 
+  function getActiveReminderFilter() {
+    const active = document.querySelector(".reminder-chip.reminder-chip--active");
+    return active ? active.dataset.filter : "all";
+  }
+
+  function setReminderFilter(filterValue) {
+    document.querySelectorAll(".reminder-chip").forEach((btn) => {
+      btn.classList.toggle("reminder-chip--active", btn.dataset.filter === filterValue);
+    });
+    render();
+  }
+
   function renderReminders() {
-    const filter = $("#reminderFilter").value;
+    const filter = getActiveReminderFilter();
     const reminders = sortedReminders(CallFlowReminders.filterReminders(state.reminders, filter, state.settings));
     $("#reminderList").innerHTML = reminders.length
       ? reminders
@@ -2439,11 +2473,21 @@ Africa/Harare ZW
                   : ""
               }
               <div class="reminder-actions">
-                <button type="button" class="icon-button" data-edit-reminder="${reminder.id}" title="${escapeHtml(CallFlowI18n.t("editReminder", state.settings.language || "es"))}">✎</button>
                 ${
-                  reminderStatusKey(reminder) === "completed"
-                    ? `<span class="tag reminder-completed-label">${escapeHtml(CallFlowI18n.t("reminderCompleted", state.settings.language || "es"))}</span>`
-                    : `<button type="button" data-complete-reminder="${reminder.id}">${escapeHtml(CallFlowI18n.t("completeReminder", state.settings.language || "es"))}</button>`
+                  reminderStatusKey(reminder) === "deleted"
+                    ? `
+                        <button type="button" data-restore-reminder="${reminder.id}">${escapeHtml(CallFlowI18n.t("restoreReminder", state.settings.language || "es"))}</button>
+                        <button type="button" class="icon-button danger ghost-danger" data-permanent-delete-reminder="${reminder.id}" title="${escapeHtml(CallFlowI18n.t("permanentDeleteReminder", state.settings.language || "es"))}">🗑</button>
+                      `
+                    : `
+                        <button type="button" class="icon-button" data-edit-reminder="${reminder.id}" title="${escapeHtml(CallFlowI18n.t("editReminder", state.settings.language || "es"))}">✎</button>
+                        ${
+                          reminderStatusKey(reminder) === "completed"
+                            ? `<span class="tag reminder-completed-label">${escapeHtml(CallFlowI18n.t("reminderCompleted", state.settings.language || "es"))}</span>`
+                            : `<button type="button" data-complete-reminder="${reminder.id}">${escapeHtml(CallFlowI18n.t("completeReminder", state.settings.language || "es"))}</button>`
+                        }
+                        <button type="button" class="icon-button danger ghost-danger" data-delete-reminder="${reminder.id}" title="${escapeHtml(CallFlowI18n.t("deleteReminder", state.settings.language || "es"))}">🗑</button>
+                      `
                 }
               </div>
             </article>
@@ -3033,6 +3077,47 @@ Africa/Harare ZW
     });
   }
 
+  async function deleteReminder(id) {
+    const language = state.settings.language || "es";
+    if (!window.confirm(CallFlowI18n.t("confirmDeleteReminder", language))) return;
+    if (state.activeAlarmReminderId === id) clearReminderAlarm();
+    const nextReminders = state.reminders.map((reminder) =>
+      reminder.id === id ? { ...reminder, status: "deleted", deletedAt: new Date().toISOString() } : reminder
+    );
+    await runAction(async () => {
+      await CallFlowStorage.write("reminders", nextReminders);
+      state.reminders = nextReminders;
+      render();
+      setStatusMessage(CallFlowI18n.t("saved", language), "success");
+    });
+  }
+
+  async function restoreReminder(id) {
+    const language = state.settings.language || "es";
+    const nextReminders = state.reminders.map((reminder) =>
+      reminder.id === id ? { ...reminder, status: "pending", deletedAt: undefined } : reminder
+    );
+    await runAction(async () => {
+      await CallFlowStorage.write("reminders", nextReminders);
+      state.reminders = nextReminders;
+      render();
+      setStatusMessage(CallFlowI18n.t("saved", language), "success");
+    });
+  }
+
+  async function permanentDeleteReminder(id) {
+    const language = state.settings.language || "es";
+    if (!window.confirm(CallFlowI18n.t("confirmPermanentDeleteReminder", language))) return;
+    const nextReminders = state.reminders.filter((reminder) => reminder.id !== id);
+    await runAction(async () => {
+      await CallFlowStorage.write("reminders", nextReminders);
+      state.reminders = nextReminders;
+      render();
+      setStatusMessage(CallFlowI18n.t("saved", language), "success");
+    });
+  }
+
+
   async function saveNote(event) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -3236,7 +3321,10 @@ Africa/Harare ZW
     $("#cancelReminderEdit").addEventListener("click", cancelReminderEdit);
     $("#toggleReminderForm").addEventListener("click", () => setReminderFormCollapsed(true));
     $("#showReminderForm").addEventListener("click", () => setReminderFormCollapsed(false));
-    $("#reminderFilter").addEventListener("change", render);
+    document.querySelector(".reminder-chips").addEventListener("click", (e) => {
+      const chip = e.target.closest(".reminder-chip");
+      if (chip) setReminderFilter(chip.dataset.filter);
+    });
     $("#noteForm").addEventListener("submit", saveNote);
     $("#deleteNote").addEventListener("click", deleteNote);
     $("#newNote").addEventListener("click", () => {
@@ -3351,6 +3439,9 @@ Africa/Harare ZW
       const reminderId = event.target.dataset.completeReminder;
       const reminderCallId = event.target.dataset.copyReminderCallId;
       const editReminderId = event.target.dataset.editReminder;
+      const deleteReminderId = event.target.closest("[data-delete-reminder]")?.dataset.deleteReminder;
+      const restoreReminderId = event.target.closest("[data-restore-reminder]")?.dataset.restoreReminder;
+      const permanentDeleteReminderId = event.target.closest("[data-permanent-delete-reminder]")?.dataset.permanentDeleteReminder;
       const reminderDateShortcut = event.target.dataset.reminderDateShortcut;
       const addActiveTimezonePicker = event.target.dataset.addActiveTimezone;
       const removeActiveTimezoneValue = event.target.dataset.removeActiveTimezone;
@@ -3434,6 +3525,9 @@ Africa/Harare ZW
       if (reminderId) completeReminder(reminderId);
       if (reminderCallId) copyReminderCallId(reminderCallId);
       if (editReminderId) editReminder(editReminderId);
+      if (deleteReminderId) deleteReminder(deleteReminderId);
+      if (restoreReminderId) restoreReminder(restoreReminderId);
+      if (permanentDeleteReminderId) permanentDeleteReminder(permanentDeleteReminderId);
       if (reminderDateShortcut) setReminderDateShortcut(reminderDateShortcut);
       if (addActiveTimezonePicker) addActiveTimezoneFromPicker(addActiveTimezonePicker);
       if (removeActiveTimezoneValue) removeActiveTimezone(removeActiveTimezoneValue);

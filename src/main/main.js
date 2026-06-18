@@ -128,7 +128,7 @@ function isValidDate(date) {
 }
 
 function isValidReminder(reminder) {
-  if (!reminder || reminder.status === "completed") return false;
+  if (!reminder || reminder.status === "completed" || reminder.status === "deleted") return false;
   return isValidDate(reminderDueDate(reminder));
 }
 

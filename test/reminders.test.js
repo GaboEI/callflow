@@ -82,3 +82,18 @@ test("filters reminders using each reminder timezone", () => {
     global.Date = originalNow;
   }
 });
+
+test("preserves status in normalizeReminder if deleted", () => {
+  assert.equal(reminders.normalizeReminder({ date: "2026-06-18", time: "11:59", status: "deleted" }).status, "deleted");
+});
+
+test("filters and excludes deleted reminders correctly", () => {
+  const items = [
+    { id: "active", date: "2026-06-18", time: "13:00", status: "pending" },
+    { id: "trash", date: "2026-06-18", time: "14:00", status: "deleted" }
+  ];
+
+  assert.deepEqual(reminders.filterReminders(items, "today").map((item) => item.id), ["active"]);
+  assert.deepEqual(reminders.filterReminders(items, "deleted").map((item) => item.id), ["trash"]);
+});
+
