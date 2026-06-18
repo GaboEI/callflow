@@ -3241,6 +3241,15 @@ Africa/Harare ZW
     return [`REPORTE ${operator} DE ${block}`, "", lines].join("\n");
   }
 
+  function reportExportBaseName() {
+    const operator = String(state.settings.operatorName || "operador")
+      .trim()
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, "-")
+      .replace(/^-+|-+$/g, "");
+    return `${operator || "operador"}-report-${isoDateOffset(0)}`;
+  }
+
   function selectedReportTexts(format = "md") {
     const groupsByDate = reportGroupsForRange();
     return [...state.selectedBlocks]
@@ -3272,7 +3281,7 @@ Africa/Harare ZW
     await runAction(
       () =>
         window.callflow.exportNote({
-          fileName: `callflow-report-${isoDateOffset(0)}`,
+          fileName: reportExportBaseName(),
           content: reports.join("\n\n"),
           extension
         }),
