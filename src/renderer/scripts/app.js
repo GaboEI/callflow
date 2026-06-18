@@ -845,6 +845,13 @@ Africa/Harare ZW
     return label.charAt(0).toUpperCase() + label.slice(1);
   }
 
+  function monthName(month) {
+    const language = state.settings?.language || "es";
+    const label = new Intl.DateTimeFormat(languageLocale(language), { month: "long" })
+      .format(new Date(Date.UTC(2026, month, 1)));
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  }
+
   function weekdayLabels() {
     const language = state.settings?.language || "es";
     const monday = new Date(Date.UTC(2026, 5, 15));
@@ -865,18 +872,24 @@ Africa/Harare ZW
       es: {
         previousMonth: "Mes anterior",
         nextMonth: "Mes siguiente",
+        month: "Mes",
+        year: "Año",
         exactMinute: "Minuto exacto",
         apply: "OK"
       },
       en: {
         previousMonth: "Previous month",
         nextMonth: "Next month",
+        month: "Month",
+        year: "Year",
         exactMinute: "Exact minute",
         apply: "OK"
       },
       ru: {
         previousMonth: "Предыдущий месяц",
         nextMonth: "Следующий месяц",
+        month: "Месяц",
+        year: "Год",
         exactMinute: "Точная минута",
         apply: "OK"
       }
@@ -927,7 +940,7 @@ Africa/Harare ZW
     if (!input || !picker || picker.classList.contains("hidden")) return;
 
     const rect = input.getBoundingClientRect();
-    const width = Math.min(340, Math.max(284, Math.floor(window.innerWidth - 24)));
+    const width = Math.min(368, Math.max(292, Math.floor(window.innerWidth - 24)));
     picker.style.width = `${width}px`;
     const pickerHeight = picker.offsetHeight || 360;
     const preferredTop = rect.bottom + 8;
@@ -952,6 +965,9 @@ Africa/Harare ZW
       const selected = parseIsoDateParts(input.value);
       const today = parseIsoDateParts(V.isoDateInTimezone(new Date(), inputTimezone(input)));
       const weekdays = weekdayLabels().map((day) => `<span>${escapeHtml(day)}</span>`).join("");
+      const monthOptions = Array.from({ length: 12 }, (_item, month) =>
+        `<option value="${month}" ${pickerState.month === month ? "selected" : ""}>${escapeHtml(monthName(month))}</option>`
+      ).join("");
       const days = datePickerDays(pickerState.year, pickerState.month)
         .map((cell) => {
           const dateValue = `${cell.year}-${String(cell.month + 1).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`;
@@ -968,7 +984,10 @@ Africa/Harare ZW
       picker.innerHTML = `
         <div class="cf-picker-header">
           <button type="button" class="icon-button" data-cf-picker-month="-1" aria-label="${escapeHtml(pickerText("previousMonth"))}">‹</button>
-          <strong>${escapeHtml(monthLabel(pickerState.year, pickerState.month))}</strong>
+          <div class="cf-picker-month-year">
+            <select data-cf-picker-month-select aria-label="${escapeHtml(pickerText("month"))}">${monthOptions}</select>
+            <input type="number" data-cf-picker-year-input aria-label="${escapeHtml(pickerText("year"))}" min="1900" max="2200" value="${pickerState.year}" />
+          </div>
           <button type="button" class="icon-button" data-cf-picker-month="1" aria-label="${escapeHtml(pickerText("nextMonth"))}">›</button>
         </div>
         <div class="cf-picker-weekdays">${weekdays}</div>
@@ -1000,7 +1019,13 @@ Africa/Harare ZW
               <div class="cf-picker-exact-minute">
                 <label>
                   <span>${escapeHtml(pickerText("exactMinute"))}</span>
-                  <input id="exactMinuteInput" type="number" min="0" max="59" inputmode="numeric" value="${String(pickerState.minute).padStart(2, "0")}" />
+                  <div class="cf-exact-minute-control">
+                    <input id="exactMinuteInput" type="number" min="0" max="59" inputmode="numeric" value="${String(pickerState.minute).padStart(2, "0")}" />
+                    <div class="cf-minute-stepper" aria-label="${escapeHtml(pickerText("exactMinute"))}">
+                      <button type="button" data-cf-picker-minute-step="1" aria-label="+1">⌃</button>
+                      <button type="button" data-cf-picker-minute-step="-1" aria-label="-1">⌄</button>
+                    </div>
+                  </div>
                 </label>
                 <button type="button" data-cf-picker-apply-minute>${escapeHtml(pickerText("apply"))}</button>
               </div>
@@ -1073,12 +1098,41 @@ Africa/Harare ZW
     renderDateTimePicker();
   }
 
+  function setPickerMonth(month) {
+    const nextMonth = Math.min(11, Math.max(0, Number(month)));
+    if (Number.isNaN(nextMonth)) return;
+    state.dateTimePicker.month = nextMonth;
+    renderDateTimePicker();
+  }
+
+  function setPickerYear(year) {
+    const nextYear = Math.min(2200, Math.max(1900, Number(year)));
+    if (Number.isNaN(nextYear)) return;
+    state.dateTimePicker.year = nextYear;
+    renderDateTimePicker();
+  }
+
+  function exactMinuteInputValue() {
+    const input = $("#exactMinuteInput");
+    return Math.min(59, Math.max(0, Number(input?.value) || 0));
+  }
+
+  function nudgeExactMinute(delta) {
+    const input = $("#exactMinuteInput");
+    if (!input) return;
+    const nextMinute = (exactMinuteInputValue() + delta + 60) % 60;
+    input.value = String(nextMinute).padStart(2, "0");
+    state.dateTimePicker.minute = nextMinute;
+    renderDateTimePicker();
+  }
+
   function handleDateTimePickerClick(event) {
     const monthButton = event.target.closest("[data-cf-picker-month]");
     const dateButton = event.target.closest("[data-cf-picker-date]");
     const stepButton = event.target.closest("[data-cf-picker-step]");
     const hourButton = event.target.closest("[data-cf-picker-hour]");
     const minuteButton = event.target.closest("[data-cf-picker-minute]");
+    const minuteStepButton = event.target.closest("[data-cf-picker-minute-step]");
     const applyMinute = event.target.closest("[data-cf-picker-apply-minute]");
 
     if (monthButton) shiftPickerMonth(Number(monthButton.dataset.cfPickerMonth));
@@ -1093,7 +1147,20 @@ Africa/Harare ZW
       renderDateTimePicker();
     }
     if (minuteButton) commitPickerTime(Number(minuteButton.dataset.cfPickerMinute));
+    if (minuteStepButton) nudgeExactMinute(Number(minuteStepButton.dataset.cfPickerMinuteStep));
     if (applyMinute) commitPickerTime($("#exactMinuteInput")?.value);
+  }
+
+  function handleDateTimePickerChange(event) {
+    const monthSelect = event.target.closest("[data-cf-picker-month-select]");
+    const yearInput = event.target.closest("[data-cf-picker-year-input]");
+    const exactMinuteInput = event.target.closest("#exactMinuteInput");
+    if (monthSelect) setPickerMonth(monthSelect.value);
+    if (yearInput) setPickerYear(yearInput.value);
+    if (exactMinuteInput) {
+      exactMinuteInput.value = String(exactMinuteInputValue()).padStart(2, "0");
+      state.dateTimePicker.minute = exactMinuteInputValue();
+    }
   }
 
   function enhanceDateTimeInputs() {
@@ -3741,6 +3808,10 @@ Africa/Harare ZW
     });
 
     document.addEventListener("change", (event) => {
+      if (event.target.closest("#dateTimePicker")) {
+        handleDateTimePickerChange(event);
+        return;
+      }
       if (event.target.matches("[data-report-block]")) {
         if (event.target.checked) state.selectedBlocks.add(event.target.dataset.reportBlock);
         else state.selectedBlocks.delete(event.target.dataset.reportBlock);
@@ -3904,6 +3975,10 @@ Africa/Harare ZW
     });
     window.addEventListener("scroll", positionDateTimePicker, true);
     document.addEventListener("keydown", (event) => {
+      if (event.target.matches("[data-cf-picker-year-input]") && event.key === "Enter") {
+        event.preventDefault();
+        setPickerYear(event.target.value);
+      }
       if (event.target.matches("#exactMinuteInput") && event.key === "Enter") {
         event.preventDefault();
         commitPickerTime(event.target.value);

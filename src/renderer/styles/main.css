@@ -104,6 +104,34 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   cursor: pointer;
 }
 
+input[type="date"].cf-datetime-input {
+  border-color: rgba(34, 197, 94, 0.46);
+  background:
+    linear-gradient(90deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.06) 34px, transparent 35px),
+    #0b1220;
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.08);
+}
+
+input[type="time"].cf-datetime-input {
+  border-color: rgba(59, 130, 246, 0.5);
+  background:
+    linear-gradient(90deg, rgba(59, 130, 246, 0.22), rgba(59, 130, 246, 0.07) 34px, transparent 35px),
+    #0b1220;
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+input[type="date"].cf-datetime-input:hover,
+input[type="date"].cf-datetime-input:focus {
+  border-color: rgba(34, 197, 94, 0.78);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+}
+
+input[type="time"].cf-datetime-input:hover,
+input[type="time"].cf-datetime-input:focus {
+  border-color: rgba(59, 130, 246, 0.82);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+}
+
 .cf-datetime-input::-webkit-calendar-picker-indicator {
   display: none;
 }
@@ -137,6 +165,30 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .cf-picker-header .icon-button {
   min-width: 38px;
   height: 34px;
+}
+
+.cf-picker-month-year {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cf-picker-month-year select,
+.cf-picker-month-year input {
+  min-height: 34px;
+  padding: 6px 8px;
+  border-color: rgba(59, 130, 246, 0.34);
+  background: rgba(15, 23, 42, 0.86);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cf-picker-month-year select:hover,
+.cf-picker-month-year input:hover,
+.cf-picker-month-year select:focus,
+.cf-picker-month-year input:focus {
+  border-color: rgba(59, 130, 246, 0.72);
 }
 
 .cf-picker-header .icon-button.is-selected {
@@ -227,7 +279,38 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   min-height: 36px;
 }
 
-.cf-picker-exact-minute button {
+.cf-exact-minute-control {
+  display: grid;
+  grid-template-columns: 1fr 30px;
+  gap: 6px;
+}
+
+.cf-minute-stepper {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
+}
+
+.cf-minute-stepper button {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  min-height: 0;
+  height: 16px;
+  border-color: rgba(59, 130, 246, 0.36);
+  background: rgba(59, 130, 246, 0.14);
+  color: #bfdbfe;
+  padding: 0;
+  line-height: 1;
+  font-size: 13px;
+}
+
+.cf-minute-stepper button:hover {
+  border-color: rgba(59, 130, 246, 0.78);
+  background: rgba(59, 130, 246, 0.24);
+}
+
+.cf-picker-exact-minute > button {
   min-width: 56px;
   min-height: 36px;
 }

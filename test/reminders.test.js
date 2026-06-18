@@ -88,12 +88,28 @@ test("preserves status in normalizeReminder if deleted", () => {
 });
 
 test("filters and excludes deleted reminders correctly", () => {
+  const originalNow = Date;
+  const fixedNow = new originalNow("2026-06-18T12:00:00");
+
+  global.Date = class extends originalNow {
+    constructor(...args) {
+      return args.length ? new originalNow(...args) : fixedNow;
+    }
+
+    static now() {
+      return fixedNow.getTime();
+    }
+  };
+
   const items = [
     { id: "active", date: "2026-06-18", time: "13:00", status: "pending" },
     { id: "trash", date: "2026-06-18", time: "14:00", status: "deleted" }
   ];
 
-  assert.deepEqual(reminders.filterReminders(items, "today").map((item) => item.id), ["active"]);
-  assert.deepEqual(reminders.filterReminders(items, "deleted").map((item) => item.id), ["trash"]);
+  try {
+    assert.deepEqual(reminders.filterReminders(items, "today").map((item) => item.id), ["active"]);
+    assert.deepEqual(reminders.filterReminders(items, "deleted").map((item) => item.id), ["trash"]);
+  } finally {
+    global.Date = originalNow;
+  }
 });
-
