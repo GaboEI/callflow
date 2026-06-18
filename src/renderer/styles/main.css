@@ -100,6 +100,138 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   filter: invert(67%) sepia(91%) saturate(641%) hue-rotate(86deg) brightness(102%) contrast(89%);
 }
 
+.cf-datetime-input {
+  cursor: pointer;
+}
+
+.cf-datetime-input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.cf-datetime-picker {
+  position: fixed;
+  z-index: 80;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 8px;
+  background: #0b1220;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.48);
+  padding: 10px;
+}
+
+.cf-picker-header {
+  display: grid;
+  grid-template-columns: 38px 1fr 38px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cf-picker-header strong {
+  min-width: 0;
+  text-align: center;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cf-picker-header .icon-button {
+  min-width: 38px;
+  height: 34px;
+}
+
+.cf-picker-header .icon-button.is-selected {
+  border-color: var(--blue);
+  background: rgba(59, 130, 246, 0.18);
+  color: #bfdbfe;
+}
+
+.cf-picker-weekdays,
+.cf-picker-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.cf-picker-weekdays {
+  margin-bottom: 5px;
+}
+
+.cf-picker-weekdays span {
+  color: var(--muted);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.cf-picker-day,
+.cf-picker-cell {
+  display: inline-grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 34px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.18);
+  padding: 0;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.cf-picker-day:hover,
+.cf-picker-cell:hover {
+  border-color: rgba(59, 130, 246, 0.76);
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.cf-picker-day.is-muted {
+  color: rgba(148, 163, 184, 0.58);
+}
+
+.cf-picker-day.is-today {
+  color: #bfdbfe;
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.46);
+}
+
+.cf-picker-day.is-selected,
+.cf-picker-cell.is-selected {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #eff6ff;
+}
+
+.cf-picker-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.cf-picker-grid.hours {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.cf-picker-grid.minutes {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cf-picker-exact-minute {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 8px;
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.cf-picker-exact-minute input {
+  min-height: 36px;
+}
+
+.cf-picker-exact-minute button {
+  min-width: 56px;
+  min-height: 36px;
+}
+
 select:disabled {
   opacity: 0.55;
   cursor: default;
