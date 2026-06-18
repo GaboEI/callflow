@@ -432,6 +432,7 @@ nav {
 .clock-chip small {
   display: block;
   max-width: 110px;
+  margin-bottom: 2px;
   color: var(--muted);
   font-size: 10px;
   line-height: 1.1;
