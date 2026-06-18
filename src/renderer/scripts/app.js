@@ -2245,25 +2245,53 @@ Africa/Harare ZW
     renderReportSearchStatus();
   }
 
+  function callProductivityScore(call) {
+    const category = call.primaryOutcome?.category;
+    if (category === "success") return 5;
+    if (category === "callback") return 2;
+    if (category === "rejection") return -3;
+
+    const description = String(call.description || "").toLowerCase();
+    const successLabel = String(state.settings.successLabel || "").toLowerCase();
+    const rejectionLabel = String(state.settings.rejectionLabel || "").toLowerCase();
+    if (successLabel && description.includes(successLabel)) return 4;
+    if (rejectionLabel && description.includes(rejectionLabel)) return -3;
+    return 0.5;
+  }
+
+  function blockProductivity(calls) {
+    const score = calls.reduce((total, call) => total + callProductivityScore(call), 0);
+    const volumeSignal = calls.length * 0.25;
+    const qualityRatio = calls.length ? score / calls.length : 0;
+    return Number((score + volumeSignal + qualityRatio).toFixed(3));
+  }
+
   function renderBlocks() {
     const todayCalls = CallFlowReports.ensureDailySequences(CallFlowReports.callsForToday(state.calls, state.settings));
     const groups = CallFlowReports.groupByBlock(todayCalls);
     const entries = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-    const counts = entries.map(([, calls]) => calls.length);
-    const maxCount = counts.length ? Math.max(...counts) : 0;
-    const minCount = counts.length ? Math.min(...counts) : 0;
-    const shouldMarkBest = entries.length > 2;
-    const shouldMarkWorst = entries.length > 3 && minCount < maxCount;
+    const currentBlock = CallFlowReports.blockFromHour(CallFlowReports.formatCallTimestamp(new Date(), state.settings).hour);
+    const scoredClosedEntries = entries
+      .filter(([block]) => block !== currentBlock)
+      .map(([block, calls]) => ({ block, score: blockProductivity(calls) }));
+    const scores = scoredClosedEntries.map((entry) => entry.score);
+    const maxScore = scores.length ? Math.max(...scores) : 0;
+    const minScore = scores.length ? Math.min(...scores) : 0;
+    const shouldMarkBest = scoredClosedEntries.length > 1;
+    const shouldMarkWorst = scoredClosedEntries.length > 2 && minScore < maxScore;
 
     $("#hourBlocks").innerHTML = entries.length
       ? entries
           .map(([block, calls]) => {
-            const best = shouldMarkBest && calls.length === maxCount;
-            const worst = shouldMarkWorst && calls.length === minCount;
+            const current = block === currentBlock;
+            const score = current ? null : blockProductivity(calls);
+            const best = !current && shouldMarkBest && score === maxScore;
+            const worst = !current && shouldMarkWorst && score === minScore;
+            const title = current ? "Bloque actual en curso" : `Score de productividad: ${score}`;
             return `
-            <article class="block-item compact-hour-block${best ? " best-block" : ""}${worst ? " worst-block" : ""}">
+            <article class="block-item compact-hour-block${current ? " current-block" : ""}${best ? " best-block" : ""}${worst ? " worst-block" : ""}" title="${escapeHtml(title)}">
               <strong>${block}</strong>
-              <span class="muted">${calls.length} llamadas</span>
+              <span class="muted">${calls.length} llamadas${current ? " · en curso" : ""}</span>
             </article>
           `;
           })

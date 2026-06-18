@@ -154,7 +154,10 @@
           <div class="panel">
             <div class="panel-header">
               <h2 data-i18n="quickRegister">Registro rápido</h2>
-              <span class="muted" id="lastSavedLabel"></span>
+              <div class="panel-actions">
+                <span class="muted" id="lastSavedLabel"></span>
+                <button class="icon-button" type="button" id="toggleCallTypeManager" data-i18n-title="manageCallTypes" title="Gestionar tipos">⋯</button>
+              </div>
             </div>
             <form id="callForm" class="call-form">
               <label>
@@ -171,7 +174,6 @@
               <label>
                 <span class="field-heading">
                   <span data-i18n="callType">Tipo / proveedor</span>
-                  <button class="icon-button" type="button" id="toggleCallTypeManager" data-i18n-title="manageCallTypes" title="Gestionar tipos">⋯</button>
                 </span>
                 <select name="callType"></select>
               </label>

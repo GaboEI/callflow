@@ -34,7 +34,8 @@ CallFlow helps operators register calls quickly during long shifts, copy clean C
 - CRM copy format: `DD.MM HH:mm Operator: Description`.
 - CRM copy still starts from the original call date/time, even when the description includes callback date/time.
 - Hourly grouping by configured timezone.
-- Today's hourly blocks use a compact grid and can visually mark the most productive hour in green and the least productive hour in red when enough data exists.
+- Today's hourly blocks use a compact grid, mark the active hour in blue, and only compare closed hours for best/worst performance.
+- Hourly performance highlights use a simple productivity score based on outcome quality first, with call volume as a smaller supporting signal.
 - Supervisor report copy in Markdown with one or more selected hourly blocks; calls inside a block are listed on consecutive lines without blank spacing.
 - Reports default to today's calls and can be filtered by yesterday, last 7 days, last 30 days, or a custom date range.
 - Reports include an in-section text search with match count, previous/next navigation, and visual highlighting for reviewing repeated words or exact phrases.

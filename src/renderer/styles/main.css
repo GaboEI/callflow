@@ -340,6 +340,14 @@ nav {
   margin-bottom: 14px;
 }
 
+.panel-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
 .topbar-actions {
   display: flex;
   flex-wrap: wrap;
@@ -623,20 +631,33 @@ nav {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
 }
 
 .inline-icon-actions {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex: 0 0 auto;
 }
 
 .icon-button {
   width: 30px;
+  height: 30px;
+  min-width: 30px;
   min-height: 30px;
   padding: 0;
-  font-size: 18px;
+  border-color: rgba(148, 163, 184, 0.32);
+  background: rgba(15, 23, 42, 0.52);
+  color: var(--muted);
+  font-size: 16px;
   line-height: 1;
+}
+
+.icon-button:hover {
+  border-color: rgba(96, 165, 250, 0.55);
+  background: rgba(59, 130, 246, 0.14);
+  color: var(--text);
 }
 
 .call-time-helper {
@@ -1204,6 +1225,16 @@ code {
 .compact-hour-block.best-block strong,
 .compact-hour-block.best-block .muted {
   color: var(--green);
+}
+
+.compact-hour-block.current-block {
+  border-color: rgba(96, 165, 250, 0.72);
+  background: rgba(59, 130, 246, 0.14);
+}
+
+.compact-hour-block.current-block strong,
+.compact-hour-block.current-block .muted {
+  color: #bfdbfe;
 }
 
 .compact-hour-block.worst-block {
