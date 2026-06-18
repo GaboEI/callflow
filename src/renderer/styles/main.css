@@ -1844,6 +1844,73 @@ code {
   margin-bottom: 14px;
 }
 
+.report-main-actions,
+.report-export-actions,
+.report-bulk-actions,
+.report-period-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-main-actions {
+  justify-content: flex-end;
+}
+
+.report-export-actions {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 4px;
+}
+
+.report-export-actions span {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 0 4px;
+}
+
+.report-export-actions button,
+.report-bulk-actions button,
+.report-period-chip {
+  min-height: 32px;
+  padding: 6px 10px;
+}
+
+.report-period-bar {
+  align-items: stretch;
+}
+
+.report-period-chip {
+  border-left: 3px solid rgba(59, 130, 246, 0.36);
+  background: rgba(15, 23, 42, 0.52);
+  color: #cbd5e1;
+}
+
+.report-period-chip:hover {
+  border-left-color: rgba(59, 130, 246, 0.82);
+  color: #dbeafe;
+}
+
+.report-period-chip--active {
+  border-color: rgba(59, 130, 246, 0.48);
+  border-left-color: var(--blue);
+  background: rgba(59, 130, 246, 0.18);
+  color: #bfdbfe;
+}
+
+.report-trash-chip {
+  border-left-color: rgba(239, 68, 68, 0.48);
+}
+
+.report-trash-chip.report-period-chip--active {
+  border-color: rgba(239, 68, 68, 0.42);
+  border-left-color: var(--red);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fecaca;
+}
+
 .report-toolbar label {
   display: grid;
   gap: 6px;
@@ -1919,6 +1986,11 @@ code {
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 14px;
+}
+
+.report-item-trash {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(127, 29, 29, 0.16);
 }
 
 .report-block-header {
@@ -2374,7 +2446,7 @@ code {
   }
 
   .report-toolbar {
-    grid-template-columns: minmax(180px, 220px) minmax(150px, 180px) minmax(150px, 180px);
+    grid-template-columns: 1fr;
     align-items: end;
   }
 

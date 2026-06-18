@@ -10,6 +10,7 @@
     alarmSoundTimer: null,
     knowledgeBase: [],
     health: [],
+    callsNeedPersist: false,
     workTimer: null,
     clockTimer: null,
     timerPersistTimer: null,
@@ -722,6 +723,14 @@ Africa/Harare ZW
 
   function normalizeRuntimeData() {
     state.calls = V.normalizeCollection(state.calls, V.normalizeCall, state.settings);
+    const callsBeforeTrashPurge = state.calls.length;
+    const reportTrashCutoff = new Date();
+    reportTrashCutoff.setDate(reportTrashCutoff.getDate() - 30);
+    state.calls = state.calls.filter((call) => {
+      if (call.reportDeletedAt) return new Date(call.reportDeletedAt) > reportTrashCutoff;
+      return true;
+    });
+    state.callsNeedPersist = state.callsNeedPersist || state.calls.length !== callsBeforeTrashPurge;
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     state.reminders = V.normalizeCollection(state.reminders, V.normalizeReminder, state.settings)
@@ -2511,6 +2520,14 @@ Africa/Harare ZW
     return day && month ? `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}` : isoDateOffset(0);
   }
 
+  function activeCalls() {
+    return state.calls.filter((call) => !call.reportDeletedAt);
+  }
+
+  function reportTrashMode() {
+    return state.reportRange.preset === "trash";
+  }
+
   function reportRangeBounds() {
     if (state.reportRange.preset === "yesterday") {
       const date = isoDateOffset(1);
@@ -2536,15 +2553,20 @@ Africa/Harare ZW
   }
 
   function syncReportRangeInputs() {
-    const preset = $("#reportRangePreset");
     const fromInput = $("#reportDateFrom");
     const toInput = $("#reportDateTo");
-    if (!preset || !fromInput || !toInput) return;
+    const rangeFields = $$(".report-range-field");
+    if (!fromInput || !toInput) return;
 
     const range = reportRangeBounds();
-    preset.value = state.reportRange.preset;
     fromInput.value = range.from;
     toInput.value = range.to;
+    rangeFields.forEach((field) => field.classList.toggle("hidden", state.reportRange.preset !== "custom"));
+    $$("[data-report-period]").forEach((button) => {
+      const active = button.dataset.reportPeriod === state.reportRange.preset;
+      button.classList.toggle("report-period-chip--active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
   }
 
   function reportBlockKey(isoDate, block) {
@@ -2553,8 +2575,12 @@ Africa/Harare ZW
 
   function reportGroupsForRange() {
     const range = reportRangeBounds();
-    const calls = CallFlowReports.ensureDailySequences(state.calls)
+    const sourceCalls = reportTrashMode()
+      ? state.calls.filter((call) => call.reportDeletedAt)
+      : activeCalls();
+    const calls = CallFlowReports.ensureDailySequences(sourceCalls)
       .filter((call) => {
+        if (reportTrashMode()) return true;
         const isoDate = callIsoDate(call);
         return compareIsoDate(isoDate, range.from) >= 0 && compareIsoDate(isoDate, range.to) <= 0;
       })
@@ -2572,6 +2598,12 @@ Africa/Harare ZW
 
   function reportBlockActions(key, isEditing) {
     const language = state.settings.language || "es";
+    if (reportTrashMode()) {
+      return `
+        <button type="button" data-restore-report-block="${escapeHtml(key)}">Restaurar</button>
+        <button type="button" class="danger ghost-danger" data-permanent-delete-report-block="${escapeHtml(key)}">Eliminar definitivo</button>
+      `;
+    }
     if (isEditing) {
       return `
         <button type="button" data-save-report-block="${escapeHtml(key)}" data-i18n="saveBlock">${CallFlowI18n.t("saveBlock", language)}</button>
@@ -2640,16 +2672,17 @@ Africa/Harare ZW
     const key = reportBlockKey(isoDate, block);
     const isEditing = state.editingReportBlockKey === key;
     const lines = calls.map((call) => CallFlowReports.buildCallLine(call, state.settings)).join("\n");
+    const trash = reportTrashMode();
 
     return `
-      <article class="report-item">
+      <article class="report-item${trash ? " report-item-trash" : ""}">
         <header class="report-block-header">
           <label class="report-block-check">
-            <input type="checkbox" data-report-block="${escapeHtml(key)}" ${state.selectedBlocks.has(key) ? "checked" : ""} />
+            ${trash ? "" : `<input type="checkbox" data-report-block="${escapeHtml(key)}" ${state.selectedBlocks.has(key) ? "checked" : ""} />`}
             <strong>${escapeHtml(block)}</strong>
           </label>
           <div class="report-actions">
-            <span class="tag">${calls.length} llamadas</span>
+            <span class="tag">${calls.length} llamadas${trash ? " · basura" : ""}</span>
             ${reportBlockActions(key, isEditing)}
           </div>
         </header>
@@ -2664,6 +2697,10 @@ Africa/Harare ZW
 
   function renderReportBlocks() {
     syncReportRangeInputs();
+    if (reportTrashMode()) {
+      state.selectedBlocks.clear();
+      state.editingReportBlockKey = null;
+    }
     state.reportSearch.matches = 0;
     const groupsByDate = reportGroupsForRange();
     const dateEntries = Object.entries(groupsByDate).sort(([a], [b]) => a.localeCompare(b));
@@ -2736,7 +2773,7 @@ Africa/Harare ZW
   }
 
   function renderBlocks() {
-    const todayCalls = CallFlowReports.ensureDailySequences(CallFlowReports.callsForToday(state.calls, state.settings));
+    const todayCalls = CallFlowReports.ensureDailySequences(CallFlowReports.callsForToday(activeCalls(), state.settings));
     const groups = CallFlowReports.groupByBlock(todayCalls);
     const entries = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
     const currentBlock = CallFlowReports.blockFromHour(CallFlowReports.formatCallTimestamp(new Date(), state.settings).hour);
@@ -2797,7 +2834,7 @@ Africa/Harare ZW
   }
 
   function renderStats() {
-    const todayCalls = CallFlowReports.callsForToday(state.calls, state.settings);
+    const todayCalls = CallFlowReports.callsForToday(activeCalls(), state.settings);
     const stats = CallFlowStats.buildStats(todayCalls, state.reminders, state.settings);
     $("#dashboardStats").innerHTML = statsCards(stats);
     $("#statsCards").innerHTML = statsCards(stats);
@@ -3056,7 +3093,7 @@ Africa/Harare ZW
 
   function renderLastCall() {
     if (!state.lastCall) {
-      const latest = [...state.calls].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))[0];
+      const latest = [...activeCalls()].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))[0];
       state.lastCall = latest || null;
     }
     $("#lastFullLine").textContent = state.lastCall
@@ -3109,7 +3146,7 @@ Africa/Harare ZW
         description: form.description.value.trim(),
         customComment: form.customComment.value.trim(),
         capturedAt: state.pendingCallCapturedAt,
-        dailySequence: CallFlowReports.callsForToday(state.calls, state.settings).length + 1
+        dailySequence: CallFlowReports.callsForToday(activeCalls(), state.settings).length + 1
       },
       state.settings
     );
@@ -3198,23 +3235,75 @@ Africa/Harare ZW
     form.callId.focus();
   }
 
-  async function copySelectedBlocks() {
+  function buildPlainSupervisorReport(block, calls) {
+    const operator = (state.settings.operatorName || "OPERADOR").toUpperCase();
+    const lines = calls.map((call) => CallFlowReports.buildCallLine(call, state.settings)).join("\n");
+    return [`REPORTE ${operator} DE ${block}`, "", lines].join("\n");
+  }
+
+  function selectedReportTexts(format = "md") {
     const groupsByDate = reportGroupsForRange();
-    const reports = [...state.selectedBlocks]
+    return [...state.selectedBlocks]
       .sort()
       .map((key) => {
         const [isoDate, block] = key.split("|");
         const calls = groupsByDate[isoDate] && groupsByDate[isoDate][block];
-        return calls ? CallFlowReports.buildSupervisorReport(block, calls, state.settings) : "";
+        if (!calls) return "";
+        return format === "txt"
+          ? buildPlainSupervisorReport(block, calls)
+          : CallFlowReports.buildSupervisorReport(block, calls, state.settings);
       })
       .filter(Boolean);
+  }
 
+  async function copySelectedBlocks() {
+    const reports = selectedReportTexts("md");
     if (reports.length) {
       await runAction(async () => {
         await window.callflow.copyText(reports.join("\n\n"));
         setStatusMessage(CallFlowI18n.t("copied", state.settings.language || "es"), "success");
       });
     }
+  }
+
+  async function exportSelectedBlocks(extension) {
+    const reports = selectedReportTexts(extension);
+    if (!reports.length) return;
+    await runAction(
+      () =>
+        window.callflow.exportNote({
+          fileName: `callflow-report-${isoDateOffset(0)}`,
+          content: reports.join("\n\n"),
+          extension
+        }),
+      { userMessage: CallFlowI18n.t("saveFailed", state.settings.language || "es"), logMessage: "Failed to export report" }
+    );
+  }
+
+  function visibleReportBlockKeys() {
+    const groupsByDate = reportGroupsForRange();
+    return Object.entries(groupsByDate).flatMap(([isoDate, groups]) =>
+      Object.keys(groups).map((block) => reportBlockKey(isoDate, block))
+    );
+  }
+
+  function selectAllVisibleReportBlocks() {
+    if (reportTrashMode()) return;
+    visibleReportBlockKeys().forEach((key) => state.selectedBlocks.add(key));
+    renderReportBlocks();
+  }
+
+  function clearReportSelection() {
+    state.selectedBlocks.clear();
+    renderReportBlocks();
+  }
+
+  function setReportPeriod(period) {
+    state.reportRange.preset = period;
+    state.selectedBlocks.clear();
+    state.editingReportBlockKey = null;
+    state.reportSearch.activeIndex = 0;
+    render();
   }
 
   function callsForReportBlockKey(key) {
@@ -3242,9 +3331,32 @@ Africa/Harare ZW
     const language = state.settings.language || "es";
     if (!window.confirm(CallFlowI18n.t("confirmDeleteBlock", language))) return;
     const ids = new Set(callsForReportBlockKey(key).map((call) => call.id));
-    state.calls = state.calls.filter((call) => !ids.has(call.id));
+    const deletedAt = new Date().toISOString();
+    state.calls = state.calls.map((call) => (ids.has(call.id) ? { ...call, reportDeletedAt: deletedAt } : call));
+    if (state.lastCall && ids.has(state.lastCall.id)) state.lastCall = null;
     state.selectedBlocks.delete(key);
     if (state.editingReportBlockKey === key) state.editingReportBlockKey = null;
+    await CallFlowStorage.write("calls", state.calls);
+    render();
+  }
+
+  async function restoreReportBlock(key) {
+    const ids = new Set(callsForReportBlockKey(key).map((call) => call.id));
+    state.calls = state.calls.map((call) => {
+      if (!ids.has(call.id)) return call;
+      const restored = { ...call };
+      delete restored.reportDeletedAt;
+      return restored;
+    });
+    await CallFlowStorage.write("calls", state.calls);
+    render();
+  }
+
+  async function permanentDeleteReportBlock(key) {
+    if (!window.confirm("Eliminar definitivamente este bloque?")) return;
+    const ids = new Set(callsForReportBlockKey(key).map((call) => call.id));
+    state.calls = state.calls.filter((call) => !ids.has(call.id));
+    if (state.lastCall && ids.has(state.lastCall.id)) state.lastCall = null;
     await CallFlowStorage.write("calls", state.calls);
     render();
   }
@@ -3734,13 +3846,10 @@ Africa/Harare ZW
       }
     });
     $("#copySelectedBlocks").addEventListener("click", copySelectedBlocks);
-    $("#reportRangePreset").addEventListener("change", (event) => {
-      state.reportRange.preset = event.target.value;
-      state.selectedBlocks.clear();
-      state.editingReportBlockKey = null;
-      state.reportSearch.activeIndex = 0;
-      render();
-    });
+    $("#exportSelectedMd").addEventListener("click", () => exportSelectedBlocks("md"));
+    $("#exportSelectedTxt").addEventListener("click", () => exportSelectedBlocks("txt"));
+    $("#selectAllReportBlocks").addEventListener("click", selectAllVisibleReportBlocks);
+    $("#clearReportSelection").addEventListener("click", clearReportSelection);
     $("#reportDateFrom").addEventListener("change", (event) => {
       state.reportRange.preset = "custom";
       state.reportRange.from = event.target.value;
@@ -3918,6 +4027,9 @@ Africa/Harare ZW
       const saveReportBlockKey = event.target.dataset.saveReportBlock;
       const cancelReportEditKey = event.target.dataset.cancelReportEdit;
       const deleteReportBlockKey = event.target.dataset.deleteReportBlock;
+      const restoreReportBlockKey = event.target.dataset.restoreReportBlock;
+      const permanentDeleteReportBlockKey = event.target.dataset.permanentDeleteReportBlock;
+      const reportPeriod = event.target.dataset.reportPeriod;
       const timezoneToggleId = timezoneToggle ? timezoneToggle.dataset.timezoneToggle : null;
       const timezonePickerId = timezoneOption ? timezoneOption.dataset.timezonePickerOption : null;
       const reminderId = event.target.dataset.completeReminder;
@@ -3977,6 +4089,15 @@ Africa/Harare ZW
       }
       if (deleteReportBlockKey) {
         deleteReportBlock(deleteReportBlockKey);
+      }
+      if (restoreReportBlockKey) {
+        restoreReportBlock(restoreReportBlockKey);
+      }
+      if (permanentDeleteReportBlockKey) {
+        permanentDeleteReportBlock(permanentDeleteReportBlockKey);
+      }
+      if (reportPeriod) {
+        setReportPeriod(reportPeriod);
       }
       if (timezoneToggleId) {
         const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);
@@ -4061,6 +4182,10 @@ Africa/Harare ZW
     normalizeRuntimeData();
     freezeStaleTimerOnStartup();
     await persistWorkTimer();
+    if (state.callsNeedPersist) {
+      await CallFlowStorage.write("calls", state.calls);
+      state.callsNeedPersist = false;
+    }
     await CallFlowStorage.write("reminders", state.reminders);
     CallFlowI18n.applyI18n(state.settings.language);
     applySettingsToForms();

@@ -292,27 +292,36 @@
           <div class="panel">
             <div class="panel-header">
               <h2 data-i18n="hourlyReports">Reportes horarios</h2>
-              <button id="copySelectedBlocks" class="primary" data-i18n="copySelectedBlocks">Copiar bloques seleccionados</button>
+              <div class="report-main-actions">
+                <button id="copySelectedBlocks" class="primary" data-i18n="copySelectedBlocks">Copiar bloques seleccionados</button>
+                <div class="report-export-actions">
+                  <span>Exportar como</span>
+                  <button type="button" id="exportSelectedMd">.md</button>
+                  <button type="button" id="exportSelectedTxt">.txt</button>
+                </div>
+              </div>
             </div>
             <div class="report-toolbar">
-              <label>
-                <span data-i18n="reportPeriod">Periodo</span>
-                <select id="reportRangePreset">
-                  <option value="today" data-i18n="reportToday">Hoy</option>
-                  <option value="yesterday" data-i18n="reportYesterday">Ayer</option>
-                  <option value="last7" data-i18n="reportLast7">Últimos 7 días</option>
-                  <option value="last30" data-i18n="reportLast30">Últimos 30 días</option>
-                  <option value="custom" data-i18n="reportCustomRange">Rango</option>
-                </select>
-              </label>
-              <label>
+              <div class="report-period-bar" role="group" aria-label="Periodo">
+                <button type="button" class="report-period-chip" data-report-period="today" data-i18n="reportToday">Hoy</button>
+                <button type="button" class="report-period-chip" data-report-period="yesterday" data-i18n="reportYesterday">Ayer</button>
+                <button type="button" class="report-period-chip" data-report-period="last7" data-i18n="reportLast7">Últimos 7 días</button>
+                <button type="button" class="report-period-chip" data-report-period="last30" data-i18n="reportLast30">Últimos 30 días</button>
+                <button type="button" class="report-period-chip" data-report-period="custom" data-i18n="reportCustomRange">Rango</button>
+                <button type="button" class="report-period-chip report-trash-chip" data-report-period="trash">Basura</button>
+              </div>
+              <label class="report-range-field">
                 <span data-i18n="reportDateFrom">Desde</span>
                 <input id="reportDateFrom" type="date" />
               </label>
-              <label>
+              <label class="report-range-field">
                 <span data-i18n="reportDateTo">Hasta</span>
                 <input id="reportDateTo" type="date" />
               </label>
+            </div>
+            <div class="report-bulk-actions">
+              <button type="button" id="selectAllReportBlocks">Seleccionar todo</button>
+              <button type="button" id="clearReportSelection">Deseleccionar todo</button>
             </div>
             <div class="report-searchbar">
               <label>
