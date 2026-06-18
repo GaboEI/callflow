@@ -237,20 +237,34 @@ h2 {
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
+  display: grid;
+  gap: 10px;
   margin-bottom: 10px;
 }
 
 .brand strong {
+  display: block;
   font-size: 18px;
 }
 
 .brand span {
+  display: block;
   color: var(--muted);
   font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-operator {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.55);
+  padding: 8px 10px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -331,7 +345,9 @@ nav {
   flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex: 1 1 420px;
+  min-width: 0;
 }
 
 .shift-timer {
@@ -389,15 +405,16 @@ nav {
 .work-clock-shell {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(118px, auto) 44px;
+  grid-template-columns: minmax(118px, 1fr) 44px;
   align-items: stretch;
   gap: 0;
-  flex: 0 0 auto;
-  max-width: min(520px, 100%);
+  flex: 1 1 460px;
+  min-width: 240px;
+  max-width: min(580px, 100%);
 }
 
 .work-clock {
-  max-width: min(460px, 100%);
+  max-width: 100%;
   min-width: 118px;
   border: 1px solid rgba(34, 197, 94, 0.35);
   border-right: 0;
@@ -430,7 +447,9 @@ nav {
 }
 
 .clock-chip small {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 3px;
   max-width: 110px;
   margin-bottom: 2px;
   color: var(--muted);
@@ -441,6 +460,13 @@ nav {
   white-space: nowrap;
 }
 
+.clock-flag {
+  flex: 0 0 14px;
+  width: 14px;
+  text-align: left;
+  line-height: 1;
+}
+
 .clock-chip strong {
   display: block;
   font-family: "Cascadia Mono", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -448,7 +474,7 @@ nav {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   line-height: 1;
-  text-align: center;
+  text-align: left;
 }
 
 .clock-empty {
