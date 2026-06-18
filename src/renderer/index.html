@@ -34,6 +34,8 @@
               <button class="timezone-toggle" type="button" data-timezone-toggle="onboarding" aria-label="Open timezone list">⌄</button>
             </div>
             <small class="helper"><span data-i18n="selectedTimezone">Seleccionada actualmente</span>: <strong data-timezone-selected="onboarding"></strong></small>
+            <button type="button" data-add-active-timezone="onboarding" data-i18n="addActiveTimezone">Agregar a relojes activos</button>
+            <div class="chip-list timezone-chip-list" data-active-timezones-output="onboarding"></div>
             <div class="timezone-results" data-timezone-results="onboarding"></div>
           </div>
 
@@ -130,6 +132,7 @@
           <div class="topbar-actions">
             <div class="shift-timer" id="shiftTimer">
               <button class="shift-toggle" type="button" id="shiftTimerToggle" data-i18n-title="startWorkTimer" title="Iniciar jornada">▶</button>
+              <button class="shift-toggle total-pause-toggle" type="button" id="shiftTimerStop" data-i18n-title="pauseAllTimer" title="Pausa total">■</button>
               <div>
                 <span id="shiftTimerLabel" data-i18n="workTimer">Trabajo</span>
                 <strong id="shiftTimerValue">00:00:00</strong>
@@ -220,6 +223,10 @@
                   <span data-i18n="callbackTime">Hora de rellamada</span>
                   <input name="callbackTime" type="time" />
                 </label>
+                <label class="reminder-timezone-field hidden" id="callbackTimezoneField">
+                  <span data-i18n="reminderTimezone">Zona del recordatorio</span>
+                  <select name="callbackTimezone"></select>
+                </label>
               </div>
               <label class="span-2">
                 <span data-i18n="customComment">Comentario personalizado</span>
@@ -306,6 +313,10 @@
               <form id="reminderForm" class="stack">
                 <input name="callId" placeholder="ID de llamada opcional" />
                 <input name="date" type="date" required />
+                <label class="reminder-timezone-field hidden" id="reminderTimezoneField">
+                  <span data-i18n="reminderTimezone">Zona del recordatorio</span>
+                  <select name="timezone"></select>
+                </label>
                 <div class="reminder-date-shortcuts">
                   <button type="button" data-reminder-date-shortcut="today" data-i18n="reportToday">Hoy</button>
                   <button type="button" data-reminder-date-shortcut="tomorrow" data-i18n="reportTomorrow">Mañana</button>
@@ -393,6 +404,8 @@
                   <button class="timezone-toggle" type="button" data-timezone-toggle="settings" aria-label="Open timezone list">⌄</button>
                 </div>
                 <small class="helper"><span data-i18n="selectedTimezone">Seleccionada actualmente</span>: <strong data-timezone-selected="settings"></strong></small>
+                <button type="button" data-add-active-timezone="settings" data-i18n="addActiveTimezone">Agregar a relojes activos</button>
+                <div class="chip-list timezone-chip-list" data-active-timezones-output="settings"></div>
                 <div class="timezone-results" data-timezone-results="settings"></div>
               </div>
               <label><span data-i18n="operatorName">Nombre del operador</span><input name="operatorName" required /></label>

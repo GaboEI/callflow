@@ -56,3 +56,29 @@ test("filters reminders by today, tomorrow and overdue", () => {
     global.Date = originalNow;
   }
 });
+
+test("filters reminders using each reminder timezone", () => {
+  const originalNow = Date;
+  const fixedNow = new originalNow("2026-06-18T22:30:00.000Z");
+
+  global.Date = class extends originalNow {
+    constructor(...args) {
+      return args.length ? new originalNow(...args) : fixedNow;
+    }
+
+    static now() {
+      return fixedNow.getTime();
+    }
+  };
+
+  const items = [
+    { id: "madrid", date: "2026-06-19", time: "09:00", timezone: "Europe/Madrid", status: "pending" },
+    { id: "bogota", date: "2026-06-18", time: "16:00", timezone: "America/Bogota", status: "pending" }
+  ];
+
+  try {
+    assert.deepEqual(reminders.filterReminders(items, "today").map((item) => item.id), ["madrid", "bogota"]);
+  } finally {
+    global.Date = originalNow;
+  }
+});

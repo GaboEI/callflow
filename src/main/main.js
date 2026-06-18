@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Notification, ipcMain, clipboard, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
+const time = require("../renderer/scripts/validators");
 
 const DATA_FILES = {
   settings: "settings.json",
@@ -18,6 +19,7 @@ const DEFAULT_DATA = {
   knowledgeBase: [],
   workTimer: {
     status: "idle",
+    previousStatus: null,
     workElapsedMs: 0,
     workStartedAt: null,
     currentBreakStartedAt: null,
@@ -118,7 +120,7 @@ function validateStorageValue(key, value) {
 }
 
 function reminderDueDate(reminder) {
-  return new Date(`${reminder.date}T${reminder.time || "00:00"}`);
+  return time.reminderDueDate(reminder);
 }
 
 function isValidDate(date) {
@@ -127,8 +129,6 @@ function isValidDate(date) {
 
 function isValidReminder(reminder) {
   if (!reminder || reminder.status === "completed") return false;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(reminder.date || ""))) return false;
-  if (!/^\d{2}:\d{2}$/.test(String(reminder.time || "00:00"))) return false;
   return isValidDate(reminderDueDate(reminder));
 }
 

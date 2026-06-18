@@ -12,6 +12,7 @@
     health: [],
     workTimer: null,
     clockTimer: null,
+    timerPersistTimer: null,
     reminderTimer: null,
     selectedNoteId: null,
     editingReminderId: null,
@@ -151,6 +152,7 @@
   function defaultWorkTimer() {
     return {
       status: "idle",
+      previousStatus: null,
       workElapsedMs: 0,
       workStartedAt: null,
       currentBreakStartedAt: null,
@@ -259,6 +261,8 @@
       ...settings,
       language: sanitized.language,
       timezone: sanitized.timezone,
+      activeTimezones: sanitized.activeTimezones,
+      lastReminderTimezone: sanitized.lastReminderTimezone,
       callTypes: sanitized.callTypes,
       frequentStatuses: sanitized.frequentStatuses,
       successLabel: sanitized.successLabel || defaultSuccessLabel(sanitized.language),
@@ -285,10 +289,33 @@
 
   function normalizeRuntimeData() {
     state.calls = V.normalizeCollection(state.calls, V.normalizeCall, state.settings);
-    state.reminders = V.normalizeCollection(state.reminders, V.normalizeReminder);
+    state.reminders = V.normalizeCollection(state.reminders, V.normalizeReminder, state.settings);
     state.knowledgeBase = V.normalizeCollection(state.knowledgeBase, V.normalizeNote);
     state.workTimer = V.normalizeWorkTimer(state.workTimer);
     state.health = Array.isArray(state.health) ? state.health : [];
+  }
+
+  function freezeStaleTimerOnStartup() {
+    const timer = normalizeWorkTimer(state.workTimer);
+    if (timer.status === "working") {
+      state.workTimer = {
+        ...timer,
+        status: "stopped",
+        previousStatus: "working",
+        workStartedAt: null,
+        currentBreakStartedAt: null
+      };
+      return;
+    }
+    if (timer.status === "paused") {
+      state.workTimer = {
+        ...timer,
+        status: "stopped",
+        previousStatus: "paused",
+        workStartedAt: null,
+        currentBreakStartedAt: null
+      };
+    }
   }
 
   function setStatusMessage(message, tone = "info") {
@@ -694,6 +721,7 @@
     state.presetMeta.settingsFrequentStatuses.custom = [...settings.frequentStatuses];
     renderTimezonePickers(settings.language);
     renderListEditors();
+    renderActiveTimezoneEditors();
   }
 
   function outcomePresetsFromForm(listPrefix, language) {
@@ -724,6 +752,8 @@
       ...state.settings,
       language,
       timezone: form.timezone.value,
+      activeTimezones: uniqueItems([form.timezone.value, ...(state.settings.activeTimezones || [])]).slice(0, V.MAX_ACTIVE_TIMEZONES),
+      lastReminderTimezone: state.settings.lastReminderTimezone,
       operatorName: form.operatorName.value.trim(),
       callTypes: [...state.formLists[`${listPrefix}CallTypes`]],
       frequentStatuses: [...state.formLists[`${listPrefix}FrequentStatuses`]],
@@ -782,6 +812,7 @@
   function handleLanguageChange(form, language) {
     CallFlowI18n.applyI18n(language);
     renderTimezonePickers(language);
+    renderActiveTimezoneEditors();
 
     if (form.id === "onboardingForm" && !state.settings.onboardingCompleted) {
       refreshPresetBackedStatuses("onboardingFrequentStatuses", language);
@@ -813,6 +844,79 @@
     form.timezone.value = value;
     filterTimezoneOptions(pickerId, form.language.value);
     renderTimezonePicker(pickerId, form.language.value);
+  }
+
+  function shortTimezoneName(timezone) {
+    if (timezone === "local") return "Local";
+    const city = timezone.split("/").pop() || timezone;
+    return city.replaceAll("_", " ");
+  }
+
+  function timezoneFlag(timezone) {
+    const flags = {
+      "Europe/Madrid": "🇪🇸",
+      "Europe/Rome": "🇮🇹",
+      "America/Argentina/Buenos_Aires": "🇦🇷",
+      "America/Mexico_City": "🇲🇽",
+      "America/Bogota": "🇨🇴",
+      "America/New_York": "🇺🇸",
+      "America/Los_Angeles": "🇺🇸",
+      "Europe/London": "🇬🇧",
+      "Europe/Paris": "🇫🇷",
+      "Europe/Berlin": "🇩🇪",
+      UTC: "🌐"
+    };
+    return flags[timezone] || "🌐";
+  }
+
+  function activeTimezones() {
+    return V.uniqueItems([state.settings.timezone || "local", ...(state.settings.activeTimezones || [])]).slice(0, V.MAX_ACTIVE_TIMEZONES);
+  }
+
+  function renderActiveTimezoneEditors() {
+    ["onboarding", "settings"].forEach((pickerId) => {
+      const output = document.querySelector(`[data-active-timezones-output="${pickerId}"]`);
+      if (!output || !state.settings) return;
+      const zones = activeTimezones();
+      output.innerHTML = zones
+        .map(
+          (timezone, index) => `
+            <span class="chip timezone-chip">
+              ${escapeHtml(timezoneFlag(timezone))} ${escapeHtml(shortTimezoneName(timezone))}
+              ${
+                index === 0
+                  ? ""
+                  : `<button type="button" data-remove-active-timezone="${escapeHtml(timezone)}" aria-label="${escapeHtml(CallFlowI18n.t("remove", activeFormLanguage()))}">×</button>`
+              }
+            </span>
+          `
+        )
+        .join("");
+    });
+  }
+
+  async function updateActiveTimezones(timezones, lastReminderTimezone = state.settings.lastReminderTimezone) {
+    const zones = V.uniqueItems([state.settings.timezone || "local", ...timezones]).slice(0, V.MAX_ACTIVE_TIMEZONES);
+    state.settings = normalizeSettings({
+      ...state.settings,
+      activeTimezones: zones,
+      lastReminderTimezone: zones.includes(lastReminderTimezone) ? lastReminderTimezone : zones[0]
+    });
+    await runAction(async () => {
+      await CallFlowStorage.write("settings", state.settings);
+      applySettingsToForms();
+      render();
+    });
+  }
+
+  async function addActiveTimezoneFromPicker(pickerId) {
+    const pickerState = timezonePickerState(pickerId);
+    const value = pickerState.selectedTimezoneValue || timezonePickerForm(pickerId).timezone.value || "local";
+    await updateActiveTimezones([...activeTimezones(), value], value);
+  }
+
+  async function removeActiveTimezone(value) {
+    await updateActiveTimezones(activeTimezones().filter((timezone) => timezone !== value));
   }
 
   function renderListEditors() {
@@ -927,11 +1031,14 @@
     const form = $("#callForm");
     const selected = state.selectedPrimaryOutcome;
     if (!selected || selected.category !== "callback") return null;
+    const timezone = form.callbackTimezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
     return {
       category: "callback",
       label: selected.label,
       callbackDate: form.callbackDate.value,
-      callbackTime: form.callbackTime.value
+      callbackTime: form.callbackTime.value,
+      timezone: V.resolveTimezone(timezone),
+      dueAt: V.zonedDateTimeToUtc(form.callbackDate.value, form.callbackTime.value, timezone)?.toISOString() || null
     };
   }
 
@@ -946,25 +1053,20 @@
     };
   }
 
-  function currentDateInputValue() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+  function currentDateInputValue(timezone = state.settings || "local") {
+    return V.isoDateInTimezone(new Date(), timezone);
   }
 
-  function currentTimeInputValue() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    return `${hours}:${minutes}`;
+  function currentTimeInputValue(timezone = state.settings || "local") {
+    return V.timeInTimezone(new Date(), timezone);
   }
 
   function defaultCallbackDateTime() {
     const form = $("#callForm");
-    if (!form.callbackDate.value) form.callbackDate.value = currentDateInputValue();
-    if (!form.callbackTime.value) form.callbackTime.value = currentTimeInputValue();
+    renderReminderTimezoneSelectors();
+    const timezone = form.callbackTimezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
+    if (!form.callbackDate.value) form.callbackDate.value = currentDateInputValue(timezone);
+    if (!form.callbackTime.value) form.callbackTime.value = currentTimeInputValue(timezone);
   }
 
   function selectPrimaryOutcome(category, label) {
@@ -1069,6 +1171,25 @@
 
     const callbackSelected = state.selectedPrimaryOutcome?.category === "callback";
     $("#callbackFields").classList.toggle("hidden", !callbackSelected);
+    renderReminderTimezoneSelectors();
+  }
+
+  function renderReminderTimezoneSelectors() {
+    if (!state.settings) return;
+    const zones = activeTimezones();
+    const last = zones.includes(state.settings.lastReminderTimezone) ? state.settings.lastReminderTimezone : zones[0] || state.settings.timezone || "local";
+    [
+      { field: $("#reminderTimezoneField"), select: $("#reminderForm select[name='timezone']") },
+      { field: $("#callbackTimezoneField"), select: $("#callForm select[name='callbackTimezone']") }
+    ].forEach(({ field, select }) => {
+      if (!field || !select) return;
+      const current = select.value || last;
+      field.classList.toggle("hidden", zones.length <= 1);
+      select.innerHTML = zones
+        .map((timezone) => `<option value="${escapeHtml(timezone)}">${escapeHtml(`${timezoneFlag(timezone)} ${shortTimezoneName(timezone)}`)}</option>`)
+        .join("");
+      select.value = zones.includes(current) ? current : last;
+    });
   }
 
   function renderDashboardInlineManagers() {
@@ -1184,7 +1305,38 @@
   function renderWorkClock() {
     const clock = $("#workClock");
     if (!clock || !state.settings) return;
-    clock.textContent = formatWorkClock(new Date());
+    const now = new Date();
+    clock.innerHTML = activeTimezones()
+      .map((timezone) => {
+        const label = `${timezoneFlag(timezone)} ${shortTimezoneName(timezone)}`;
+        const value = formatWorkClockForTimezone(now, timezone);
+        return `<span class="clock-chip" title="${escapeHtml(timezone)}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></span>`;
+      })
+      .join("");
+  }
+
+  function formatWorkClockForTimezone(date, timezone) {
+    const format = state.settings.clockFormat || "24h";
+
+    if (format === "military") {
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: V.resolveTimezone(timezone),
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }).formatToParts(date);
+      const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+      return `${values.hour}${values.minute}${values.second}`;
+    }
+
+    return new Intl.DateTimeFormat(languageLocale(state.settings.language), {
+      timeZone: V.resolveTimezone(timezone),
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: format === "12h"
+    }).format(date);
   }
 
   function renderCapturedCallTime() {
@@ -1202,12 +1354,16 @@
 
   function startWorkClock() {
     if (state.clockTimer) clearInterval(state.clockTimer);
+    if (state.timerPersistTimer) clearInterval(state.timerPersistTimer);
     renderWorkClock();
     renderShiftTimer();
     state.clockTimer = setInterval(() => {
       renderWorkClock();
       renderShiftTimer();
     }, 1000);
+    state.timerPersistTimer = setInterval(() => {
+      persistActiveTimerSnapshot().catch((error) => console.error("Timer snapshot failed", error));
+    }, 10000);
   }
 
   function formatDuration(ms) {
@@ -1236,26 +1392,51 @@
     const label = $("#shiftTimerLabel");
     const value = $("#shiftTimerValue");
     const button = $("#shiftTimerToggle");
-    if (!wrapper || !label || !value || !button || !state.settings) return;
+    const stopButton = $("#shiftTimerStop");
+    if (!wrapper || !label || !value || !button || !stopButton || !state.settings) return;
 
     const language = state.settings.language || "es";
     const paused = timer.status === "paused";
     const working = timer.status === "working";
+    const stopped = timer.status === "stopped";
     wrapper.classList.toggle("paused", paused);
     wrapper.classList.toggle("working", working);
-    label.textContent = CallFlowI18n.t(paused ? "breakTimer" : "workTimer", language);
+    wrapper.classList.toggle("stopped", stopped);
+    label.textContent = CallFlowI18n.t(stopped ? "totalPauseTimer" : paused ? "breakTimer" : "workTimer", language);
     value.textContent = formatDuration(paused ? currentBreakElapsed() : currentWorkElapsed());
     button.textContent = working ? "⏸" : "▶";
     button.setAttribute(
       "aria-label",
-      CallFlowI18n.t(working ? "pauseWorkTimer" : timer.status === "paused" ? "resumeWorkTimer" : "startWorkTimer", language)
+      CallFlowI18n.t(
+        working ? "pauseWorkTimer" : timer.status === "paused" || stopped ? "resumeWorkTimer" : "startWorkTimer",
+        language
+      )
     );
     button.title = button.getAttribute("aria-label");
+    stopButton.disabled = stopped || timer.status === "idle";
+    stopButton.setAttribute("aria-label", CallFlowI18n.t("pauseAllTimer", language));
+    stopButton.title = stopButton.getAttribute("aria-label");
   }
 
   async function persistWorkTimer() {
     state.workTimer = normalizeWorkTimer(state.workTimer);
     await CallFlowStorage.write("workTimer", state.workTimer);
+  }
+
+  async function persistActiveTimerSnapshot() {
+    const timer = normalizeWorkTimer(state.workTimer);
+    const now = new Date();
+    if (timer.status === "working" && timer.workStartedAt) {
+      state.workTimer = {
+        ...timer,
+        workElapsedMs: currentWorkElapsed(now.getTime()),
+        workStartedAt: now.toISOString()
+      };
+      await persistWorkTimer();
+    } else if (timer.status === "paused" && timer.currentBreakStartedAt) {
+      state.workTimer = timer;
+      await persistWorkTimer();
+    }
   }
 
   async function toggleShiftTimer() {
@@ -1267,6 +1448,7 @@
       timer.workStartedAt = null;
       timer.currentBreakStartedAt = now.toISOString();
       timer.status = "paused";
+      timer.previousStatus = "working";
     } else {
       if (timer.status === "paused" && timer.currentBreakStartedAt) {
         const startedAt = timer.currentBreakStartedAt;
@@ -1275,7 +1457,12 @@
       }
       timer.currentBreakStartedAt = null;
       timer.workStartedAt = now.toISOString();
-      timer.status = "working";
+      timer.status = timer.status === "stopped" && timer.previousStatus === "paused" ? "paused" : "working";
+      if (timer.status === "paused") {
+        timer.workStartedAt = null;
+        timer.currentBreakStartedAt = now.toISOString();
+      }
+      timer.previousStatus = null;
     }
 
     state.workTimer = timer;
@@ -1283,15 +1470,42 @@
     renderShiftTimer();
   }
 
+  function freezeWorkTimer(timer, now = new Date()) {
+    const normalized = normalizeWorkTimer(timer);
+    if (normalized.status === "working" && normalized.workStartedAt) {
+      normalized.workElapsedMs = currentWorkElapsed(now.getTime());
+      normalized.workStartedAt = null;
+      normalized.previousStatus = "working";
+    } else if (normalized.status === "paused" && normalized.currentBreakStartedAt) {
+      const startedAt = normalized.currentBreakStartedAt;
+      const durationMs = Math.max(0, now.getTime() - new Date(startedAt).getTime());
+      normalized.breaks = [...normalized.breaks, { startedAt, endedAt: now.toISOString(), durationMs }];
+      normalized.currentBreakStartedAt = null;
+      normalized.previousStatus = "paused";
+    } else if (!normalized.previousStatus) {
+      normalized.previousStatus = null;
+    }
+    normalized.status = "stopped";
+    return normalized;
+  }
+
+  async function stopShiftTimer() {
+    const timer = normalizeWorkTimer(state.workTimer);
+    if (timer.status === "idle" || timer.status === "stopped") return;
+    state.workTimer = freezeWorkTimer(timer);
+    await persistWorkTimer();
+    renderShiftTimer();
+  }
+
+  async function freezeAndPersistTimerOnUnload() {
+    const timer = normalizeWorkTimer(state.workTimer);
+    if (!["working", "paused"].includes(timer.status)) return;
+    state.workTimer = freezeWorkTimer(timer);
+    await persistWorkTimer();
+  }
+
   function isoDateInSettings(date) {
-    const formatter = new Intl.DateTimeFormat("en-CA", {
-      timeZone: CallFlowReports.resolveTimezone(state.settings),
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    });
-    const parts = Object.fromEntries(formatter.formatToParts(date).map((part) => [part.type, part.value]));
-    return `${parts.year}-${parts.month}-${parts.day}`;
+    return V.isoDateInTimezone(date, state.settings);
   }
 
   function isoDateOffset(days) {
@@ -1553,7 +1767,7 @@
   }
 
   function reminderDueDate(reminder) {
-    return V.reminderDueDate(reminder) || new Date(8640000000000000);
+    return V.reminderDueDate(reminder, state.settings) || new Date(8640000000000000);
   }
 
   function sortedReminders(reminders) {
@@ -1596,7 +1810,7 @@
   }
 
   function reminderStatusKey(reminder) {
-    if (!V.reminderDueDate(reminder) && reminder.status !== "completed") return "invalid";
+    if (!V.reminderDueDate(reminder, state.settings) && reminder.status !== "completed") return "invalid";
     if (reminder.status === "completed") return "completed";
     if (reminder.status === "overdue") return "overdue";
     if (reminder.status === "invalid") return "invalid";
@@ -1628,7 +1842,7 @@
 
   function renderReminders() {
     const filter = $("#reminderFilter").value;
-    const reminders = sortedReminders(CallFlowReminders.filterReminders(state.reminders, filter));
+    const reminders = sortedReminders(CallFlowReminders.filterReminders(state.reminders, filter, state.settings));
     $("#reminderList").innerHTML = reminders.length
       ? reminders
           .map((reminder) => `
@@ -1637,6 +1851,7 @@
                 <p class="reminder-title">${escapeHtml(reminder.note)}</p>
                 <div class="reminder-details">
                   <span>${escapeHtml(reminder.date)} ${escapeHtml(reminder.time)}</span>
+                  <span>${escapeHtml(reminder.timezone || V.resolveTimezone(state.settings))}</span>
                   <span>${escapeHtml(reminderRepeatLabel(reminder))}</span>
                 </div>
               </div>
@@ -1675,8 +1890,13 @@
     if (!form.callId.value && (dashboardCallId || lastCallId)) {
       form.callId.value = dashboardCallId || lastCallId;
     }
-    if (!form.date.value) form.date.value = currentDateInputValue();
-    if (!form.time.value) form.time.value = currentTimeInputValue();
+    renderReminderTimezoneSelectors();
+    if (form.timezone && !form.timezone.value) {
+      form.timezone.value = state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
+    }
+    const timezone = form.timezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
+    if (!form.date.value) form.date.value = currentDateInputValue(timezone);
+    if (!form.time.value) form.time.value = currentTimeInputValue(timezone);
     if (!form.repeat.value) form.repeat.value = "once";
   }
 
@@ -1773,6 +1993,7 @@
     renderCallOptions();
     renderOutcomeControls();
     renderDashboardInlineManagers();
+    renderActiveTimezoneEditors();
     renderListEditors();
     renderBlocks();
     renderStats();
@@ -1795,7 +2016,7 @@
     if (
       primaryOutcome &&
       primaryOutcome.category === "callback" &&
-      (!V.validIsoDate(primaryOutcome.callbackDate) || !V.validTime(primaryOutcome.callbackTime))
+      (!V.validIsoDate(primaryOutcome.callbackDate) || !V.validTime(primaryOutcome.callbackTime) || !primaryOutcome.dueAt)
     ) {
       $("#lastSavedLabel").textContent = CallFlowI18n.t("selectCallbackDateTime", state.settings.language || "es");
       return;
@@ -1825,6 +2046,8 @@
         operator: call.operatorName,
         date: primaryOutcome.callbackDate,
         time: primaryOutcome.callbackTime,
+        timezone: primaryOutcome.timezone,
+        dueAt: primaryOutcome.dueAt,
         note: call.description || primaryOutcome.label,
         status: "pending",
         createdAt: new Date().toISOString()
@@ -1836,6 +2059,8 @@
         await CallFlowStorage.write("calls", nextCalls);
         if (primaryOutcome && primaryOutcome.category === "callback") {
           await CallFlowStorage.write("reminders", nextReminders);
+          state.settings = normalizeSettings({ ...state.settings, lastReminderTimezone: primaryOutcome.timezone });
+          await CallFlowStorage.write("settings", state.settings);
         }
         if (submitter && ["saveCopy", "saveCopyReminder"].includes(submitter.dataset.action)) {
           await window.callflow.copyText(call.crmLine);
@@ -1948,12 +2173,15 @@
   async function saveReminder(event) {
     event.preventDefault();
     const form = event.currentTarget;
+    const existingReminder = state.reminders.find((reminder) => reminder.id === state.editingReminderId);
+    const reminderTimezone = existingReminder?.timezone || form.timezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || V.resolveTimezone(state.settings);
     const validation = V.validateReminderPayload({
       callId: form.callId.value.trim(),
       date: form.date.value,
       time: form.time.value,
       repeat: form.repeat.value || "once",
-      note: form.note.value.trim()
+      note: form.note.value.trim(),
+      timezone: reminderTimezone
     });
     if (!validation.ok) {
       setStatusMessage(CallFlowI18n.t(validation.messageKey, state.settings.language || "es"), "error");
@@ -1978,6 +2206,10 @@
     await runAction(
       async () => {
         await CallFlowStorage.write("reminders", nextReminders);
+        if (!existingReminder) {
+          state.settings = normalizeSettings({ ...state.settings, lastReminderTimezone: reminderPayload.timezone });
+          await CallFlowStorage.write("settings", state.settings);
+        }
         state.reminders = nextReminders;
         state.editingReminderId = null;
         $("#cancelReminderEdit").classList.add("hidden");
@@ -1997,18 +2229,16 @@
   }
 
   function isoDateValue(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return V.isoDateInTimezone(date, state.settings || "local");
   }
 
   function setReminderDateShortcut(shortcut) {
     const form = $("#reminderForm");
-    const date = new Date();
-    if (shortcut === "tomorrow") date.setDate(date.getDate() + 1);
-    if (shortcut === "nextWeek") date.setDate(date.getDate() + 7);
-    form.date.value = isoDateValue(date);
+    const timezone = form.timezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
+    let date = V.isoDateInTimezone(new Date(), timezone);
+    if (shortcut === "tomorrow") date = addDaysIso(date, 1);
+    if (shortcut === "nextWeek") date = addDaysIso(date, 7);
+    form.date.value = date;
     form.time.focus();
   }
 
@@ -2085,7 +2315,12 @@
     overlay.classList.remove("hidden");
     $("#reminderAlarmPhase").textContent = alarmPhaseLabel(state.activeAlarmPhase);
     $("#reminderAlarmTitle").textContent = CallFlowI18n.t("alarmTitle", state.settings.language || "es");
-    $("#reminderAlarmMeta").textContent = [reminder.date, reminder.time, reminder.callId ? `ID: ${reminder.callId}` : ""]
+    $("#reminderAlarmMeta").textContent = [
+      reminder.date,
+      reminder.time,
+      reminder.timezone || V.resolveTimezone(state.settings),
+      reminder.callId ? `ID: ${reminder.callId}` : ""
+    ]
       .filter(Boolean)
       .join(" - ");
     $("#reminderAlarmNote").textContent = reminder.note || "";
@@ -2152,44 +2387,58 @@
     if (reminderId) editReminder(reminderId);
   }
 
-  function addOneMonthClamped(date) {
-    const targetDay = date.getDate();
-    const next = new Date(date);
-    next.setDate(1);
-    next.setMonth(next.getMonth() + 1);
-    const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
-    next.setDate(Math.min(targetDay, lastDay));
-    return next;
+  function addDaysIso(isoDate, days) {
+    const [year, month, day] = isoDate.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day + days));
+    return date.toISOString().slice(0, 10);
+  }
+
+  function isoWeekday(isoDate) {
+    const [year, month, day] = isoDate.split("-").map(Number);
+    return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  }
+
+  function addOneMonthClampedIso(isoDate) {
+    const [year, month, day] = isoDate.split("-").map(Number);
+    const target = new Date(Date.UTC(year, month, 1));
+    const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+    target.setUTCDate(Math.min(day, lastDay));
+    return target.toISOString().slice(0, 10);
   }
 
   function nextRecurringReminder(reminder) {
     const repeat = reminder.repeat || "once";
     if (repeat === "once") return null;
-    const next = reminderDueDate(reminder);
-    if (!next || Number.isNaN(next.getTime())) return null;
+    const timezone = reminder.timezone || V.resolveTimezone(state.settings);
+    let nextDate = reminder.date;
+    let nextDueAt = V.zonedDateTimeToUtc(nextDate, reminder.time, timezone);
+    if (!nextDueAt) return null;
     const now = new Date();
     do {
       if (repeat === "daily") {
-        next.setDate(next.getDate() + 1);
+        nextDate = addDaysIso(nextDate, 1);
       } else if (repeat === "weekdays") {
-        next.setDate(next.getDate() + 1);
-        while (next.getDay() === 0 || next.getDay() === 6) {
-          next.setDate(next.getDate() + 1);
+        nextDate = addDaysIso(nextDate, 1);
+        while (isoWeekday(nextDate) === 0 || isoWeekday(nextDate) === 6) {
+          nextDate = addDaysIso(nextDate, 1);
         }
       } else if (repeat === "weekly") {
-        next.setDate(next.getDate() + 7);
+        nextDate = addDaysIso(nextDate, 7);
       } else if (repeat === "monthly") {
-        const monthly = addOneMonthClamped(next);
-        next.setFullYear(monthly.getFullYear(), monthly.getMonth(), monthly.getDate());
+        nextDate = addOneMonthClampedIso(nextDate);
       } else {
         return null;
       }
-    } while (next <= now);
+      nextDueAt = V.zonedDateTimeToUtc(nextDate, reminder.time, timezone);
+    } while (nextDueAt && nextDueAt <= now);
+    if (!nextDueAt) return null;
     return {
       ...reminder,
       id: crypto.randomUUID(),
-      date: isoDateValue(next),
+      date: nextDate,
       time: reminder.time,
+      timezone,
+      dueAt: nextDueAt.toISOString(),
       status: "pending",
       createdAt: new Date().toISOString(),
       previousReminderId: reminder.id,
@@ -2306,6 +2555,7 @@
     $("#importCallIdClipboard").addEventListener("click", importCallIdFromClipboard);
     $("#captureCallTime").addEventListener("click", captureCurrentCallTime);
     $("#shiftTimerToggle").addEventListener("click", toggleShiftTimer);
+    $("#shiftTimerStop").addEventListener("click", stopShiftTimer);
     $("#sidebarToggle").addEventListener("click", () => {
       const app = $("#app");
       app.classList.toggle("sidebar-open");
@@ -2513,6 +2763,8 @@
       const reminderCallId = event.target.dataset.copyReminderCallId;
       const editReminderId = event.target.dataset.editReminder;
       const reminderDateShortcut = event.target.dataset.reminderDateShortcut;
+      const addActiveTimezonePicker = event.target.dataset.addActiveTimezone;
+      const removeActiveTimezoneValue = event.target.dataset.removeActiveTimezone;
       const noteId = event.target.dataset.selectNote;
       if (addListId) {
         addListItem(addListId, document.querySelector(`[data-list-input="${addListId}"]`).value);
@@ -2586,6 +2838,8 @@
       if (reminderCallId) copyReminderCallId(reminderCallId);
       if (editReminderId) editReminder(editReminderId);
       if (reminderDateShortcut) setReminderDateShortcut(reminderDateShortcut);
+      if (addActiveTimezonePicker) addActiveTimezoneFromPicker(addActiveTimezonePicker);
+      if (removeActiveTimezoneValue) removeActiveTimezone(removeActiveTimezoneValue);
       if (noteId) {
         state.selectedNoteId = noteId;
         renderNotes();
@@ -2599,6 +2853,9 @@
         $("#sidebarToggle").setAttribute("aria-label", CallFlowI18n.t("openSidebar", state.settings.language));
       }
     });
+    window.addEventListener("beforeunload", () => {
+      freezeAndPersistTimerOnUnload();
+    });
   }
 
   async function init() {
@@ -2610,6 +2867,9 @@
     Object.assign(state, data);
     state.settings = normalizeSettings(state.settings);
     normalizeRuntimeData();
+    freezeStaleTimerOnStartup();
+    await persistWorkTimer();
+    await CallFlowStorage.write("reminders", state.reminders);
     CallFlowI18n.applyI18n(state.settings.language);
     applySettingsToForms();
     const dataDir = await window.callflow.getDataDir();

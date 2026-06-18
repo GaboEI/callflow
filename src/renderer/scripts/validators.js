@@ -7,6 +7,7 @@
     noteContent: 20000,
     reportHeader: 300
   };
+  const MAX_ACTIVE_TIMEZONES = 10;
 
   const repeatValues = new Set(["once", "daily", "weekdays", "weekly", "monthly"]);
   const languages = new Set(["es", "en", "ru"]);
@@ -55,11 +56,78 @@
     return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
   }
 
-  function reminderDueDate(reminder) {
+  function resolveTimezone(settingsOrTimezone) {
+    const timezone =
+      typeof settingsOrTimezone === "string"
+        ? settingsOrTimezone
+        : settingsOrTimezone && settingsOrTimezone.timezone;
+    if (!timezone || timezone === "local") {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    }
+    return timezone;
+  }
+
+  function dateTimePartsInZone(date, timezone) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: resolveTimezone(timezone),
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    }).formatToParts(date);
+    return Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  }
+
+  function isoDateInTimezone(date = new Date(), settingsOrTimezone = "local") {
+    const parts = dateTimePartsInZone(date, settingsOrTimezone);
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
+
+  function timeInTimezone(date = new Date(), settingsOrTimezone = "local") {
+    const parts = dateTimePartsInZone(date, settingsOrTimezone);
+    return `${parts.hour}:${parts.minute}`;
+  }
+
+  function zonedDateTimeToUtc(dateValue, timeValue, settingsOrTimezone = "local") {
+    if (!validIsoDate(dateValue) || !validTime(timeValue)) return null;
+    const timezone = resolveTimezone(settingsOrTimezone);
+    const [year, month, day] = String(dateValue).split("-").map(Number);
+    const [hour, minute] = String(timeValue).split(":").map(Number);
+    let utcMs = Date.UTC(year, month - 1, day, hour, minute, 0, 0);
+
+    for (let index = 0; index < 3; index += 1) {
+      const parts = dateTimePartsInZone(new Date(utcMs), timezone);
+      const renderedMs = Date.UTC(
+        Number(parts.year),
+        Number(parts.month) - 1,
+        Number(parts.day),
+        Number(parts.hour),
+        Number(parts.minute),
+        Number(parts.second || 0),
+        0
+      );
+      const targetMs = Date.UTC(year, month - 1, day, hour, minute, 0, 0);
+      const diff = targetMs - renderedMs;
+      if (diff === 0) break;
+      utcMs += diff;
+    }
+
+    const result = new Date(utcMs);
+    const check = dateTimePartsInZone(result, timezone);
+    if (`${check.year}-${check.month}-${check.day}` !== dateValue || `${check.hour}:${check.minute}` !== timeValue) {
+      return null;
+    }
+    return result;
+  }
+
+  function reminderDueDate(reminder, settingsOrTimezone) {
+    if (reminder && validIsoDateTime(reminder.dueAt)) return new Date(reminder.dueAt);
     if (!validIsoDate(reminder && reminder.date)) return null;
     const time = validTime(reminder.time) ? reminder.time : "00:00";
-    const due = new Date(`${reminder.date}T${time}`);
-    return Number.isNaN(due.getTime()) ? null : due;
+    return zonedDateTimeToUtc(reminder.date, time, reminder.timezone || settingsOrTimezone || "local");
   }
 
   function validIsoDateTime(value) {
@@ -105,10 +173,18 @@
     const source = isPlainObject(settings) ? settings : {};
     const merged = { ...defaults, ...source };
     const language = languages.has(merged.language) ? merged.language : "es";
+    const primaryTimezone = text(merged.timezone, LIMITS.shortText) || "local";
+    const activeTimezones = uniqueItems([primaryTimezone, ...(Array.isArray(merged.activeTimezones) ? merged.activeTimezones : [])], LIMITS.shortText).slice(
+      0,
+      MAX_ACTIVE_TIMEZONES
+    );
+    const lastReminderTimezone = text(merged.lastReminderTimezone, LIMITS.shortText);
     const normalized = {
       ...merged,
       language,
-      timezone: text(merged.timezone, LIMITS.shortText) || "local",
+      timezone: primaryTimezone,
+      activeTimezones,
+      lastReminderTimezone: activeTimezones.includes(lastReminderTimezone) ? lastReminderTimezone : activeTimezones[0] || primaryTimezone,
       operatorName: text(merged.operatorName, LIMITS.shortText),
       callTypes: uniqueItems(merged.callTypes, LIMITS.shortText),
       frequentStatuses: uniqueItems(merged.frequentStatuses || merged.callStatuses, LIMITS.shortText),
@@ -157,9 +233,11 @@
     };
   }
 
-  function normalizeReminder(reminder) {
+  function normalizeReminder(reminder, settingsOrTimezone = "local") {
     if (!isPlainObject(reminder)) return null;
     const status = reminderStatuses.has(reminder.status) ? reminder.status : "pending";
+    const timezone = resolveTimezone(reminder.timezone || settingsOrTimezone);
+    const due = reminderDueDate({ ...reminder, timezone }, timezone);
     return {
       ...reminder,
       id: text(reminder.id, LIMITS.shortText) || randomId("reminder"),
@@ -169,6 +247,8 @@
       operator: text(reminder.operator, LIMITS.shortText),
       date: validIsoDate(reminder.date) ? reminder.date : "",
       time: validTime(reminder.time) ? reminder.time : "",
+      timezone,
+      dueAt: due ? due.toISOString() : null,
       repeat: repeatValues.has(reminder.repeat) ? reminder.repeat : "once",
       note: text(reminder.note, LIMITS.mediumText),
       status,
@@ -196,9 +276,11 @@
 
   function normalizeWorkTimer(timer) {
     const source = isPlainObject(timer) ? timer : {};
-    const status = ["idle", "working", "paused"].includes(source.status) ? source.status : "idle";
+    const status = ["idle", "working", "paused", "stopped"].includes(source.status) ? source.status : "idle";
+    const previousStatus = ["working", "paused"].includes(source.previousStatus) ? source.previousStatus : null;
     return {
       status,
+      previousStatus,
       workElapsedMs: Math.max(0, Number(source.workElapsedMs) || 0),
       workStartedAt: validIsoDateTime(source.workStartedAt) ? source.workStartedAt : null,
       currentBreakStartedAt: validIsoDateTime(source.currentBreakStartedAt) ? source.currentBreakStartedAt : null,
@@ -230,12 +312,17 @@
     const note = text(payload.note, LIMITS.mediumText);
     if (!validIsoDate(payload.date) || !validTime(payload.time)) return { ok: false, messageKey: "invalidReminderDateTime" };
     if (!note) return { ok: false, messageKey: "reminderNoteRequired" };
+    const timezone = resolveTimezone(payload.timezone || "local");
+    const dueAt = zonedDateTimeToUtc(payload.date, payload.time, timezone);
+    if (!dueAt) return { ok: false, messageKey: "invalidReminderDateTime" };
     return {
       ok: true,
       value: {
         callId: text(payload.callId, LIMITS.callId),
         date: payload.date,
         time: payload.time,
+        timezone,
+        dueAt: dueAt.toISOString(),
         repeat: repeatValues.has(payload.repeat) ? payload.repeat : "once",
         note
       }
@@ -256,11 +343,16 @@
 
   const api = {
     LIMITS,
+    MAX_ACTIVE_TIMEZONES,
     text,
     multilineText,
     uniqueItems,
     validIsoDate,
     validTime,
+    resolveTimezone,
+    isoDateInTimezone,
+    timeInTimezone,
+    zonedDateTimeToUtc,
     reminderDueDate,
     normalizeSettings,
     normalizeCall,
