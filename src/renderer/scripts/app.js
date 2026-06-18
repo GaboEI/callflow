@@ -76,49 +76,7 @@
     }
   };
 
-  const presets = {
-    es: {
-      frequentStatuses: [
-        "Sin_respuesta",
-        "Buzón",
-        "Contesta_cuelga",
-        "Teléfono_apagado",
-        "Teléfono_fuera_de_línea",
-        "No_habla"
-      ],
-      selectedStatuses: ["Sin_respuesta", "Buzón", "Contesta_cuelga", "Teléfono_apagado"],
-      successLabels: ["Exitosa", "Venta", "Cita_agendada", "Caso_resuelto", "Seguimiento_programado"],
-      rejectionLabel: "Rechazo"
-    },
-    en: {
-      frequentStatuses: [
-        "No_answer",
-        "Voicemail",
-        "Answers_and_hangs_up",
-        "Phone_off",
-        "Phone_out_of_service",
-        "Does_not_speak"
-      ],
-      selectedStatuses: ["No_answer", "Voicemail", "Answers_and_hangs_up", "Phone_off"],
-      successLabels: ["Successful", "Sale", "Appointment_booked", "Case_resolved", "Follow_up_scheduled"],
-      rejectionLabel: "Rejected"
-    },
-    ru: {
-      frequentStatuses: [
-        "Нет_ответа",
-        "Голосовая_почта",
-        "Ответил_и_сбросил",
-        "Телефон_выключен",
-        "Телефон_вне_зоны",
-        "Не_говорит"
-      ],
-      selectedStatuses: ["Нет_ответа", "Голосовая_почта", "Ответил_и_сбросил", "Телефон_выключен"],
-      successLabels: ["Успешно", "Продажа", "Встреча_назначена", "Заявка_решена", "Повторный_звонок_назначен"],
-      rejectionLabel: "Отказ"
-    }
-  };
-
-  const presetStatusValues = new Set(Object.values(presets).flatMap((preset) => preset.frequentStatuses));
+  const presetStatusValues = new Set(Object.values(window.CallFlowSettings.presets).flatMap((preset) => preset.frequentStatuses));
   const fallbackTimezones = [
     "Africa/Cairo",
     "Africa/Casablanca",
@@ -580,146 +538,20 @@ Africa/Harare ZW
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
   const V = window.CallFlowValidators;
-
-  function defaultWorkTimer() {
-    return {
-      status: "idle",
-      previousStatus: null,
-      workElapsedMs: 0,
-      workStartedAt: null,
-      currentBreakStartedAt: null,
-      breaks: []
-    };
-  }
-
-  function normalizeWorkTimer(timer) {
-    return {
-      ...defaultWorkTimer(),
-      ...(timer || {}),
-      workElapsedMs: Number(timer && timer.workElapsedMs) || 0,
-      breaks: Array.isArray(timer && timer.breaks) ? timer.breaks : []
-    };
-  }
-
-  function linesToArray(value) {
-    if (Array.isArray(value)) {
-      return value
-        .filter((item) => item !== null && item !== undefined)
-        .map((item) => String(item).trim())
-        .filter(Boolean);
-    }
-    return String(value || "")
-      .split(/\n|,/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  function uniqueItems(value) {
-    return [...new Set(linesToArray(value))];
-  }
-
-  function presetForLanguage(language) {
-    return presets[language] || presets.es;
-  }
-
-  function defaultSuccessLabel(language) {
-    return presetForLanguage(language).successLabels[0];
-  }
-
-  function defaultRejectionLabel(language) {
-    return presetForLanguage(language).rejectionLabel;
-  }
-
-  function defaultCallbackLabel(language) {
-    return { es: "Rellamada", en: "Callback", ru: "Повторный_звонок" }[language] || "Rellamada";
-  }
-
-  function rejectionPresetsForLanguage(language) {
-    return {
-      es: ["Rechazo", "No_interesado", "Precio_alto", "No_tiene_dinero", "No_autoriza"],
-      en: ["Rejected", "Not_interested", "Price_too_high", "No_money", "Not_authorized"],
-      ru: ["Отказ", "Не_интересно", "Высокая_цена", "Нет_денег", "Не_разрешает"]
-    }[language] || ["Rechazo", "No_interesado", "Precio_alto", "No_tiene_dinero"];
-  }
-
-  function defaultOutcomePresets(settings) {
-    const language = settings.language || "es";
-    const successItems = uniqueItems([settings.successLabel, ...presetForLanguage(language).successLabels]);
-    const rejectionItems = uniqueItems([settings.rejectionLabel, ...rejectionPresetsForLanguage(language)]);
-    const callbackLabel = defaultCallbackLabel(language);
-    return {
-      success: {
-        default: settings.successLabel || defaultSuccessLabel(language),
-        items: successItems
-      },
-      rejection: {
-        default: settings.rejectionLabel || defaultRejectionLabel(language),
-        items: rejectionItems
-      },
-      callback: {
-        default: callbackLabel,
-        items: [callbackLabel]
-      }
-    };
-  }
-
-  function firstOrDefault(items, fallback) {
-    return uniqueItems(items)[0] || fallback || "";
-  }
-
-  function normalizeOutcomePresets(settings) {
-    const defaults = defaultOutcomePresets(settings);
-    const existing = settings.outcomePresets || {};
-    return ["success", "rejection", "callback"].reduce((result, category) => {
-      const hasStoredCategory = Object.prototype.hasOwnProperty.call(existing, category);
-      const current = hasStoredCategory ? existing[category] || {} : {};
-      const hasStoredItems = Array.isArray(current.items);
-      const items = uniqueItems(hasStoredItems ? current.items : defaults[category].items || []);
-      const fallbackDefault = hasStoredCategory
-        ? current.default || items[0] || ""
-        : defaults[category].default || items[0] || "";
-      result[category] = {
-        default: items.includes(fallbackDefault) ? fallbackDefault : items[0] || fallbackDefault,
-        items
-      };
-      return result;
-    }, {});
-  }
-
-  function normalizeSettings(settings) {
-    const sanitized = V.normalizeSettings(settings);
-    const normalized = {
-      ...sanitized,
-      ...settings,
-      language: sanitized.language,
-      timezone: sanitized.timezone,
-      activeTimezones: sanitized.activeTimezones,
-      pinnedClockTimezones: sanitized.pinnedClockTimezones,
-      lastReminderTimezone: sanitized.lastReminderTimezone,
-      callTypes: sanitized.callTypes,
-      frequentStatuses: sanitized.frequentStatuses,
-      customComments: sanitized.customComments,
-      successLabel: sanitized.successLabel || defaultSuccessLabel(sanitized.language),
-      rejectionLabel: sanitized.rejectionLabel || defaultRejectionLabel(sanitized.language),
-      outcomePresets: normalizeOutcomePresets(sanitized),
-      linePrefixMode: sanitized.linePrefixMode,
-      clockFormat: sanitized.clockFormat,
-      startOnLogin: sanitized.startOnLogin,
-      runInBackground: sanitized.runInBackground,
-      notifyBeforeMinutes: sanitized.notifyBeforeMinutes,
-      notifyAtExactTime: sanitized.notifyAtExactTime,
-      reminderSound: sanitized.reminderSound,
-      theme: sanitized.theme,
-      onboardingCompleted: sanitized.onboardingCompleted
-    };
-
-    if (!normalized.onboardingCompleted && !normalized.frequentStatuses.length) {
-      normalized.frequentStatuses = [...presetForLanguage(normalized.language).selectedStatuses];
-    }
-
-    delete normalized.callStatuses;
-    return normalized;
-  }
+  const Settings = window.CallFlowSettings;
+  const Timezones = window.CallFlowTimezones;
+  const Markdown = window.CallFlowMarkdown;
+  const Recurrence = window.CallFlowRecurrence;
+  const Timers = window.CallFlowTimers;
+  const defaultOutcomePresets = Settings.defaultOutcomePresets;
+  const defaultRejectionLabel = Settings.defaultRejectionLabel;
+  const defaultSuccessLabel = Settings.defaultSuccessLabel;
+  const firstOrDefault = Settings.firstOrDefault;
+  const addDaysIso = Recurrence.addDaysIso;
+  const normalizeSettings = (settings) => Settings.normalizeSettings(settings, V);
+  const normalizeWorkTimer = Timers.normalizeWorkTimer;
+  const presetForLanguage = Settings.presetForLanguage;
+  const uniqueItems = Settings.uniqueItems;
 
   function normalizeRuntimeData() {
     state.calls = V.normalizeCollection(state.calls, V.normalizeCall, state.settings);
@@ -1184,196 +1016,10 @@ Africa/Harare ZW
     });
   }
 
-  function languageLocale(language) {
-    return { es: "es-ES", en: "en-US", ru: "ru-RU" }[language] || "es-ES";
-  }
-
-  function localizedRegion(region, language) {
-    const names = {
-      es: {
-        Africa: "África",
-        America: "América",
-        Antarctica: "Antártida",
-        Arctic: "Ártico",
-        Asia: "Asia",
-        Atlantic: "Atlántico",
-        Australia: "Australia",
-        Europe: "Europa",
-        Indian: "Índico",
-        Pacific: "Pacífico",
-        UTC: "UTC",
-        Etc: "Etc"
-      },
-      en: {
-        Africa: "Africa",
-        America: "America",
-        Antarctica: "Antarctica",
-        Arctic: "Arctic",
-        Asia: "Asia",
-        Atlantic: "Atlantic",
-        Australia: "Australia",
-        Europe: "Europe",
-        Indian: "Indian",
-        Pacific: "Pacific",
-        UTC: "UTC",
-        Etc: "Etc"
-      },
-      ru: {
-        Africa: "Африка",
-        America: "Америка",
-        Antarctica: "Антарктида",
-        Arctic: "Арктика",
-        Asia: "Азия",
-        Atlantic: "Атлантика",
-        Australia: "Австралия",
-        Europe: "Европа",
-        Indian: "Индийский океан",
-        Pacific: "Тихий океан",
-        UTC: "UTC",
-        Etc: "Etc"
-      }
-    };
-    return (names[language] && names[language][region]) || region;
-  }
-
-  function localizedCity(city, language) {
-    const cleanCity = city.replaceAll("_", " ");
-    const ruCities = {
-      Madrid: "Мадрид",
-      London: "Лондон",
-      Moscow: "Москва",
-      Paris: "Париж",
-      Rome: "Рим",
-      Berlin: "Берлин",
-      New_York: "Нью-Йорк",
-      Mexico_City: "Мехико",
-      Los_Angeles: "Лос-Анджелес",
-      Chicago: "Чикаго",
-      Tokyo: "Токио",
-      Seoul: "Сеул",
-      Shanghai: "Шанхай",
-      Singapore: "Сингапур",
-      Dubai: "Дубай",
-      Sydney: "Сидней"
-    };
-    if (language === "ru" && ruCities[city]) return ruCities[city];
-    return cleanCity;
-  }
-
-  function timezoneOffset(timezone, date = new Date()) {
-    if (timezone === "local") {
-      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    }
-
-    try {
-      const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: timezone,
-        timeZoneName: "shortOffset",
-        hour: "2-digit"
-      }).formatToParts(date);
-      const rawOffset = parts.find((part) => part.type === "timeZoneName").value;
-      if (rawOffset === "GMT" || rawOffset === "UTC") return "UTC+00:00";
-      const match = rawOffset.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
-      if (!match) return rawOffset.replace("GMT", "UTC");
-      return `UTC${match[1]}${match[2].padStart(2, "0")}:${match[3] || "00"}`;
-    } catch (_error) {
-      return "UTC";
-    }
-  }
-
-  function timezoneCurrentTime(timezone, language) {
-    const resolvedTimezone = timezone === "local" ? Intl.DateTimeFormat().resolvedOptions().timeZone : timezone;
-    try {
-      return new Intl.DateTimeFormat(languageLocale(language), {
-        timeZone: resolvedTimezone,
-        hour: "2-digit",
-        minute: "2-digit"
-      }).format(new Date());
-    } catch (_error) {
-      return "";
-    }
-  }
-
-  function timezoneLabel(value, language) {
-    if (value === "local") {
-      const resolved = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-      return `${CallFlowI18n.t("localSystemTime", language)} — ${resolved} — ${timezoneOffset("local")}`;
-    }
-
-    const [region, ...cityParts] = value.split("/");
-    const city = cityParts.join("/");
-    const label = city ? `${localizedRegion(region, language)} / ${localizedCity(city, language)}` : value;
-    const currentTime = timezoneCurrentTime(value, language);
-    return `${label} — ${timezoneOffset(value)}${currentTime ? ` — ${currentTime}` : ""}`;
-  }
-
-  function normalizeTimezoneSearch(value) {
-    return String(value || "")
-      .toLowerCase()
-      .replaceAll("_", " ")
-      .replaceAll("/", " ")
-      .replace(/[—–-]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  function timezoneSearchAliases(value) {
-    const aliases = {
-      "Europe/Madrid": "spain madrid espana madrid españa madrid spain espana españa madrid",
-      "Europe/London": "united kingdom uk england britain londres london",
-      "Europe/Moscow": "russia rusia moscu moscow moscú moskva",
-      "America/New_York": "new york nyc united states usa us estados unidos",
-      "America/Mexico_City": "mexico city méxico city mexico ciudad méxico ciudad ciudad de mexico ciudad de méxico",
-      "America/Havana": "cuba havana habana",
-      "America/Los_Angeles": "los angeles california united states usa us",
-      "America/Chicago": "chicago united states usa us",
-      "Asia/Tokyo": "japan japon japón tokyo",
-      "Asia/Dubai": "united arab emirates emirates dubai",
-      "UTC": "gmt utc universal"
-    };
-    return aliases[value] || "";
-  }
-
-  function timezoneOption(value, language) {
-    const resolvedTimezone = value === "local" ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" : value;
-    const [region, ...cityParts] = value.split("/");
-    const city = cityParts.join("/");
-    const displayName =
-      value === "local"
-        ? CallFlowI18n.t("localSystemTime", language)
-        : city
-          ? `${localizedRegion(region, language)} / ${localizedCity(city, language)}`
-          : value;
-    const offset = timezoneOffset(value);
-    const currentTime = timezoneCurrentTime(value, language);
-    const label =
-      value === "local"
-        ? `${displayName} — ${resolvedTimezone} — ${offset}`
-        : `${displayName} — ${offset}${currentTime ? ` — ${currentTime}` : ""}`;
-    const searchText = normalizeTimezoneSearch(
-      [
-        value,
-        value.replaceAll("_", " "),
-        resolvedTimezone,
-        resolvedTimezone.replaceAll("_", " "),
-        displayName,
-        localizedRegion(region, language),
-        localizedCity(city, language),
-        offset,
-        offset.replace(":00", ""),
-        timezoneSearchAliases(value)
-      ].join(" ")
-    );
-
-    return {
-      value,
-      label,
-      resolvedTimezone,
-      offset,
-      currentTime,
-      searchText
-    };
-  }
+  const languageLocale = Timezones.languageLocale;
+  const normalizeTimezoneSearch = Timezones.normalizeTimezoneSearch;
+  const timezoneLabel = (value, language) => Timezones.timezoneLabel(value, language, CallFlowI18n.t);
+  const timezoneOption = (value, language) => Timezones.timezoneOption(value, language, CallFlowI18n.t);
 
   function timezonePickerState(pickerId) {
     return state.timezonePickers[pickerId];
@@ -1458,18 +1104,8 @@ Africa/Harare ZW
     openTimezoneDropdown(pickerId);
   }
 
-  function escapeHtml(value) {
-    return String(value || "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  function escapeRegExp(value) {
-    return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
+  const escapeHtml = Markdown.escapeHtml;
+  const escapeRegExp = Markdown.escapeRegExp;
 
   function compactStatusLabel(value) {
     const text = String(value || "");
@@ -1477,17 +1113,7 @@ Africa/Harare ZW
     return `${text.slice(0, 48)}...${text.slice(-18)}`;
   }
 
-  function markdownPreview(markdown) {
-    const escaped = escapeHtml(markdown);
-    return escaped
-      .replace(/^### (.*)$/gm, "<h3>$1</h3>")
-      .replace(/^## (.*)$/gm, "<h2>$1</h2>")
-      .replace(/^# (.*)$/gm, "<h1>$1</h1>")
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.*?)\*/g, "<em>$1</em>")
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      .replace(/\n/g, "<br />");
-  }
+  const markdownPreview = Markdown.markdownPreview;
 
   function getViewTitle(view) {
     const titles = {
@@ -2326,24 +1952,12 @@ Africa/Harare ZW
     }, 10000);
   }
 
-  function formatDuration(ms) {
-    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-    const seconds = String(totalSeconds % 60).padStart(2, "0");
-    return `${hours}:${minutes}:${seconds}`;
-  }
-
   function currentWorkElapsed(now = Date.now()) {
-    const timer = normalizeWorkTimer(state.workTimer);
-    if (timer.status !== "working" || !timer.workStartedAt) return timer.workElapsedMs;
-    return timer.workElapsedMs + Math.max(0, now - new Date(timer.workStartedAt).getTime());
+    return Timers.currentWorkElapsed(state.workTimer, now);
   }
 
   function currentBreakElapsed(now = Date.now()) {
-    const timer = normalizeWorkTimer(state.workTimer);
-    if (timer.status !== "paused" || !timer.currentBreakStartedAt) return 0;
-    return Math.max(0, now - new Date(timer.currentBreakStartedAt).getTime());
+    return Timers.currentBreakElapsed(state.workTimer, now);
   }
 
   function renderShiftTimer() {
@@ -2363,7 +1977,7 @@ Africa/Harare ZW
     wrapper.classList.toggle("working", working);
     wrapper.classList.toggle("stopped", stopped);
     label.textContent = CallFlowI18n.t(stopped ? "totalPauseTimer" : paused ? "breakTimer" : "workTimer", language);
-    value.textContent = formatDuration(paused ? currentBreakElapsed() : currentWorkElapsed());
+    value.textContent = Timers.formatDuration(paused ? currentBreakElapsed() : currentWorkElapsed());
     button.textContent = working ? "⏸" : "▶";
     button.setAttribute(
       "aria-label",
@@ -2400,59 +2014,15 @@ Africa/Harare ZW
   }
 
   async function toggleShiftTimer() {
-    const timer = normalizeWorkTimer(state.workTimer);
-    const now = new Date();
-
-    if (timer.status === "working") {
-      timer.workElapsedMs = currentWorkElapsed(now.getTime());
-      timer.workStartedAt = null;
-      timer.currentBreakStartedAt = now.toISOString();
-      timer.status = "paused";
-      timer.previousStatus = "working";
-    } else {
-      if (timer.status === "paused" && timer.currentBreakStartedAt) {
-        const startedAt = timer.currentBreakStartedAt;
-        const durationMs = Math.max(0, now.getTime() - new Date(startedAt).getTime());
-        timer.breaks = [...timer.breaks, { startedAt, endedAt: now.toISOString(), durationMs }];
-      }
-      timer.currentBreakStartedAt = null;
-      timer.workStartedAt = now.toISOString();
-      timer.status = timer.status === "stopped" && timer.previousStatus === "paused" ? "paused" : "working";
-      if (timer.status === "paused") {
-        timer.workStartedAt = null;
-        timer.currentBreakStartedAt = now.toISOString();
-      }
-      timer.previousStatus = null;
-    }
-
-    state.workTimer = timer;
+    state.workTimer = Timers.toggleShiftTimer(state.workTimer);
     await persistWorkTimer();
     renderShiftTimer();
-  }
-
-  function freezeWorkTimer(timer, now = new Date()) {
-    const normalized = normalizeWorkTimer(timer);
-    if (normalized.status === "working" && normalized.workStartedAt) {
-      normalized.workElapsedMs = currentWorkElapsed(now.getTime());
-      normalized.workStartedAt = null;
-      normalized.previousStatus = "working";
-    } else if (normalized.status === "paused" && normalized.currentBreakStartedAt) {
-      const startedAt = normalized.currentBreakStartedAt;
-      const durationMs = Math.max(0, now.getTime() - new Date(startedAt).getTime());
-      normalized.breaks = [...normalized.breaks, { startedAt, endedAt: now.toISOString(), durationMs }];
-      normalized.currentBreakStartedAt = null;
-      normalized.previousStatus = "paused";
-    } else if (!normalized.previousStatus) {
-      normalized.previousStatus = null;
-    }
-    normalized.status = "stopped";
-    return normalized;
   }
 
   async function stopShiftTimer() {
     const timer = normalizeWorkTimer(state.workTimer);
     if (timer.status === "idle" || timer.status === "stopped") return;
-    state.workTimer = freezeWorkTimer(timer);
+    state.workTimer = Timers.freezeWorkTimer(timer);
     await persistWorkTimer();
     renderShiftTimer();
   }
@@ -2460,7 +2030,7 @@ Africa/Harare ZW
   async function freezeAndPersistTimerOnUnload() {
     const timer = normalizeWorkTimer(state.workTimer);
     if (!["working", "paused"].includes(timer.status)) return;
-    state.workTimer = freezeWorkTimer(timer);
+    state.workTimer = Timers.freezeWorkTimer(timer);
     await persistWorkTimer();
   }
 
@@ -3551,64 +3121,13 @@ Africa/Harare ZW
     if (reminderId) editReminder(reminderId);
   }
 
-  function addDaysIso(isoDate, days) {
-    const [year, month, day] = isoDate.split("-").map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day + days));
-    return date.toISOString().slice(0, 10);
-  }
-
-  function isoWeekday(isoDate) {
-    const [year, month, day] = isoDate.split("-").map(Number);
-    return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
-  }
-
-  function addOneMonthClampedIso(isoDate) {
-    const [year, month, day] = isoDate.split("-").map(Number);
-    const target = new Date(Date.UTC(year, month, 1));
-    const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
-    target.setUTCDate(Math.min(day, lastDay));
-    return target.toISOString().slice(0, 10);
-  }
-
   function nextRecurringReminder(reminder) {
-    const repeat = reminder.repeat || "once";
-    if (repeat === "once") return null;
-    const timezone = reminder.timezone || V.resolveTimezone(state.settings);
-    let nextDate = reminder.date;
-    let nextDueAt = V.zonedDateTimeToUtc(nextDate, reminder.time, timezone);
-    if (!nextDueAt) return null;
-    const now = new Date();
-    do {
-      if (repeat === "daily") {
-        nextDate = addDaysIso(nextDate, 1);
-      } else if (repeat === "weekdays") {
-        nextDate = addDaysIso(nextDate, 1);
-        while (isoWeekday(nextDate) === 0 || isoWeekday(nextDate) === 6) {
-          nextDate = addDaysIso(nextDate, 1);
-        }
-      } else if (repeat === "weekly") {
-        nextDate = addDaysIso(nextDate, 7);
-      } else if (repeat === "monthly") {
-        nextDate = addOneMonthClampedIso(nextDate);
-      } else {
-        return null;
-      }
-      nextDueAt = V.zonedDateTimeToUtc(nextDate, reminder.time, timezone);
-    } while (nextDueAt && nextDueAt <= now);
-    if (!nextDueAt) return null;
-    return {
-      ...reminder,
-      id: crypto.randomUUID(),
-      date: nextDate,
-      time: reminder.time,
-      timezone,
-      dueAt: nextDueAt.toISOString(),
-      status: "pending",
-      createdAt: new Date().toISOString(),
-      previousReminderId: reminder.id,
-      completedAt: undefined,
-      updatedAt: undefined
-    };
+    return Recurrence.nextRecurringReminder(reminder, {
+      createId: () => crypto.randomUUID(),
+      now: new Date(),
+      resolveTimezone: () => V.resolveTimezone(state.settings),
+      zonedDateTimeToUtc: V.zonedDateTimeToUtc
+    });
   }
 
   async function completeReminder(id) {
@@ -3724,6 +3243,197 @@ Africa/Harare ZW
         extension
       })
     );
+  }
+
+  function handleDocumentChange(event) {
+    if (event.target.closest("#dateTimePicker")) {
+      handleDateTimePickerChange(event);
+      return;
+    }
+    if (event.target.matches("[data-report-block]")) {
+      if (event.target.checked) state.selectedBlocks.add(event.target.dataset.reportBlock);
+      else state.selectedBlocks.delete(event.target.dataset.reportBlock);
+    }
+  }
+
+  function handleDocumentFocusIn(event) {
+    if (event.target.matches("input[type='date'], input[type='time']")) {
+      enhanceDateTimeInputs();
+      openDateTimePicker(event.target);
+    }
+  }
+
+  function handleDocumentClick(event) {
+    const picker = event.target.closest("#dateTimePicker");
+    if (picker) {
+      handleDateTimePickerClick(event);
+      return;
+    }
+    if (!event.target.closest(".cf-datetime-input")) {
+      closeDateTimePicker();
+    }
+    const sidebarToggle = event.target.closest("#sidebarToggle");
+    const sidebarBackdrop = event.target.closest("#sidebarBackdrop");
+    if (sidebarBackdrop) {
+      $("#app").classList.remove("sidebar-open");
+      $("#sidebarBackdrop").hidden = true;
+    }
+    if (sidebarToggle) return;
+    const timezoneToggle = event.target.closest("[data-timezone-toggle]");
+    const timezoneOption = event.target.closest("[data-timezone-picker-option]");
+    const statusOption = event.target.closest("[data-status-option]");
+    const customCommentOption = event.target.closest("[data-custom-comment-option]");
+    const outcomeToggle = event.target.closest("[data-outcome-toggle]");
+    const addListId = event.target.dataset.addListItem;
+    const removeListId = event.target.dataset.removeListItem;
+    const presetListId = event.target.dataset.presetListItem;
+    const dashboardCallTypeToRemove = event.target.dataset.removeDashboardCallType;
+    const selectOutcomeCategory = event.target.dataset.selectOutcome;
+    const addOutcomeCategory = event.target.dataset.addOutcome;
+    const removeOutcomeCategory = event.target.dataset.removeOutcome;
+    const clearOutcome = event.target.closest("[data-clear-outcome]");
+    const editReportBlockKey = event.target.dataset.editReportBlock;
+    const saveReportBlockKey = event.target.dataset.saveReportBlock;
+    const cancelReportEditKey = event.target.dataset.cancelReportEdit;
+    const deleteReportBlockKey = event.target.dataset.deleteReportBlock;
+    const restoreReportBlockKey = event.target.dataset.restoreReportBlock;
+    const permanentDeleteReportBlockKey = event.target.dataset.permanentDeleteReportBlock;
+    const reportPeriod = event.target.dataset.reportPeriod;
+    const timezoneToggleId = timezoneToggle ? timezoneToggle.dataset.timezoneToggle : null;
+    const timezonePickerId = timezoneOption ? timezoneOption.dataset.timezonePickerOption : null;
+    const reminderId = event.target.dataset.completeReminder;
+    const reminderCallId = event.target.dataset.copyReminderCallId;
+    const editReminderId = event.target.dataset.editReminder;
+    const deleteReminderId = event.target.closest("[data-delete-reminder]")?.dataset.deleteReminder;
+    const restoreReminderId = event.target.closest("[data-restore-reminder]")?.dataset.restoreReminder;
+    const permanentDeleteReminderId = event.target.closest("[data-permanent-delete-reminder]")?.dataset.permanentDeleteReminder;
+    const reminderDateShortcut = event.target.dataset.reminderDateShortcut;
+    const addActiveTimezonePicker = event.target.dataset.addActiveTimezone;
+    const removeActiveTimezoneValue = event.target.dataset.removeActiveTimezone;
+    const togglePinnedClockButton = event.target.closest("[data-toggle-pinned-clock]");
+    const togglePinnedClockValue = togglePinnedClockButton ? togglePinnedClockButton.dataset.togglePinnedClock : null;
+    const noteId = event.target.dataset.selectNote;
+    if (addListId) {
+      addListItem(addListId, document.querySelector(`[data-list-input="${addListId}"]`).value);
+    }
+    if (removeListId) {
+      removeListItem(removeListId, event.target.dataset.value);
+    }
+    if (presetListId) {
+      addListItem(presetListId, event.target.dataset.value);
+    }
+    if (dashboardCallTypeToRemove) {
+      removeDashboardCallType(dashboardCallTypeToRemove);
+    }
+    if (outcomeToggle) {
+      const category = outcomeToggle.dataset.outcomeToggle;
+      if (state.selectedPrimaryOutcome?.category !== category) {
+        selectPrimaryOutcome(category, defaultOutcomeLabel(category));
+      }
+      state.openOutcomeMenu = state.openOutcomeMenu === category ? null : category;
+      renderOutcomeControls();
+    }
+    if (selectOutcomeCategory) {
+      selectPrimaryOutcome(selectOutcomeCategory, event.target.dataset.value);
+    }
+    if (addOutcomeCategory) {
+      addOutcomePreset(addOutcomeCategory);
+    }
+    if (removeOutcomeCategory) {
+      removeOutcomePreset(removeOutcomeCategory, event.target.dataset.value);
+    }
+    if (clearOutcome) {
+      clearPrimaryOutcome();
+    }
+    if (editReportBlockKey) {
+      state.editingReportBlockKey = editReportBlockKey;
+      renderReportBlocks();
+    }
+    if (saveReportBlockKey) {
+      saveReportBlockEdit(saveReportBlockKey);
+    }
+    if (cancelReportEditKey) {
+      state.editingReportBlockKey = null;
+      renderReportBlocks();
+    }
+    if (deleteReportBlockKey) {
+      deleteReportBlock(deleteReportBlockKey);
+    }
+    if (restoreReportBlockKey) {
+      restoreReportBlock(restoreReportBlockKey);
+    }
+    if (permanentDeleteReportBlockKey) {
+      permanentDeleteReportBlock(permanentDeleteReportBlockKey);
+    }
+    if (reportPeriod) {
+      setReportPeriod(reportPeriod);
+    }
+    if (timezoneToggleId) {
+      const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);
+      toggleTimezoneDropdown(timezoneToggleId);
+      if (timezonePickerState(timezoneToggleId).isTimezoneDropdownOpen) input.focus();
+    }
+    if (timezonePickerId) {
+      selectTimezone(timezonePickerId, timezoneOption.dataset.value);
+    }
+    if (statusOption) {
+      selectStatusOption(statusOption.dataset.statusOption);
+    }
+    if (customCommentOption) {
+      selectCustomCommentOption(customCommentOption.dataset.customCommentOption);
+    }
+    if (!event.target.closest(".status-combobox")) {
+      renderStatusOptions(false);
+    }
+    if (!event.target.closest(".custom-comment-combobox")) {
+      renderCustomCommentOptions(false);
+    }
+    if (!event.target.closest(".outcome-control")) {
+      state.openOutcomeMenu = null;
+      renderOutcomeControls();
+    }
+    if (!event.target.closest(".timezone-picker")) {
+      closeTimezoneDropdown("onboarding");
+      closeTimezoneDropdown("settings");
+    }
+    if (reminderId) completeReminder(reminderId);
+    if (reminderCallId) copyReminderCallId(reminderCallId);
+    if (editReminderId) editReminder(editReminderId);
+    if (deleteReminderId) deleteReminder(deleteReminderId);
+    if (restoreReminderId) restoreReminder(restoreReminderId);
+    if (permanentDeleteReminderId) permanentDeleteReminder(permanentDeleteReminderId);
+    if (reminderDateShortcut) setReminderDateShortcut(reminderDateShortcut);
+    if (addActiveTimezonePicker) addActiveTimezoneFromPicker(addActiveTimezonePicker);
+    if (removeActiveTimezoneValue) removeActiveTimezone(removeActiveTimezoneValue);
+    if (togglePinnedClockValue) togglePinnedClock(togglePinnedClockValue);
+    if (!event.target.closest("#workClockShell")) {
+      $("#clockPanel").classList.add("hidden");
+    }
+    if (noteId) {
+      state.selectedNoteId = noteId;
+      renderNotes();
+    }
+  }
+
+  function handleWindowResize() {
+    positionDateTimePicker();
+    if (window.innerWidth >= 780) {
+      $("#app").classList.remove("sidebar-open");
+      $("#sidebarBackdrop").hidden = true;
+      $("#sidebarToggle").setAttribute("aria-label", CallFlowI18n.t("openSidebar", state.settings.language));
+    }
+  }
+
+  function handleGlobalKeydown(event) {
+    if (event.target.matches("[data-cf-picker-year-input]") && event.key === "Enter") {
+      event.preventDefault();
+      setPickerYear(event.target.value);
+    }
+    if (event.target.matches("#exactMinuteInput") && event.key === "Enter") {
+      event.preventDefault();
+      commitPickerTime(event.target.value);
+    }
+    if (event.key === "Escape") closeDateTimePicker();
   }
 
   function bindEvents() {
@@ -3949,196 +3659,13 @@ Africa/Harare ZW
       });
     });
 
-    document.addEventListener("change", (event) => {
-      if (event.target.closest("#dateTimePicker")) {
-        handleDateTimePickerChange(event);
-        return;
-      }
-      if (event.target.matches("[data-report-block]")) {
-        if (event.target.checked) state.selectedBlocks.add(event.target.dataset.reportBlock);
-        else state.selectedBlocks.delete(event.target.dataset.reportBlock);
-      }
-    });
+    document.addEventListener("change", handleDocumentChange);
+    document.addEventListener("focusin", handleDocumentFocusIn);
+    document.addEventListener("click", handleDocumentClick);
 
-    document.addEventListener("focusin", (event) => {
-      if (event.target.matches("input[type='date'], input[type='time']")) {
-        enhanceDateTimeInputs();
-        openDateTimePicker(event.target);
-      }
-    });
-
-    document.addEventListener("click", (event) => {
-      const picker = event.target.closest("#dateTimePicker");
-      if (picker) {
-        handleDateTimePickerClick(event);
-        return;
-      }
-      if (!event.target.closest(".cf-datetime-input")) {
-        closeDateTimePicker();
-      }
-      const sidebarToggle = event.target.closest("#sidebarToggle");
-      const sidebarBackdrop = event.target.closest("#sidebarBackdrop");
-      if (sidebarBackdrop) {
-        $("#app").classList.remove("sidebar-open");
-        $("#sidebarBackdrop").hidden = true;
-      }
-      if (sidebarToggle) return;
-      const timezoneToggle = event.target.closest("[data-timezone-toggle]");
-      const timezoneOption = event.target.closest("[data-timezone-picker-option]");
-      const statusOption = event.target.closest("[data-status-option]");
-      const customCommentOption = event.target.closest("[data-custom-comment-option]");
-      const outcomeToggle = event.target.closest("[data-outcome-toggle]");
-      const addListId = event.target.dataset.addListItem;
-      const removeListId = event.target.dataset.removeListItem;
-      const presetListId = event.target.dataset.presetListItem;
-      const dashboardCallTypeToRemove = event.target.dataset.removeDashboardCallType;
-      const selectOutcomeCategory = event.target.dataset.selectOutcome;
-      const addOutcomeCategory = event.target.dataset.addOutcome;
-      const removeOutcomeCategory = event.target.dataset.removeOutcome;
-      const clearOutcome = event.target.closest("[data-clear-outcome]");
-      const editReportBlockKey = event.target.dataset.editReportBlock;
-      const saveReportBlockKey = event.target.dataset.saveReportBlock;
-      const cancelReportEditKey = event.target.dataset.cancelReportEdit;
-      const deleteReportBlockKey = event.target.dataset.deleteReportBlock;
-      const restoreReportBlockKey = event.target.dataset.restoreReportBlock;
-      const permanentDeleteReportBlockKey = event.target.dataset.permanentDeleteReportBlock;
-      const reportPeriod = event.target.dataset.reportPeriod;
-      const timezoneToggleId = timezoneToggle ? timezoneToggle.dataset.timezoneToggle : null;
-      const timezonePickerId = timezoneOption ? timezoneOption.dataset.timezonePickerOption : null;
-      const reminderId = event.target.dataset.completeReminder;
-      const reminderCallId = event.target.dataset.copyReminderCallId;
-      const editReminderId = event.target.dataset.editReminder;
-      const deleteReminderId = event.target.closest("[data-delete-reminder]")?.dataset.deleteReminder;
-      const restoreReminderId = event.target.closest("[data-restore-reminder]")?.dataset.restoreReminder;
-      const permanentDeleteReminderId = event.target.closest("[data-permanent-delete-reminder]")?.dataset.permanentDeleteReminder;
-      const reminderDateShortcut = event.target.dataset.reminderDateShortcut;
-      const addActiveTimezonePicker = event.target.dataset.addActiveTimezone;
-      const removeActiveTimezoneValue = event.target.dataset.removeActiveTimezone;
-      const togglePinnedClockButton = event.target.closest("[data-toggle-pinned-clock]");
-      const togglePinnedClockValue = togglePinnedClockButton ? togglePinnedClockButton.dataset.togglePinnedClock : null;
-      const noteId = event.target.dataset.selectNote;
-      if (addListId) {
-        addListItem(addListId, document.querySelector(`[data-list-input="${addListId}"]`).value);
-      }
-      if (removeListId) {
-        removeListItem(removeListId, event.target.dataset.value);
-      }
-      if (presetListId) {
-        addListItem(presetListId, event.target.dataset.value);
-      }
-      if (dashboardCallTypeToRemove) {
-        removeDashboardCallType(dashboardCallTypeToRemove);
-      }
-      if (outcomeToggle) {
-        const category = outcomeToggle.dataset.outcomeToggle;
-        if (state.selectedPrimaryOutcome?.category !== category) {
-          selectPrimaryOutcome(category, defaultOutcomeLabel(category));
-        }
-        state.openOutcomeMenu = state.openOutcomeMenu === category ? null : category;
-        renderOutcomeControls();
-      }
-      if (selectOutcomeCategory) {
-        selectPrimaryOutcome(selectOutcomeCategory, event.target.dataset.value);
-      }
-      if (addOutcomeCategory) {
-        addOutcomePreset(addOutcomeCategory);
-      }
-      if (removeOutcomeCategory) {
-        removeOutcomePreset(removeOutcomeCategory, event.target.dataset.value);
-      }
-      if (clearOutcome) {
-        clearPrimaryOutcome();
-      }
-      if (editReportBlockKey) {
-        state.editingReportBlockKey = editReportBlockKey;
-        renderReportBlocks();
-      }
-      if (saveReportBlockKey) {
-        saveReportBlockEdit(saveReportBlockKey);
-      }
-      if (cancelReportEditKey) {
-        state.editingReportBlockKey = null;
-        renderReportBlocks();
-      }
-      if (deleteReportBlockKey) {
-        deleteReportBlock(deleteReportBlockKey);
-      }
-      if (restoreReportBlockKey) {
-        restoreReportBlock(restoreReportBlockKey);
-      }
-      if (permanentDeleteReportBlockKey) {
-        permanentDeleteReportBlock(permanentDeleteReportBlockKey);
-      }
-      if (reportPeriod) {
-        setReportPeriod(reportPeriod);
-      }
-      if (timezoneToggleId) {
-        const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);
-        toggleTimezoneDropdown(timezoneToggleId);
-        if (timezonePickerState(timezoneToggleId).isTimezoneDropdownOpen) input.focus();
-      }
-      if (timezonePickerId) {
-        selectTimezone(timezonePickerId, timezoneOption.dataset.value);
-      }
-      if (statusOption) {
-        selectStatusOption(statusOption.dataset.statusOption);
-      }
-      if (customCommentOption) {
-        selectCustomCommentOption(customCommentOption.dataset.customCommentOption);
-      }
-      if (!event.target.closest(".status-combobox")) {
-        renderStatusOptions(false);
-      }
-      if (!event.target.closest(".custom-comment-combobox")) {
-        renderCustomCommentOptions(false);
-      }
-      if (!event.target.closest(".outcome-control")) {
-        state.openOutcomeMenu = null;
-        renderOutcomeControls();
-      }
-      if (!event.target.closest(".timezone-picker")) {
-        closeTimezoneDropdown("onboarding");
-        closeTimezoneDropdown("settings");
-      }
-      if (reminderId) completeReminder(reminderId);
-      if (reminderCallId) copyReminderCallId(reminderCallId);
-      if (editReminderId) editReminder(editReminderId);
-      if (deleteReminderId) deleteReminder(deleteReminderId);
-      if (restoreReminderId) restoreReminder(restoreReminderId);
-      if (permanentDeleteReminderId) permanentDeleteReminder(permanentDeleteReminderId);
-      if (reminderDateShortcut) setReminderDateShortcut(reminderDateShortcut);
-      if (addActiveTimezonePicker) addActiveTimezoneFromPicker(addActiveTimezonePicker);
-      if (removeActiveTimezoneValue) removeActiveTimezone(removeActiveTimezoneValue);
-      if (togglePinnedClockValue) togglePinnedClock(togglePinnedClockValue);
-      if (!event.target.closest("#workClockShell")) {
-        $("#clockPanel").classList.add("hidden");
-      }
-      if (noteId) {
-        state.selectedNoteId = noteId;
-        renderNotes();
-      }
-    });
-
-    window.addEventListener("resize", () => {
-      positionDateTimePicker();
-      if (window.innerWidth >= 780) {
-        $("#app").classList.remove("sidebar-open");
-        $("#sidebarBackdrop").hidden = true;
-        $("#sidebarToggle").setAttribute("aria-label", CallFlowI18n.t("openSidebar", state.settings.language));
-      }
-    });
+    window.addEventListener("resize", handleWindowResize);
     window.addEventListener("scroll", positionDateTimePicker, true);
-    document.addEventListener("keydown", (event) => {
-      if (event.target.matches("[data-cf-picker-year-input]") && event.key === "Enter") {
-        event.preventDefault();
-        setPickerYear(event.target.value);
-      }
-      if (event.target.matches("#exactMinuteInput") && event.key === "Enter") {
-        event.preventDefault();
-        commitPickerTime(event.target.value);
-      }
-      if (event.key === "Escape") closeDateTimePicker();
-    });
+    document.addEventListener("keydown", handleGlobalKeydown);
     window.addEventListener("beforeunload", () => {
       freezeAndPersistTimerOnUnload();
     });
