@@ -606,6 +606,7 @@ Africa/Harare ZW
 
   function applySettingsToForms() {
     const settings = state.settings;
+    document.body.dataset.theme = settings.theme || "dark";
     const onboardingForm = $("#onboardingForm");
     onboardingForm.language.value = settings.language;
     onboardingForm.timezone.value = settings.timezone;

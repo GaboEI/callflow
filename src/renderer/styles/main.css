@@ -482,8 +482,20 @@ h2 {
 
 .brand {
   display: grid;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.brand-mark {
+  min-width: 0;
+}
+
+.brand-logo-dark {
+  display: block;
+  width: min(180px, 100%);
+  height: 38px;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .brand strong {
@@ -498,6 +510,20 @@ h2 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.brand .brand-text,
+body[data-theme="dark"] .brand #dataDirLabel {
+  display: none;
+}
+
+body[data-theme="light"] .brand-logo-dark {
+  display: none;
+}
+
+body[data-theme="light"] .brand .brand-text,
+body[data-theme="light"] .brand #dataDirLabel {
+  display: block;
 }
 
 .sidebar-operator {
