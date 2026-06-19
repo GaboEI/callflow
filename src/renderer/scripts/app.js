@@ -601,7 +601,7 @@ Africa/Harare ZW
       $("#sidebarToggle").setAttribute("aria-label", CallFlowI18n.t("openSidebar", state.settings.language || "es"));
     }
     render();
-    if (view === "reminders") prepareReminderFormDefaults();
+    if (view === "reminders") remindersView.prepareFormDefaults();
   }
 
   function applySettingsToForms() {
@@ -811,6 +811,67 @@ Africa/Harare ZW
     timezoneFlag,
     uniqueItems
   });
+  const remindersView = window.CallFlowRemindersView.createRemindersView({
+    $,
+    activeTimezones,
+    addDaysIso,
+    currentDateInputValue,
+    currentTimeInputValue,
+    escapeHtml,
+    i18n: CallFlowI18n,
+    normalizeSettings,
+    recurrence: Recurrence,
+    renderApp: () => render(),
+    renderReminderTimezoneSelectors,
+    runAction,
+    setStatusMessage,
+    setView,
+    state,
+    storage: CallFlowStorage,
+    timezoneFlag,
+    validators: V
+  });
+  const reportsView = window.CallFlowReportsView.createReportsView({
+    $$,
+    $,
+    activeCalls,
+    callIsoDate,
+    compareIsoDate,
+    displayIsoDate,
+    escapeHtml,
+    escapeRegExp,
+    i18n: CallFlowI18n,
+    isoDateOffset,
+    renderApp: () => render(),
+    runAction,
+    setStatusMessage,
+    state,
+    storage: CallFlowStorage
+  });
+  const dashboardView = window.CallFlowDashboardView.createDashboardView({
+    $,
+    activeCalls,
+    activeTimezones,
+    applySettingsToForms,
+    compactStatusLabel,
+    currentDateInputValue,
+    currentTimeInputValue,
+    escapeHtml,
+    i18n: CallFlowI18n,
+    normalizeSettings,
+    renderApp: () => render(),
+    renderReminderTimezoneSelectors,
+    renderReportBlocks: reportsView.renderReportBlocks,
+    reports: CallFlowReports,
+    runAction,
+    setStatusMessage,
+    setView,
+    state,
+    stats: CallFlowStats,
+    storage: CallFlowStorage,
+    uniqueItems,
+    validators: V
+  });
 
   async function updateActiveTimezones(timezones, lastReminderTimezone = state.settings.lastReminderTimezone) {
     const zones = V.uniqueItems([state.settings.timezone || "local", ...timezones]).slice(0, V.MAX_ACTIVE_TIMEZONES);
@@ -837,271 +898,12 @@ Africa/Harare ZW
     await updateActiveTimezones(activeTimezones().filter((timezone) => timezone !== value));
   }
 
-  function renderCallOptions() {
-    const callType = $("#callForm select[name='callType']");
-    const currentCallType = callType.value;
-    callType.innerHTML = state.settings.callTypes
-      .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`)
-      .join("");
-    callType.disabled = !state.settings.callTypes.length;
-    if (state.settings.callTypes.includes(currentCallType)) callType.value = currentCallType;
-    else callType.value = "";
-
-    renderStatusOptions(false);
-    renderCustomCommentOptions(false);
-  }
-
-  function renderOptionButtons(options, dataName, optionsConfig = {}) {
-    return options
-      .map(
-        (value) => `
-          <button type="button" class="status-option${optionsConfig.fullText ? " full-text" : ""}${optionsConfig.recommended === value ? " recommended" : ""}" data-${dataName}="${escapeHtml(value)}" title="${escapeHtml(value)}">
-            <span>${escapeHtml(optionsConfig.fullText ? value : compactStatusLabel(value))}</span>
-          </button>
-        `
-      )
-      .join("");
-  }
-
-  function statusUsageCounts(statuses) {
-    const activeStatuses = new Set(statuses);
-    return state.calls.reduce((result, call) => {
-      const rawDescription = String(call.rawDescription || "").trim();
-      if (activeStatuses.has(rawDescription)) {
-        result[rawDescription] = (result[rawDescription] || 0) + 1;
-        return result;
-      }
-      statuses.forEach((status) => {
-        if (!status) return;
-        if (String(call.description || "").toLowerCase().includes(String(status).toLowerCase())) {
-          result[status] = (result[status] || 0) + 1;
-        }
-      });
-      return result;
-    }, {});
-  }
-
-  function renderStatusOptions(open = true) {
-    const input = $("#descriptionInput");
-    const list = $("#statusOptions");
-    if (!input || !list) return;
-    const query = input.value.trim().toLowerCase();
-    const activeStatuses = state.settings.frequentStatuses || [];
-    const counts = statusUsageCounts(activeStatuses);
-    const options = activeStatuses.filter((status) =>
-      String(status).toLowerCase().includes(query)
-    ).sort((a, b) => (counts[b] || 0) - (counts[a] || 0) || activeStatuses.indexOf(a) - activeStatuses.indexOf(b));
-    const topStatus = options.find((status) => counts[status] > 0) || "";
-    list.classList.toggle("open", open && options.length > 0);
-    list.innerHTML = renderOptionButtons(options, "status-option", { recommended: topStatus });
-  }
-
-  function renderCustomCommentOptions(open = true) {
-    const input = $("#customCommentInput");
-    const list = $("#customCommentOptions");
-    if (!input || !list) return;
-    const query = input.value.trim().toLowerCase();
-    const options = (state.settings.customComments || []).filter((comment) =>
-      String(comment).toLowerCase().includes(query)
-    );
-    list.classList.toggle("open", open && options.length > 0);
-    list.innerHTML = renderOptionButtons(options, "custom-comment-option", { fullText: true });
-  }
-
-  function selectStatusOption(value) {
-    const input = $("#descriptionInput");
-    if (!input) return;
-    input.value = value;
-    renderStatusOptions(false);
-    input.focus();
-  }
-
-  function selectCustomCommentOption(value) {
-    const input = $("#customCommentInput");
-    if (!input) return;
-    input.value = value;
-    renderCustomCommentOptions(false);
-    input.focus();
-  }
-
-  function activeOutcomeLabels(category) {
-    const presetsForCategory = state.settings.outcomePresets[category] || { items: [] };
-    return uniqueItems(presetsForCategory.items || []);
-  }
-
-  function activeOutcomeLabelSet(category) {
-    return new Set(activeOutcomeLabels(category).map((label) => String(label).toLowerCase()));
-  }
-
-  function mostUsedOutcomeLabel(category) {
-    const activeLabels = activeOutcomeLabelSet(category);
-    const counts = state.calls.reduce((result, call) => {
-      if (!call.primaryOutcome || call.primaryOutcome.category !== category || !call.primaryOutcome.label) return result;
-      if (!activeLabels.has(String(call.primaryOutcome.label).toLowerCase())) return result;
-      result[call.primaryOutcome.label] = (result[call.primaryOutcome.label] || 0) + 1;
-      return result;
-    }, {});
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
-  }
-
-  function defaultOutcomeLabel(category) {
-    const presetsForCategory = state.settings.outcomePresets[category] || { items: [] };
-    const activeLabels = activeOutcomeLabels(category);
-    const activeDefault = activeLabels.includes(presetsForCategory.default) ? presetsForCategory.default : "";
-    return mostUsedOutcomeLabel(category) || activeDefault || activeLabels[0] || "";
-  }
-
-  function selectedOutcomeLabel(category) {
-    return state.selectedPrimaryOutcome && state.selectedPrimaryOutcome.category === category
-      ? state.selectedPrimaryOutcome.label
-      : defaultOutcomeLabel(category);
-  }
-
-  function callbackOutcomePayload() {
-    const form = $("#callForm");
-    const selected = state.selectedPrimaryOutcome;
-    if (!selected || selected.category !== "callback") return null;
-    const timezone = form.callbackTimezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
-    return {
-      category: "callback",
-      label: selected.label,
-      callbackDate: form.callbackDate.value,
-      callbackTime: form.callbackTime.value,
-      timezone: V.resolveTimezone(timezone),
-      dueAt: V.zonedDateTimeToUtc(form.callbackDate.value, form.callbackTime.value, timezone)?.toISOString() || null
-    };
-  }
-
-  function currentPrimaryOutcomePayload() {
-    if (!state.selectedPrimaryOutcome) return null;
-    if (state.selectedPrimaryOutcome.category === "callback") return callbackOutcomePayload();
-    return {
-      category: state.selectedPrimaryOutcome.category,
-      label: state.selectedPrimaryOutcome.label,
-      callbackDate: null,
-      callbackTime: null
-    };
-  }
-
   function currentDateInputValue(timezone = state.settings || "local") {
     return V.isoDateInTimezone(new Date(), timezone);
   }
 
   function currentTimeInputValue(timezone = state.settings || "local") {
     return V.timeInTimezone(new Date(), timezone);
-  }
-
-  function defaultCallbackDateTime() {
-    const form = $("#callForm");
-    renderReminderTimezoneSelectors();
-    const timezone = form.callbackTimezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
-    if (!form.callbackDate.value) form.callbackDate.value = currentDateInputValue(timezone);
-    if (!form.callbackTime.value) form.callbackTime.value = currentTimeInputValue(timezone);
-  }
-
-  function selectPrimaryOutcome(category, label) {
-    const previousCategory = state.selectedPrimaryOutcome?.category || null;
-    state.selectedPrimaryOutcome = { category, label };
-    if (category === "callback") {
-      defaultCallbackDateTime();
-    }
-    if (previousCategory === "callback" && category !== "callback") {
-      const form = $("#callForm");
-      form.callbackDate.value = "";
-      form.callbackTime.value = "";
-    }
-    state.openOutcomeMenu = null;
-    renderOutcomeControls();
-  }
-
-  function clearPrimaryOutcome() {
-    state.selectedPrimaryOutcome = null;
-    state.openOutcomeMenu = null;
-    const form = $("#callForm");
-    form.callbackDate.value = "";
-    form.callbackTime.value = "";
-    renderOutcomeControls();
-  }
-
-  async function updateOutcomePresets(outcomePresets) {
-    state.settings = normalizeSettings({
-      ...state.settings,
-      outcomePresets
-    });
-    await runAction(async () => {
-      await CallFlowStorage.write("settings", state.settings);
-      renderOutcomeControls();
-    });
-  }
-
-  async function addOutcomePreset(category) {
-    const input = document.querySelector(`[data-new-outcome="${category}"]`);
-    const value = String(input?.value || "").trim();
-    if (!value) return;
-    const presetsCopy = structuredClone(state.settings.outcomePresets);
-    presetsCopy[category].items = uniqueItems([...presetsCopy[category].items, value]);
-    presetsCopy[category].default = presetsCopy[category].default || value;
-    await updateOutcomePresets(presetsCopy);
-    selectPrimaryOutcome(category, value);
-  }
-
-  async function removeOutcomePreset(category, label) {
-    const language = state.settings.language || "es";
-    if (!window.confirm(CallFlowI18n.t("confirmRemoveOutcome", language))) return;
-    const presetsCopy = structuredClone(state.settings.outcomePresets);
-    presetsCopy[category].items = presetsCopy[category].items.filter((item) => item !== label);
-    if (presetsCopy[category].default === label) {
-      presetsCopy[category].default = presetsCopy[category].items[0] || "";
-    }
-    if (state.selectedPrimaryOutcome?.category === category && state.selectedPrimaryOutcome.label === label) {
-      state.selectedPrimaryOutcome = null;
-    }
-    await updateOutcomePresets(presetsCopy);
-  }
-
-  function renderOutcomeMenu(category) {
-    const language = state.settings.language || "es";
-    const presetsForCategory = state.settings.outcomePresets[category] || { items: [] };
-    return `
-      <div class="outcome-menu-list">
-        ${presetsForCategory.items
-          .map(
-            (item) => `
-              <div class="outcome-menu-item">
-                <button type="button" data-select-outcome="${category}" data-value="${escapeHtml(item)}">${escapeHtml(item)}</button>
-                <button type="button" class="outcome-remove" data-remove-outcome="${category}" data-value="${escapeHtml(item)}" title="${CallFlowI18n.t("removeOutcome", language)}">×</button>
-              </div>
-            `
-          )
-          .join("")}
-      </div>
-      <div class="outcome-menu-actions">
-        <input data-new-outcome="${category}" placeholder="${escapeHtml(CallFlowI18n.t("newOutcome", language))}" />
-        <button type="button" data-add-outcome="${category}">${escapeHtml(CallFlowI18n.t("addOutcome", language))}</button>
-      </div>
-      <button type="button" class="outcome-clear" data-clear-outcome>${escapeHtml(CallFlowI18n.t("clearOutcome", language))}</button>
-    `;
-  }
-
-  function renderOutcomeControls() {
-    if (!state.settings) return;
-    ["success", "rejection", "callback"].forEach((category) => {
-      const button = document.querySelector(`[data-outcome-toggle="${category}"]`);
-      const label = document.querySelector(`[data-outcome-label="${category}"]`);
-      const menu = document.querySelector(`[data-outcome-menu="${category}"]`);
-      const selected = state.selectedPrimaryOutcome?.category === category;
-      if (!button || !label || !menu) return;
-      label.textContent = selectedOutcomeLabel(category);
-      button.classList.toggle("selected", selected);
-      button.setAttribute("role", "radio");
-      button.setAttribute("aria-checked", selected ? "true" : "false");
-      menu.classList.toggle("open", state.openOutcomeMenu === category);
-      menu.innerHTML = state.openOutcomeMenu === category ? renderOutcomeMenu(category) : "";
-    });
-
-    const callbackSelected = state.selectedPrimaryOutcome?.category === "callback";
-    $("#callbackFields").classList.toggle("hidden", !callbackSelected);
-    renderReminderTimezoneSelectors();
   }
 
   function renderReminderTimezoneSelectors() {
@@ -1122,132 +924,11 @@ Africa/Harare ZW
     });
   }
 
-  function renderDashboardInlineManagers() {
-    const language = state.settings.language || "es";
-    $("#dashboardCallTypeList").innerHTML = state.settings.callTypes.length
-      ? state.settings.callTypes
-          .map(
-            (type) => `
-              <span class="chip">
-                ${escapeHtml(type)}
-                <button type="button" data-remove-dashboard-call-type="${escapeHtml(type)}" aria-label="${CallFlowI18n.t("removeCallType", language)}">×</button>
-              </span>
-            `
-          )
-          .join("")
-      : '<span class="muted">-</span>';
-  }
-
-  async function updateFrequentStatusesFromDashboard(statuses) {
-    state.settings = normalizeSettings({
-      ...state.settings,
-      frequentStatuses: uniqueItems(statuses)
-    });
-    state.formLists.settingsFrequentStatuses = [...state.settings.frequentStatuses];
-    state.formLists.onboardingFrequentStatuses = [...state.settings.frequentStatuses];
-    await runAction(async () => {
-      await CallFlowStorage.write("settings", state.settings);
-      applySettingsToForms();
-      render();
-    });
-  }
-
-  async function addCurrentDashboardStatus() {
-    const input = $("#callForm input[name='description']");
-    const value = input.value.trim();
-    if (!value) return;
-    await updateFrequentStatusesFromDashboard([...state.settings.frequentStatuses, value]);
-    input.focus();
-  }
-
-  async function removeCurrentDashboardStatus() {
-    const input = $("#callForm input[name='description']");
-    const value = input.value.trim();
-    if (!value || !state.settings.frequentStatuses.includes(value)) return;
-    const language = state.settings.language || "es";
-    if (!window.confirm(CallFlowI18n.t("confirmRemoveStatus", language))) return;
-    await updateFrequentStatusesFromDashboard(state.settings.frequentStatuses.filter((status) => status !== value));
-    input.focus();
-  }
-
-  async function updateCustomCommentsFromDashboard(customComments) {
-    state.settings = normalizeSettings({
-      ...state.settings,
-      customComments: uniqueItems(customComments)
-    });
-    await runAction(async () => {
-      await CallFlowStorage.write("settings", state.settings);
-      renderCustomCommentOptions(false);
-      render();
-    });
-  }
-
-  async function addCurrentCustomComment() {
-    const input = $("#customCommentInput");
-    const value = input.value.trim();
-    if (!value) return;
-    await updateCustomCommentsFromDashboard([...(state.settings.customComments || []), value]);
-    input.focus();
-  }
-
-  async function removeCurrentCustomComment() {
-    const input = $("#customCommentInput");
-    const value = input.value.trim();
-    if (!value || !(state.settings.customComments || []).includes(value)) return;
-    const language = state.settings.language || "es";
-    if (!window.confirm(CallFlowI18n.t("confirmRemoveCustomComment", language))) return;
-    await updateCustomCommentsFromDashboard((state.settings.customComments || []).filter((comment) => comment !== value));
-    input.focus();
-  }
-
-  async function updateCallTypesFromDashboard(callTypes) {
-    state.settings = normalizeSettings({
-      ...state.settings,
-      callTypes: uniqueItems(callTypes)
-    });
-    state.formLists.settingsCallTypes = [...state.settings.callTypes];
-    state.formLists.onboardingCallTypes = [...state.settings.callTypes];
-    await runAction(async () => {
-      await CallFlowStorage.write("settings", state.settings);
-      applySettingsToForms();
-      render();
-    });
-  }
-
-  async function addDashboardCallType() {
-    const input = $("#newDashboardCallType");
-    const value = input.value.trim();
-    if (!value) return;
-    await updateCallTypesFromDashboard([...state.settings.callTypes, value]);
-    $("#callForm select[name='callType']").value = value;
-    input.value = "";
-    input.focus();
-  }
-
-  async function removeDashboardCallType(value) {
-    const language = state.settings.language || "es";
-    if (!window.confirm(CallFlowI18n.t("confirmRemoveCallType", language))) return;
-    await updateCallTypesFromDashboard(state.settings.callTypes.filter((type) => type !== value));
-  }
-
   function renderHeader() {
     const now = CallFlowReports.formatCallTimestamp(new Date(), state.settings);
     $("#currentBlockLabel").textContent = CallFlowReports.blockFromHour(now.hour);
     $("#operatorLabel").textContent = state.settings.operatorName || "Sin operador";
     clockView.renderWorkClock();
-  }
-
-  function renderCapturedCallTime() {
-    const label = $("#capturedCallTimeLabel");
-    if (!label || !state.settings) return;
-
-    if (!state.pendingCallCapturedAt) {
-      label.textContent = "";
-      return;
-    }
-
-    const stamp = CallFlowReports.formatCallTimestamp(new Date(state.pendingCallCapturedAt), state.settings);
-    label.textContent = `${CallFlowI18n.t("capturedCallTime", state.settings.language || "es")}: ${stamp.date} ${stamp.time}`;
   }
 
   function isoDateInSettings(date) {
@@ -1278,1099 +959,15 @@ Africa/Harare ZW
     return state.calls.filter((call) => !call.reportDeletedAt);
   }
 
-  function reportTrashMode() {
-    return state.reportRange.preset === "trash";
-  }
-
-  function reportRangeBounds() {
-    if (state.reportRange.preset === "yesterday") {
-      const date = isoDateOffset(1);
-      return { from: date, to: date };
-    }
-
-    if (state.reportRange.preset === "last7") {
-      return { from: isoDateOffset(6), to: isoDateOffset(0) };
-    }
-
-    if (state.reportRange.preset === "last30") {
-      return { from: isoDateOffset(29), to: isoDateOffset(0) };
-    }
-
-    if (state.reportRange.preset === "custom") {
-      const from = state.reportRange.from || isoDateOffset(0);
-      const to = state.reportRange.to || from;
-      return compareIsoDate(from, to) <= 0 ? { from, to } : { from: to, to: from };
-    }
-
-    const today = isoDateOffset(0);
-    return { from: today, to: today };
-  }
-
-  function syncReportRangeInputs() {
-    const fromInput = $("#reportDateFrom");
-    const toInput = $("#reportDateTo");
-    const rangeFields = $$(".report-range-field");
-    if (!fromInput || !toInput) return;
-
-    const range = reportRangeBounds();
-    fromInput.value = range.from;
-    toInput.value = range.to;
-    rangeFields.forEach((field) => field.classList.toggle("hidden", state.reportRange.preset !== "custom"));
-    $$("[data-report-period]").forEach((button) => {
-      const active = button.dataset.reportPeriod === state.reportRange.preset;
-      button.classList.toggle("report-period-chip--active", active);
-      button.setAttribute("aria-pressed", active ? "true" : "false");
-    });
-  }
-
-  function reportBlockKey(isoDate, block) {
-    return `${isoDate}|${block}`;
-  }
-
-  function reportGroupsForRange() {
-    const range = reportRangeBounds();
-    const sourceCalls = reportTrashMode()
-      ? state.calls.filter((call) => call.reportDeletedAt)
-      : activeCalls();
-    const calls = CallFlowReports.ensureDailySequences(sourceCalls)
-      .filter((call) => {
-        if (reportTrashMode()) return true;
-        const isoDate = callIsoDate(call);
-        return compareIsoDate(isoDate, range.from) >= 0 && compareIsoDate(isoDate, range.to) <= 0;
-      })
-      .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
-
-    return calls.reduce((groups, call) => {
-      const isoDate = callIsoDate(call);
-      const block = call.block || CallFlowReports.blockFromHour(call.hour || 0);
-      groups[isoDate] = groups[isoDate] || {};
-      groups[isoDate][block] = groups[isoDate][block] || [];
-      groups[isoDate][block].push(call);
-      return groups;
-    }, {});
-  }
-
-  function reportBlockActions(key, isEditing) {
-    const language = state.settings.language || "es";
-    if (reportTrashMode()) {
-      return `
-        <button type="button" data-restore-report-block="${escapeHtml(key)}">Restaurar</button>
-        <button type="button" class="danger ghost-danger" data-permanent-delete-report-block="${escapeHtml(key)}">Eliminar definitivo</button>
-      `;
-    }
-    if (isEditing) {
-      return `
-        <button type="button" data-save-report-block="${escapeHtml(key)}" data-i18n="saveBlock">${CallFlowI18n.t("saveBlock", language)}</button>
-        <button type="button" data-cancel-report-edit="${escapeHtml(key)}" data-i18n="cancel">${CallFlowI18n.t("cancel", language)}</button>
-      `;
-    }
-
-    return `
-      <button type="button" data-edit-report-block="${escapeHtml(key)}" data-i18n="editBlock">${CallFlowI18n.t("editBlock", language)}</button>
-      <button type="button" class="danger ghost-danger" data-delete-report-block="${escapeHtml(key)}" data-i18n="deleteBlock">${CallFlowI18n.t("deleteBlock", language)}</button>
-    `;
-  }
-
-  function highlightedReportText(text) {
-    const query = state.reportSearch.query.trim();
-    if (!query) return escapeHtml(text);
-
-    const pattern = new RegExp(escapeRegExp(query), "gi");
-    let cursor = 0;
-    let html = "";
-    let match;
-
-    while ((match = pattern.exec(text)) !== null) {
-      const matchIndex = state.reportSearch.matches;
-      const active = matchIndex === state.reportSearch.activeIndex;
-      html += escapeHtml(text.slice(cursor, match.index));
-      html += `<mark class="report-match${active ? " active" : ""}" data-report-match="${matchIndex}">${escapeHtml(match[0])}</mark>`;
-      cursor = match.index + match[0].length;
-      state.reportSearch.matches += 1;
-
-      if (match.index === pattern.lastIndex) pattern.lastIndex += 1;
-    }
-
-    return html + escapeHtml(text.slice(cursor));
-  }
-
-  function renderReportSearchStatus() {
-    const counter = $("#reportSearchCounter");
-    const input = $("#reportSearchInput");
-    const prev = $("#reportSearchPrev");
-    const next = $("#reportSearchNext");
-    if (!counter || !input || !prev || !next) return;
-
-    input.value = state.reportSearch.query;
-    const total = state.reportSearch.matches;
-    counter.textContent = state.reportSearch.query ? `${total ? state.reportSearch.activeIndex + 1 : 0}/${total}` : "0/0";
-    prev.disabled = total < 2;
-    next.disabled = total < 2;
-  }
-
-  function scrollToActiveReportMatch() {
-    const active = document.querySelector(".report-match.active");
-    if (!active) return;
-    active.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
-  }
-
-  function moveReportSearch(step) {
-    if (!state.reportSearch.matches) return;
-    const total = state.reportSearch.matches;
-    state.reportSearch.activeIndex = (state.reportSearch.activeIndex + step + total) % total;
-    renderReportBlocks();
-    scrollToActiveReportMatch();
-  }
-
-  function renderReportBlock(isoDate, block, calls) {
-    const key = reportBlockKey(isoDate, block);
-    const isEditing = state.editingReportBlockKey === key;
-    const lines = calls.map((call) => CallFlowReports.buildCallLine(call, state.settings)).join("\n");
-    const trash = reportTrashMode();
-
-    return `
-      <article class="report-item${trash ? " report-item-trash" : ""}">
-        <header class="report-block-header">
-          <label class="report-block-check">
-            ${trash ? "" : `<input type="checkbox" data-report-block="${escapeHtml(key)}" ${state.selectedBlocks.has(key) ? "checked" : ""} />`}
-            <strong>${escapeHtml(block)}</strong>
-          </label>
-          <div class="report-actions">
-            <span class="tag">${calls.length} llamadas${trash ? " · basura" : ""}</span>
-            ${reportBlockActions(key, isEditing)}
-          </div>
-        </header>
-        ${
-          isEditing
-            ? `<textarea class="report-editor" data-report-editor="${escapeHtml(key)}" rows="7">${escapeHtml(lines)}</textarea>`
-            : `<code>${highlightedReportText(lines)}</code>`
-        }
-      </article>
-    `;
-  }
-
-  function renderReportBlocks() {
-    syncReportRangeInputs();
-    if (reportTrashMode()) {
-      state.selectedBlocks.clear();
-      state.editingReportBlockKey = null;
-    }
-    state.reportSearch.matches = 0;
-    const groupsByDate = reportGroupsForRange();
-    const dateEntries = Object.entries(groupsByDate).sort(([a], [b]) => a.localeCompare(b));
-
-    $("#reportBlocks").innerHTML = dateEntries.length
-      ? dateEntries
-          .map(([isoDate, groups]) => {
-            const blockEntries = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-            return `
-              <section class="report-day">
-                <h3>${escapeHtml(displayIsoDate(isoDate))}</h3>
-                <div class="report-list">
-                  ${blockEntries.map(([block, calls]) => renderReportBlock(isoDate, block, calls)).join("")}
-                </div>
-              </section>
-            `;
-          })
-          .join("")
-      : `<p class="muted">${escapeHtml(CallFlowI18n.t("noReportBlocks", state.settings.language || "es"))}</p>`;
-
-    if (state.reportSearch.activeIndex >= state.reportSearch.matches) {
-      state.reportSearch.activeIndex = Math.max(0, state.reportSearch.matches - 1);
-    }
-    renderReportSearchStatus();
-  }
-
-  function callProductivityCategory(call) {
-    const category = call.primaryOutcome?.category;
-    if (["success", "callback", "rejection"].includes(category)) return category;
-
-    const description = String(call.description || "").toLowerCase();
-    const matchesActiveOutcome = (outcomeCategory) =>
-      activeOutcomeLabels(outcomeCategory).some((label) => {
-        const normalized = String(label || "").toLowerCase();
-        return normalized && description.includes(normalized);
-      });
-
-    if (matchesActiveOutcome("success")) return "success";
-    if (matchesActiveOutcome("rejection")) return "rejection";
-    if (matchesActiveOutcome("callback")) return "callback";
-    return "neutral";
-  }
-
-  function blockProductivity(calls) {
-    const metrics = calls.reduce(
-      (result, call) => {
-        result.total += 1;
-        result[callProductivityCategory(call)] += 1;
-        return result;
-      },
-      { total: 0, success: 0, callback: 0, rejection: 0, neutral: 0 }
-    );
-    const outcomeScore =
-      metrics.success * 5 +
-      metrics.callback * 2 +
-      metrics.neutral * 0.5 -
-      metrics.rejection * 3;
-    const qualityRatio = metrics.total
-      ? (metrics.success * 3 + metrics.callback - metrics.rejection * 2) / metrics.total
-      : 0;
-    const volumeSignal = Math.min(metrics.total * 0.2, 2);
-    return {
-      ...metrics,
-      score: Number((outcomeScore + qualityRatio + volumeSignal).toFixed(3))
-    };
-  }
-
-  function uniqueScore(score, entries) {
-    return entries.filter((entry) => entry.productivity.score === score).length === 1;
-  }
-
-  function renderBlocks() {
-    const todayCalls = CallFlowReports.ensureDailySequences(CallFlowReports.callsForToday(activeCalls(), state.settings));
-    const groups = CallFlowReports.groupByBlock(todayCalls);
-    const entries = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-    const currentBlock = CallFlowReports.blockFromHour(CallFlowReports.formatCallTimestamp(new Date(), state.settings).hour);
-    const scoredClosedEntries = entries
-      .filter(([block]) => block !== currentBlock)
-      .map(([block, calls]) => ({ block, productivity: blockProductivity(calls) }));
-    const scores = scoredClosedEntries.map((entry) => entry.productivity.score);
-    const maxScore = scores.length ? Math.max(...scores) : 0;
-    const minScore = scores.length ? Math.min(...scores) : 0;
-    const shouldMarkBest = scoredClosedEntries.length > 1 && uniqueScore(maxScore, scoredClosedEntries);
-    const shouldMarkWorst = scoredClosedEntries.length > 2 && minScore < maxScore && uniqueScore(minScore, scoredClosedEntries);
-
-    $("#hourBlocks").innerHTML = entries.length
-      ? entries
-          .map(([block, calls]) => {
-            const current = block === currentBlock;
-            const productivity = current ? null : blockProductivity(calls);
-            const best = !current && shouldMarkBest && productivity.score === maxScore;
-            const worst = !current && shouldMarkWorst && productivity.score === minScore;
-            const title = current
-              ? "Bloque actual en curso"
-              : `Score ${productivity.score}: ${productivity.success} positivas, ${productivity.callback} callbacks, ${productivity.rejection} rechazos, ${productivity.neutral} neutras`;
-            return `
-            <article class="block-item compact-hour-block${current ? " current-block" : ""}${best ? " best-block" : ""}${worst ? " worst-block" : ""}" title="${escapeHtml(title)}">
-              <strong>${block}</strong>
-              <span class="muted">${calls.length} llamadas${current ? " · en curso" : ""}</span>
-            </article>
-          `;
-          })
-          .join("")
-      : '<p class="muted">Todavía no hay llamadas registradas hoy.</p>';
-
-    renderReportBlocks();
-  }
-
-  function statsCards(stats) {
-    const base = [
-      ["Total de llamadas", stats.total, ""],
-      [state.settings.successLabel, stats.success, "success-metric"],
-      [state.settings.rejectionLabel, stats.rejections, "rejection-metric"],
-      ["Sin respuesta", stats.noAnswer, ""],
-      ["Recordatorios pendientes", stats.pendingReminders, ""]
-    ];
-
-    const byType = Object.entries(stats.byType).map(([key, value]) => [`Tipo ${key}`, value, ""]);
-    const byStatus = Object.entries(stats.statusCounts).map(([key, value]) => [key, value, ""]);
-    return [...base, ...byType, ...byStatus]
-      .map(([label, value, className]) => {
-        const displayLabel = compactStatusLabel(label);
-        return `
-          <article class="card ${className}">
-            <span class="muted stat-label" title="${escapeHtml(label)}">${escapeHtml(displayLabel)}</span>
-            <strong>${value}</strong>
-          </article>
-        `;
-      })
-      .join("");
-  }
-
-  function renderStats() {
-    const todayCalls = CallFlowReports.callsForToday(activeCalls(), state.settings);
-    const stats = CallFlowStats.buildStats(todayCalls, state.reminders, state.settings);
-    $("#dashboardStats").innerHTML = statsCards(stats);
-    $("#statsCards").innerHTML = statsCards(stats);
-  }
-
-  function reminderDueDate(reminder) {
-    return V.reminderDueDate(reminder, state.settings) || new Date(8640000000000000);
-  }
-
-  function sortedReminders(reminders) {
-    return [...reminders].sort((a, b) => {
-      const dueDiff = reminderDueDate(a) - reminderDueDate(b);
-      if (dueDiff !== 0) return dueDiff;
-      return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
-    });
-  }
-
-  function compactDuration(ms) {
-    const units = [
-      ["mes", "meses", 30 * 24 * 60 * 60 * 1000],
-      ["sem", "sems", 7 * 24 * 60 * 60 * 1000],
-      ["d", "d", 24 * 60 * 60 * 1000],
-      ["h", "h", 60 * 60 * 1000],
-      ["min", "min", 60 * 1000],
-      ["s", "s", 1000]
-    ];
-    let remaining = Math.max(0, Math.floor(ms));
-    const parts = [];
-    for (const [singular, plural, size] of units) {
-      const value = Math.floor(remaining / size);
-      if (!value && parts.length === 0 && size > 60 * 1000) continue;
-      if (value || parts.length) {
-        parts.push(`${value}${value === 1 ? singular : plural}`);
-        remaining -= value * size;
-      }
-      if (parts.length >= 2) break;
-    }
-    return parts.length ? parts.join(" ") : "0s";
-  }
-
-  function reminderCountdownLabel(reminder) {
-    if (reminder.status === "completed") return "Completado";
-    if (reminder.status === "deleted") {
-      if (reminder.deletedAt) {
-        const delDate = new Date(reminder.deletedAt);
-        const day = String(delDate.getDate()).padStart(2, "0");
-        const month = String(delDate.getMonth() + 1).padStart(2, "0");
-        const hours = String(delDate.getHours()).padStart(2, "0");
-        const minutes = String(delDate.getMinutes()).padStart(2, "0");
-        const label = CallFlowI18n.t("deletedAtLabel", state.settings.language || "es");
-        return `${label} ${day}.${month} ${hours}:${minutes}`;
-      }
-      return CallFlowI18n.t("reminderDeletedLabel", state.settings.language || "es");
-    }
-    const due = reminderDueDate(reminder);
-    const diff = due - new Date();
-    if (diff < 0) return `Vencido hace ${compactDuration(Math.abs(diff))}`;
-    return `Faltan ${compactDuration(diff)}`;
-  }
-
-  function reminderStatusKey(reminder) {
-    if (reminder.status === "deleted") return "deleted";
-    if (!V.reminderDueDate(reminder, state.settings) && reminder.status !== "completed") return "invalid";
-    if (reminder.status === "completed") return "completed";
-    if (reminder.status === "overdue") return "overdue";
-    if (reminder.status === "invalid") return "invalid";
-    return "pending";
-  }
-
-  function reminderStatusLabel(reminder) {
-    const key = reminderStatusKey(reminder);
-    const labels = {
-      completed: CallFlowI18n.t("reminderCompleted", state.settings.language || "es"),
-      overdue: CallFlowI18n.t("reminderOverdue", state.settings.language || "es"),
-      invalid: CallFlowI18n.t("reminderInvalid", state.settings.language || "es"),
-      pending: CallFlowI18n.t("reminderPending", state.settings.language || "es"),
-      deleted: CallFlowI18n.t("reminderDeletedLabel", state.settings.language || "es")
-    };
-    return labels[key];
-  }
-
-  function reminderRepeatLabel(reminder) {
-    const repeat = reminder.repeat || "once";
-    const labels = {
-      once: CallFlowI18n.t("repeatOnce", state.settings.language || "es"),
-      daily: CallFlowI18n.t("repeatDaily", state.settings.language || "es"),
-      weekdays: CallFlowI18n.t("repeatWeekdays", state.settings.language || "es"),
-      weekly: CallFlowI18n.t("repeatWeekly", state.settings.language || "es"),
-      monthly: CallFlowI18n.t("repeatMonthly", state.settings.language || "es")
-    };
-    return labels[repeat] || labels.once;
-  }
-
-  function reminderTimezoneLabel(reminder) {
-    const timezone = reminder.timezone || V.resolveTimezone(state.settings);
-    return `${timezoneFlag(timezone)} ${timezone}`;
-  }
-
-  function getActiveReminderFilter() {
-    const active = document.querySelector(".reminder-chip.reminder-chip--active");
-    return active ? active.dataset.filter : "all";
-  }
-
-  function setReminderFilter(filterValue) {
-    document.querySelectorAll(".reminder-chip").forEach((btn) => {
-      btn.classList.toggle("reminder-chip--active", btn.dataset.filter === filterValue);
-    });
-    render();
-  }
-
-  function renderReminders() {
-    const filter = getActiveReminderFilter();
-    const reminders = sortedReminders(CallFlowReminders.filterReminders(state.reminders, filter, state.settings));
-    $("#reminderList").innerHTML = reminders.length
-      ? reminders
-          .map((reminder) => `
-            <article class="list-item reminder-item reminder-${reminderStatusKey(reminder)}">
-              <div class="reminder-main">
-                <p class="reminder-title">${escapeHtml(reminder.note)}</p>
-                <div class="reminder-details">
-                  <span>${escapeHtml(reminder.date)} ${escapeHtml(reminder.time)}</span>
-                  <span class="reminder-timezone">${escapeHtml(reminderTimezoneLabel(reminder))}</span>
-                  <span>${escapeHtml(reminderRepeatLabel(reminder))}</span>
-                </div>
-              </div>
-              <div class="reminder-meta">
-                <span class="reminder-state">${escapeHtml(reminderStatusLabel(reminder))}</span>
-                <span class="reminder-countdown">${escapeHtml(reminderCountdownLabel(reminder))}</span>
-              </div>
-              ${
-                reminder.callId
-                  ? `<div class="reminder-id-row">
-                      <button type="button" class="icon-button" data-copy-reminder-call-id="${escapeHtml(reminder.callId)}" title="${escapeHtml(CallFlowI18n.t("copyCallId", state.settings.language || "es"))}">⇩</button>
-                      <span class="reminder-id" title="${escapeHtml(reminder.callId)}">ID: ${escapeHtml(reminder.callId)}</span>
-                    </div>`
-                  : ""
-              }
-              <div class="reminder-actions">
-                ${
-                  reminderStatusKey(reminder) === "deleted"
-                    ? `
-                        <button type="button" data-restore-reminder="${reminder.id}">${escapeHtml(CallFlowI18n.t("restoreReminder", state.settings.language || "es"))}</button>
-                        <button type="button" class="icon-button danger ghost-danger" data-permanent-delete-reminder="${reminder.id}" title="${escapeHtml(CallFlowI18n.t("permanentDeleteReminder", state.settings.language || "es"))}">🗑</button>
-                      `
-                    : `
-                        <button type="button" class="icon-button" data-edit-reminder="${reminder.id}" title="${escapeHtml(CallFlowI18n.t("editReminder", state.settings.language || "es"))}">✎</button>
-                        ${
-                          reminderStatusKey(reminder) === "completed"
-                            ? `<span class="tag reminder-completed-label">${escapeHtml(CallFlowI18n.t("reminderCompleted", state.settings.language || "es"))}</span>`
-                            : `<button type="button" data-complete-reminder="${reminder.id}">${escapeHtml(CallFlowI18n.t("completeReminder", state.settings.language || "es"))}</button>`
-                        }
-                        <button type="button" class="icon-button danger ghost-danger" data-delete-reminder="${reminder.id}" title="${escapeHtml(CallFlowI18n.t("deleteReminder", state.settings.language || "es"))}">🗑</button>
-                      `
-                }
-              </div>
-            </article>
-          `)
-          .join("")
-      : '<p class="muted">No hay recordatorios en esta vista.</p>';
-  }
-
-  function prepareReminderFormDefaults(options = {}) {
-    const form = $("#reminderForm");
-    if (!form) return;
-    if (state.editingReminderId) return;
-    const dashboardCallId = $("#callForm input[name='callId']")?.value.trim();
-    const lastCallId = state.lastCall?.callId || "";
-    if (!form.callId.value && (dashboardCallId || lastCallId)) {
-      form.callId.value = dashboardCallId || lastCallId;
-    }
-    renderReminderTimezoneSelectors();
-    if (form.timezone && !form.timezone.value) {
-      form.timezone.value = state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
-    }
-    const timezone = form.timezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
-    if (options.refreshDate || !form.date.value) form.date.value = currentDateInputValue(timezone);
-    if (!form.time.value) form.time.value = currentTimeInputValue(timezone);
-    if (!form.repeat.value) form.repeat.value = "once";
-  }
-
-  function cancelReminderEdit() {
-    state.editingReminderId = null;
-    const form = $("#reminderForm");
-    form.reset();
-    $("#cancelReminderEdit").classList.add("hidden");
-    $("#saveReminderButton").textContent = CallFlowI18n.t("saveReminder", state.settings.language || "es");
-    prepareReminderFormDefaults();
-  }
-
-  function renderReminderFormVisibility() {
-    const panel = $("#reminderCreatePanel");
-    const showButton = $("#showReminderForm");
-    const toggleButton = $("#toggleReminderForm");
-    if (!panel || !showButton || !toggleButton) return;
-    panel.classList.toggle("hidden", state.reminderFormCollapsed);
-    showButton.classList.toggle("hidden", !state.reminderFormCollapsed);
-    toggleButton.textContent = "▴";
-    toggleButton.title = CallFlowI18n.t("hide", state.settings?.language || "es");
-    toggleButton.setAttribute("aria-label", CallFlowI18n.t("hide", state.settings?.language || "es"));
-  }
-
-  function setReminderFormCollapsed(collapsed) {
-    state.reminderFormCollapsed = collapsed;
-    renderReminderFormVisibility();
-    if (!collapsed) prepareReminderFormDefaults({ refreshDate: true });
-  }
-
-  function editReminder(id) {
-    const reminder = state.reminders.find((item) => item.id === id);
-    if (!reminder) return;
-    setReminderFormCollapsed(false);
-    state.editingReminderId = id;
-    const form = $("#reminderForm");
-    form.callId.value = reminder.callId || "";
-    form.date.value = reminder.date || currentDateInputValue();
-    form.time.value = reminder.time || currentTimeInputValue();
-    form.repeat.value = reminder.repeat || "once";
-    form.note.value = reminder.note || "";
-    $("#cancelReminderEdit").classList.remove("hidden");
-    $("#saveReminderButton").textContent = CallFlowI18n.t("updateReminder", state.settings.language || "es");
-    form.callId.focus();
-  }
-
-  function renderLastCall() {
-    if (!state.lastCall) {
-      const latest = [...activeCalls()].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))[0];
-      state.lastCall = latest || null;
-    }
-    $("#lastFullLine").textContent = state.lastCall
-      ? CallFlowReports.buildCallLine(state.lastCall, state.settings)
-      : "-";
-  }
-
   function render() {
     if (!state.settings) return;
-    const renderParts = {
-      renderBlocks,
-      renderCallOptions,
-      renderCapturedCallTime,
-      renderDashboardInlineManagers,
-      renderHeader,
-      renderLastCall,
-      renderOutcomeControls,
-      renderReminderFormVisibility,
-      renderReminders,
-      renderStats
-    };
-    window.CallFlowDashboardView.render(renderParts);
-    window.CallFlowReportsView.render(renderParts);
-    settingsView.render(renderParts);
-    window.CallFlowRemindersView.render(renderParts);
-    knowledgeView.render(renderParts);
-    clockView.render(renderParts);
+    renderHeader();
+    dashboardView.render();
+    settingsView.render();
+    remindersView.render();
+    knowledgeView.render();
+    clockView.render();
     dateTimePicker.enhanceInputs();
-  }
-
-  async function saveCall(event) {
-    event.preventDefault();
-    const submitter = event.submitter;
-    const form = event.currentTarget;
-    const primaryOutcome = currentPrimaryOutcomePayload();
-    const validation = V.validateCallForm({ callId: form.callId.value });
-    if (!validation.ok) {
-      setStatusMessage(CallFlowI18n.t(validation.messageKey, state.settings.language || "es"), "error");
-      return;
-    }
-    if (
-      primaryOutcome &&
-      primaryOutcome.category === "callback" &&
-      (!V.validIsoDate(primaryOutcome.callbackDate) || !V.validTime(primaryOutcome.callbackTime) || !primaryOutcome.dueAt)
-    ) {
-      $("#lastSavedLabel").textContent = CallFlowI18n.t("selectCallbackDateTime", state.settings.language || "es");
-      return;
-    }
-
-    const call = CallFlowReports.createCallRecord(
-      {
-        callId: validation.value.callId,
-        callType: form.callType.value,
-        primaryOutcome,
-        description: form.description.value.trim(),
-        customComment: form.customComment.value.trim(),
-        capturedAt: state.pendingCallCapturedAt,
-        dailySequence: CallFlowReports.callsForToday(activeCalls(), state.settings).length + 1
-      },
-      state.settings
-    );
-
-    const nextCalls = [...state.calls, call];
-    let nextReminders = state.reminders;
-    if (primaryOutcome && primaryOutcome.category === "callback") {
-      nextReminders = [...state.reminders, {
-        id: crypto.randomUUID(),
-        callId: call.callId,
-        relatedCallId: call.id,
-        callType: call.callType,
-        operator: call.operatorName,
-        date: primaryOutcome.callbackDate,
-        time: primaryOutcome.callbackTime,
-        timezone: primaryOutcome.timezone,
-        dueAt: primaryOutcome.dueAt,
-        note: call.description || primaryOutcome.label,
-        status: "pending",
-        createdAt: new Date().toISOString()
-      }];
-    }
-
-    await runAction(
-      async () => {
-        await CallFlowStorage.write("calls", nextCalls);
-        if (primaryOutcome && primaryOutcome.category === "callback") {
-          await CallFlowStorage.write("reminders", nextReminders);
-          state.settings = normalizeSettings({ ...state.settings, lastReminderTimezone: primaryOutcome.timezone });
-          await CallFlowStorage.write("settings", state.settings);
-        }
-        if (submitter && ["saveCopy", "saveCopyReminder"].includes(submitter.dataset.action)) {
-          await window.callflow.copyText(call.crmLine);
-          setStatusMessage(CallFlowI18n.t("savedAndCopiedCrm", state.settings.language), "success");
-        } else {
-          setStatusMessage(CallFlowI18n.t("saved", state.settings.language), "success");
-        }
-        state.calls = nextCalls;
-        state.reminders = nextReminders;
-        state.lastCall = call;
-
-        form.callId.value = "";
-        form.description.value = "";
-        form.customComment.value = "";
-        form.callbackDate.value = "";
-        form.callbackTime.value = "";
-        state.pendingCallCapturedAt = null;
-        state.selectedPrimaryOutcome = null;
-        state.openOutcomeMenu = null;
-        form.callId.focus();
-        render();
-
-        if (submitter && submitter.dataset.action === "saveCopyReminder") {
-          const reminderForm = $("#reminderForm");
-          reminderForm.callId.value = call.callId;
-          setStatusMessage(CallFlowI18n.t("savedCopiedReminder", state.settings.language), "success");
-          setView("reminders");
-          reminderForm.date.focus();
-        }
-      },
-      { userMessage: CallFlowI18n.t("saveFailed", state.settings.language || "es"), logMessage: "Failed to save call" }
-    );
-  }
-
-  async function copyLastCrm() {
-    if (!state.lastCall) return;
-    await runAction(async () => {
-      await window.callflow.copyText(state.lastCall.crmLine);
-      setStatusMessage(CallFlowI18n.t("lastCrmCopied", state.settings.language), "success");
-    });
-  }
-
-  function captureCurrentCallTime() {
-    state.pendingCallCapturedAt = new Date().toISOString();
-    renderCapturedCallTime();
-  }
-
-  async function importCallIdFromClipboard() {
-    const text = await runAction(() => window.callflow.readClipboardText());
-    const callId = V.cleanClipboardCallId(text);
-    if (!callId) return;
-    const form = $("#callForm");
-    form.callId.value = callId;
-    captureCurrentCallTime();
-    renderStatusOptions(false);
-    form.callId.focus();
-  }
-
-  function buildPlainSupervisorReport(block, calls) {
-    const operator = (state.settings.operatorName || "OPERADOR").toUpperCase();
-    const lines = calls.map((call) => CallFlowReports.buildCallLine(call, state.settings)).join("\n");
-    return [`REPORTE ${operator} DE ${block}`, "", lines].join("\n");
-  }
-
-  function reportExportBaseName() {
-    const operator = String(state.settings.operatorName || "operador")
-      .trim()
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}]+/gu, "-")
-      .replace(/^-+|-+$/g, "");
-    return `${operator || "operador"}-report-${isoDateOffset(0)}`;
-  }
-
-  function selectedReportTexts(format = "md") {
-    const groupsByDate = reportGroupsForRange();
-    return [...state.selectedBlocks]
-      .sort()
-      .map((key) => {
-        const [isoDate, block] = key.split("|");
-        const calls = groupsByDate[isoDate] && groupsByDate[isoDate][block];
-        if (!calls) return "";
-        return format === "txt"
-          ? buildPlainSupervisorReport(block, calls)
-          : CallFlowReports.buildSupervisorReport(block, calls, state.settings);
-      })
-      .filter(Boolean);
-  }
-
-  async function copySelectedBlocks() {
-    const reports = selectedReportTexts("md");
-    if (reports.length) {
-      await runAction(async () => {
-        await window.callflow.copyText(reports.join("\n\n"));
-        setStatusMessage(CallFlowI18n.t("copied", state.settings.language || "es"), "success");
-      });
-    }
-  }
-
-  async function exportSelectedBlocks(extension) {
-    const reports = selectedReportTexts(extension);
-    if (!reports.length) return;
-    await runAction(
-      () =>
-        window.callflow.exportNote({
-          fileName: reportExportBaseName(),
-          content: reports.join("\n\n"),
-          extension
-        }),
-      { userMessage: CallFlowI18n.t("saveFailed", state.settings.language || "es"), logMessage: "Failed to export report" }
-    );
-  }
-
-  function visibleReportBlockKeys() {
-    const groupsByDate = reportGroupsForRange();
-    return Object.entries(groupsByDate).flatMap(([isoDate, groups]) =>
-      Object.keys(groups).map((block) => reportBlockKey(isoDate, block))
-    );
-  }
-
-  function selectAllVisibleReportBlocks() {
-    if (reportTrashMode()) return;
-    visibleReportBlockKeys().forEach((key) => state.selectedBlocks.add(key));
-    renderReportBlocks();
-  }
-
-  function clearReportSelection() {
-    state.selectedBlocks.clear();
-    renderReportBlocks();
-  }
-
-  function setReportPeriod(period) {
-    state.reportRange.preset = period;
-    state.selectedBlocks.clear();
-    state.editingReportBlockKey = null;
-    state.reportSearch.activeIndex = 0;
-    render();
-  }
-
-  function callsForReportBlockKey(key) {
-    const [isoDate, block] = String(key || "").split("|");
-    const groupsByDate = reportGroupsForRange();
-    return groupsByDate[isoDate] && groupsByDate[isoDate][block] ? groupsByDate[isoDate][block] : [];
-  }
-
-  async function saveReportBlockEdit(key) {
-    const editor = $$("[data-report-editor]").find((node) => node.dataset.reportEditor === key);
-    if (!editor) return;
-    const calls = callsForReportBlockKey(key);
-    const lines = editor.value.split("\n").map((line) => line.trim());
-    calls.forEach((call, index) => {
-      if (index >= lines.length) return;
-      call.reportLineOverride = lines[index] || "";
-      if (!call.reportLineOverride) delete call.reportLineOverride;
-    });
-    state.editingReportBlockKey = null;
-    await CallFlowStorage.write("calls", state.calls);
-    render();
-  }
-
-  async function deleteReportBlock(key) {
-    const language = state.settings.language || "es";
-    if (!window.confirm(CallFlowI18n.t("confirmDeleteBlock", language))) return;
-    const ids = new Set(callsForReportBlockKey(key).map((call) => call.id));
-    const deletedAt = new Date().toISOString();
-    state.calls = state.calls.map((call) => (ids.has(call.id) ? { ...call, reportDeletedAt: deletedAt } : call));
-    if (state.lastCall && ids.has(state.lastCall.id)) state.lastCall = null;
-    state.selectedBlocks.delete(key);
-    if (state.editingReportBlockKey === key) state.editingReportBlockKey = null;
-    await CallFlowStorage.write("calls", state.calls);
-    render();
-  }
-
-  async function restoreReportBlock(key) {
-    const ids = new Set(callsForReportBlockKey(key).map((call) => call.id));
-    state.calls = state.calls.map((call) => {
-      if (!ids.has(call.id)) return call;
-      const restored = { ...call };
-      delete restored.reportDeletedAt;
-      return restored;
-    });
-    await CallFlowStorage.write("calls", state.calls);
-    render();
-  }
-
-  async function permanentDeleteReportBlock(key) {
-    if (!window.confirm("Eliminar definitivamente este bloque?")) return;
-    const ids = new Set(callsForReportBlockKey(key).map((call) => call.id));
-    state.calls = state.calls.filter((call) => !ids.has(call.id));
-    if (state.lastCall && ids.has(state.lastCall.id)) state.lastCall = null;
-    await CallFlowStorage.write("calls", state.calls);
-    render();
-  }
-
-  async function saveReminder(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const existingReminder = state.reminders.find((reminder) => reminder.id === state.editingReminderId);
-    const reminderTimezone = existingReminder?.timezone || form.timezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || V.resolveTimezone(state.settings);
-    const validation = V.validateReminderPayload({
-      callId: form.callId.value.trim(),
-      date: form.date.value,
-      time: form.time.value,
-      repeat: form.repeat.value || "once",
-      note: form.note.value.trim(),
-      timezone: reminderTimezone
-    });
-    if (!validation.ok) {
-      setStatusMessage(CallFlowI18n.t(validation.messageKey, state.settings.language || "es"), "error");
-      return;
-    }
-    const reminderPayload = validation.value;
-    let nextReminders;
-    if (state.editingReminderId) {
-      nextReminders = state.reminders.map((reminder) =>
-        reminder.id === state.editingReminderId
-          ? { ...reminder, ...reminderPayload, updatedAt: new Date().toISOString() }
-          : reminder
-      );
-    } else {
-      nextReminders = [...state.reminders, {
-        id: crypto.randomUUID(),
-        ...reminderPayload,
-        status: "pending",
-        createdAt: new Date().toISOString()
-      }];
-    }
-    await runAction(
-      async () => {
-        await CallFlowStorage.write("reminders", nextReminders);
-        if (!existingReminder) {
-          state.settings = normalizeSettings({ ...state.settings, lastReminderTimezone: reminderPayload.timezone });
-          await CallFlowStorage.write("settings", state.settings);
-        }
-        state.reminders = nextReminders;
-        state.editingReminderId = null;
-        $("#cancelReminderEdit").classList.add("hidden");
-        $("#saveReminderButton").textContent = CallFlowI18n.t("saveReminder", state.settings.language || "es");
-        form.reset();
-        prepareReminderFormDefaults();
-        render();
-        setStatusMessage(CallFlowI18n.t("reminderSaved", state.settings.language || "es"), "success");
-      },
-      { userMessage: CallFlowI18n.t("saveFailed", state.settings.language || "es"), logMessage: "Failed to save reminder" }
-    );
-  }
-
-  async function copyReminderCallId(callId) {
-    if (!callId) return;
-    await runAction(() => window.callflow.copyText(callId));
-  }
-
-  function setReminderDateShortcut(shortcut) {
-    const form = $("#reminderForm");
-    const timezone = form.timezone?.value || state.settings.lastReminderTimezone || activeTimezones()[0] || state.settings.timezone;
-    let date = V.isoDateInTimezone(new Date(), timezone);
-    if (shortcut === "tomorrow") date = addDaysIso(date, 1);
-    if (shortcut === "nextWeek") date = addDaysIso(date, 7);
-    form.date.value = date;
-    form.time.focus();
-  }
-
-  function playTone(audioContext, frequency, start, duration, type = "sine", gainValue = 0.08) {
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency, start);
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(gainValue, start + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start(start);
-    oscillator.stop(start + duration + 0.02);
-  }
-
-  function playReminderSound(sound) {
-    if (sound === "none") return;
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const audioContext = new AudioContext();
-    const now = audioContext.currentTime;
-    const patterns = {
-      soft: [[660, 0, 0.16, "sine"], [880, 0.18, 0.18, "sine"]],
-      ping: [[1046, 0, 0.12, "triangle"]],
-      bell: [[784, 0, 0.16, "sine"], [1175, 0.1, 0.22, "sine"], [1568, 0.18, 0.28, "sine"]],
-      alert: [[523, 0, 0.16, "square"], [523, 0.22, 0.16, "square"], [523, 0.44, 0.2, "square"]],
-      chime: [[523, 0, 0.14, "triangle"], [659, 0.12, 0.14, "triangle"], [784, 0.24, 0.22, "triangle"]]
-    };
-    (patterns[sound] || patterns.soft).forEach(([frequency, offset, duration, type]) => {
-      playTone(audioContext, frequency, now + offset, duration, type);
-    });
-    setTimeout(() => audioContext.close(), 1200);
-  }
-
-  function stopAlarmSound() {
-    if (state.alarmSoundTimer) {
-      clearInterval(state.alarmSoundTimer);
-      state.alarmSoundTimer = null;
-    }
-    state.activeAlarmSoundKey = null;
-  }
-
-  function startAlarmSound(sound, reminderId, phase) {
-    const soundKey = `${reminderId}:${phase}:${sound}`;
-    if (state.activeAlarmSoundKey === soundKey) return;
-    stopAlarmSound();
-    state.activeAlarmSoundKey = soundKey;
-    if (sound === "none") return;
-    playReminderSound(sound);
-    state.alarmSoundTimer = setInterval(() => playReminderSound(sound), 8000);
-  }
-
-  function activeAlarmReminder() {
-    return state.reminders.find((reminder) => reminder.id === state.activeAlarmReminderId) || null;
-  }
-
-  function alarmPhaseLabel(phase) {
-    if (phase === "early") return CallFlowI18n.t("alarmEarly", state.settings.language || "es");
-    if (phase === "overdue") return CallFlowI18n.t("alarmOverdue", state.settings.language || "es");
-    return CallFlowI18n.t("alarmNow", state.settings.language || "es");
-  }
-
-  function renderReminderAlarm() {
-    const overlay = $("#reminderAlarmOverlay");
-    if (!overlay) return;
-    const reminder = activeAlarmReminder();
-    if (!reminder || reminder.status === "completed") {
-      overlay.classList.add("hidden");
-      stopAlarmSound();
-      return;
-    }
-    overlay.classList.remove("hidden");
-    $("#reminderAlarmPhase").textContent = alarmPhaseLabel(state.activeAlarmPhase);
-    $("#reminderAlarmTitle").textContent = CallFlowI18n.t("alarmTitle", state.settings.language || "es");
-    $("#reminderAlarmMeta").textContent = [
-      reminder.date,
-      reminder.time,
-      reminder.timezone || V.resolveTimezone(state.settings),
-      reminder.callId ? `ID: ${reminder.callId}` : ""
-    ]
-      .filter(Boolean)
-      .join(" - ");
-    $("#reminderAlarmNote").textContent = reminder.note || "";
-  }
-
-  function clearReminderAlarm() {
-    state.activeAlarmReminderId = null;
-    state.activeAlarmPhase = null;
-    $("#reminderAlarmOverlay").classList.add("hidden");
-    stopAlarmSound();
-  }
-
-  function handleReminderAlarm(payload) {
-    if (!payload || !payload.reminder || !payload.reminder.id) return;
-    const current = state.reminders.find((reminder) => reminder.id === payload.reminder.id);
-    if (!current || current.status === "completed") return;
-    state.reminders = state.reminders.map((reminder) =>
-      reminder.id === payload.reminder.id ? { ...reminder, ...payload.reminder } : reminder
-    );
-    state.activeAlarmReminderId = payload.reminder.id;
-    state.activeAlarmPhase = payload.phase || "exact";
-    renderReminderAlarm();
-    startAlarmSound(state.settings.reminderSound || "soft", payload.reminder.id, state.activeAlarmPhase);
-  }
-
-  async function updateReminderSuppression(id, fields) {
-    const nextReminders = state.reminders.map((reminder) =>
-      reminder.id === id ? { ...reminder, ...fields, updatedAt: new Date().toISOString() } : reminder
-    );
-    await runAction(async () => {
-      await CallFlowStorage.write("reminders", nextReminders);
-      state.reminders = nextReminders;
-      clearReminderAlarm();
-      render();
-    });
-  }
-
-  async function snoozeActiveAlarm(minutes) {
-    const reminder = activeAlarmReminder();
-    if (!reminder) return;
-    await updateReminderSuppression(reminder.id, {
-      snoozedUntil: new Date(Date.now() + minutes * 60 * 1000).toISOString(),
-      mutedUntil: null
-    });
-  }
-
-  async function muteActiveAlarm(minutes) {
-    const reminder = activeAlarmReminder();
-    if (!reminder) return;
-    await updateReminderSuppression(reminder.id, {
-      mutedUntil: new Date(Date.now() + minutes * 60 * 1000).toISOString()
-    });
-  }
-
-  async function completeActiveAlarm() {
-    const reminder = activeAlarmReminder();
-    if (!reminder) return;
-    clearReminderAlarm();
-    await completeReminder(reminder.id);
-  }
-
-  function openReminderFromNotification(reminderId) {
-    setView("reminders");
-    if (reminderId) editReminder(reminderId);
-  }
-
-  function nextRecurringReminder(reminder) {
-    return Recurrence.nextRecurringReminder(reminder, {
-      createId: () => crypto.randomUUID(),
-      now: new Date(),
-      resolveTimezone: () => V.resolveTimezone(state.settings),
-      zonedDateTimeToUtc: V.zonedDateTimeToUtc
-    });
-  }
-
-  async function completeReminder(id) {
-    const current = state.reminders.find((reminder) => reminder.id === id);
-    const next = current ? nextRecurringReminder(current) : null;
-    if (state.activeAlarmReminderId === id) clearReminderAlarm();
-    const nextReminders = state.reminders.map((reminder) =>
-      reminder.id === id ? { ...reminder, status: "completed", completedAt: new Date().toISOString() } : reminder
-    );
-    if (next) nextReminders.push(next);
-    await runAction(async () => {
-      await CallFlowStorage.write("reminders", nextReminders);
-      state.reminders = nextReminders;
-      render();
-    });
-  }
-
-  async function deleteReminder(id) {
-    const language = state.settings.language || "es";
-    if (!window.confirm(CallFlowI18n.t("confirmDeleteReminder", language))) return;
-    if (state.activeAlarmReminderId === id) clearReminderAlarm();
-    const nextReminders = state.reminders.map((reminder) =>
-      reminder.id === id ? { ...reminder, status: "deleted", deletedAt: new Date().toISOString() } : reminder
-    );
-    await runAction(async () => {
-      await CallFlowStorage.write("reminders", nextReminders);
-      state.reminders = nextReminders;
-      render();
-      setStatusMessage(CallFlowI18n.t("saved", language), "success");
-    });
-  }
-
-  async function restoreReminder(id) {
-    const language = state.settings.language || "es";
-    const nextReminders = state.reminders.map((reminder) =>
-      reminder.id === id ? { ...reminder, status: "pending", deletedAt: undefined } : reminder
-    );
-    await runAction(async () => {
-      await CallFlowStorage.write("reminders", nextReminders);
-      state.reminders = nextReminders;
-      render();
-      setStatusMessage(CallFlowI18n.t("saved", language), "success");
-    });
-  }
-
-  async function permanentDeleteReminder(id) {
-    const language = state.settings.language || "es";
-    if (!window.confirm(CallFlowI18n.t("confirmPermanentDeleteReminder", language))) return;
-    const nextReminders = state.reminders.filter((reminder) => reminder.id !== id);
-    await runAction(async () => {
-      await CallFlowStorage.write("reminders", nextReminders);
-      state.reminders = nextReminders;
-      render();
-      setStatusMessage(CallFlowI18n.t("saved", language), "success");
-    });
   }
 
   function handleDocumentChange(event) {
@@ -2378,10 +975,7 @@ Africa/Harare ZW
       dateTimePicker.handleChange(event);
       return;
     }
-    if (event.target.matches("[data-report-block]")) {
-      if (event.target.checked) state.selectedBlocks.add(event.target.dataset.reportBlock);
-      else state.selectedBlocks.delete(event.target.dataset.reportBlock);
-    }
+    reportsView.handleDocumentChange(event);
   }
 
   function handleDocumentFocusIn(event) {
@@ -2409,33 +1003,11 @@ Africa/Harare ZW
     if (sidebarToggle) return;
     const timezoneToggle = event.target.closest("[data-timezone-toggle]");
     const timezoneOption = event.target.closest("[data-timezone-picker-option]");
-    const statusOption = event.target.closest("[data-status-option]");
-    const customCommentOption = event.target.closest("[data-custom-comment-option]");
-    const outcomeToggle = event.target.closest("[data-outcome-toggle]");
     const addListId = event.target.dataset.addListItem;
     const removeListId = event.target.dataset.removeListItem;
     const presetListId = event.target.dataset.presetListItem;
-    const dashboardCallTypeToRemove = event.target.dataset.removeDashboardCallType;
-    const selectOutcomeCategory = event.target.dataset.selectOutcome;
-    const addOutcomeCategory = event.target.dataset.addOutcome;
-    const removeOutcomeCategory = event.target.dataset.removeOutcome;
-    const clearOutcome = event.target.closest("[data-clear-outcome]");
-    const editReportBlockKey = event.target.dataset.editReportBlock;
-    const saveReportBlockKey = event.target.dataset.saveReportBlock;
-    const cancelReportEditKey = event.target.dataset.cancelReportEdit;
-    const deleteReportBlockKey = event.target.dataset.deleteReportBlock;
-    const restoreReportBlockKey = event.target.dataset.restoreReportBlock;
-    const permanentDeleteReportBlockKey = event.target.dataset.permanentDeleteReportBlock;
-    const reportPeriod = event.target.dataset.reportPeriod;
     const timezoneToggleId = timezoneToggle ? timezoneToggle.dataset.timezoneToggle : null;
     const timezonePickerId = timezoneOption ? timezoneOption.dataset.timezonePickerOption : null;
-    const reminderId = event.target.dataset.completeReminder;
-    const reminderCallId = event.target.dataset.copyReminderCallId;
-    const editReminderId = event.target.dataset.editReminder;
-    const deleteReminderId = event.target.closest("[data-delete-reminder]")?.dataset.deleteReminder;
-    const restoreReminderId = event.target.closest("[data-restore-reminder]")?.dataset.restoreReminder;
-    const permanentDeleteReminderId = event.target.closest("[data-permanent-delete-reminder]")?.dataset.permanentDeleteReminder;
-    const reminderDateShortcut = event.target.dataset.reminderDateShortcut;
     const addActiveTimezonePicker = event.target.dataset.addActiveTimezone;
     const removeActiveTimezoneValue = event.target.dataset.removeActiveTimezone;
     const togglePinnedClockButton = event.target.closest("[data-toggle-pinned-clock]");
@@ -2450,52 +1022,8 @@ Africa/Harare ZW
     if (presetListId) {
       settingsView.addListItem(presetListId, event.target.dataset.value);
     }
-    if (dashboardCallTypeToRemove) {
-      removeDashboardCallType(dashboardCallTypeToRemove);
-    }
-    if (outcomeToggle) {
-      const category = outcomeToggle.dataset.outcomeToggle;
-      if (state.selectedPrimaryOutcome?.category !== category) {
-        selectPrimaryOutcome(category, defaultOutcomeLabel(category));
-      }
-      state.openOutcomeMenu = state.openOutcomeMenu === category ? null : category;
-      renderOutcomeControls();
-    }
-    if (selectOutcomeCategory) {
-      selectPrimaryOutcome(selectOutcomeCategory, event.target.dataset.value);
-    }
-    if (addOutcomeCategory) {
-      addOutcomePreset(addOutcomeCategory);
-    }
-    if (removeOutcomeCategory) {
-      removeOutcomePreset(removeOutcomeCategory, event.target.dataset.value);
-    }
-    if (clearOutcome) {
-      clearPrimaryOutcome();
-    }
-    if (editReportBlockKey) {
-      state.editingReportBlockKey = editReportBlockKey;
-      renderReportBlocks();
-    }
-    if (saveReportBlockKey) {
-      saveReportBlockEdit(saveReportBlockKey);
-    }
-    if (cancelReportEditKey) {
-      state.editingReportBlockKey = null;
-      renderReportBlocks();
-    }
-    if (deleteReportBlockKey) {
-      deleteReportBlock(deleteReportBlockKey);
-    }
-    if (restoreReportBlockKey) {
-      restoreReportBlock(restoreReportBlockKey);
-    }
-    if (permanentDeleteReportBlockKey) {
-      permanentDeleteReportBlock(permanentDeleteReportBlockKey);
-    }
-    if (reportPeriod) {
-      setReportPeriod(reportPeriod);
-    }
+    dashboardView.handleDocumentClick(event);
+    reportsView.handleDocumentClick(event);
     if (timezoneToggleId) {
       const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);
       timezonePicker.toggle(timezoneToggleId);
@@ -2504,33 +1032,11 @@ Africa/Harare ZW
     if (timezonePickerId) {
       timezonePicker.select(timezonePickerId, timezoneOption.dataset.value);
     }
-    if (statusOption) {
-      selectStatusOption(statusOption.dataset.statusOption);
-    }
-    if (customCommentOption) {
-      selectCustomCommentOption(customCommentOption.dataset.customCommentOption);
-    }
-    if (!event.target.closest(".status-combobox")) {
-      renderStatusOptions(false);
-    }
-    if (!event.target.closest(".custom-comment-combobox")) {
-      renderCustomCommentOptions(false);
-    }
-    if (!event.target.closest(".outcome-control")) {
-      state.openOutcomeMenu = null;
-      renderOutcomeControls();
-    }
     if (!event.target.closest(".timezone-picker")) {
       timezonePicker.close("onboarding");
       timezonePicker.close("settings");
     }
-    if (reminderId) completeReminder(reminderId);
-    if (reminderCallId) copyReminderCallId(reminderCallId);
-    if (editReminderId) editReminder(editReminderId);
-    if (deleteReminderId) deleteReminder(deleteReminderId);
-    if (restoreReminderId) restoreReminder(restoreReminderId);
-    if (permanentDeleteReminderId) permanentDeleteReminder(permanentDeleteReminderId);
-    if (reminderDateShortcut) setReminderDateShortcut(reminderDateShortcut);
+    remindersView.handleDocumentClick(event);
     if (addActiveTimezonePicker) addActiveTimezoneFromPicker(addActiveTimezonePicker);
     if (removeActiveTimezoneValue) removeActiveTimezone(removeActiveTimezoneValue);
     if (togglePinnedClockValue) clockView.togglePinnedClock(togglePinnedClockValue);
@@ -2572,21 +1078,10 @@ Africa/Harare ZW
       event.preventDefault();
       await runAction(() => saveSettings(settingsFromForm(event.currentTarget, true)));
     });
-    $("#previewReminderSound").addEventListener("click", () => {
-      playReminderSound($("#settingsForm select[name='reminderSound']").value);
-    });
-    $("#completeReminderAlarm").addEventListener("click", completeActiveAlarm);
-    $("#snoozeReminderAlarm5").addEventListener("click", () => snoozeActiveAlarm(5));
-    $("#snoozeReminderAlarm15").addEventListener("click", () => snoozeActiveAlarm(15));
-    $("#silenceReminderAlarm").addEventListener("click", () => muteActiveAlarm(30));
-    $("#dismissReminderAlarm").addEventListener("click", () => muteActiveAlarm(5));
     $("#settingsForm select[name='language']").addEventListener("change", (event) => {
       handleLanguageChange($("#settingsForm"), event.target.value);
     });
-    $("#callForm").addEventListener("submit", saveCall);
-    $("#copyLastCrm").addEventListener("click", copyLastCrm);
-    $("#importCallIdClipboard").addEventListener("click", importCallIdFromClipboard);
-    $("#captureCallTime").addEventListener("click", captureCurrentCallTime);
+    dashboardView.bindEvents();
     clockView.bindEvents();
     $("#sidebarToggle").addEventListener("click", () => {
       const app = $("#app");
@@ -2595,106 +1090,8 @@ Africa/Harare ZW
       $("#sidebarToggle").setAttribute("aria-label", CallFlowI18n.t(open ? "closeSidebar" : "openSidebar", state.settings.language));
       $("#sidebarBackdrop").hidden = !open;
     });
-    $("#toggleCallTypeManager").addEventListener("click", () => {
-      $("#dashboardCallTypeManager").classList.toggle("hidden");
-      if (!$("#dashboardCallTypeManager").classList.contains("hidden")) $("#newDashboardCallType").focus();
-    });
-    $("#saveDashboardCallType").addEventListener("click", addDashboardCallType);
-    $("#newDashboardCallType").addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        addDashboardCallType();
-      }
-    });
-    $("#addCurrentStatus").addEventListener("click", addCurrentDashboardStatus);
-    $("#removeCurrentStatus").addEventListener("click", removeCurrentDashboardStatus);
-    $("#addCurrentCustomComment").addEventListener("click", addCurrentCustomComment);
-    $("#removeCurrentCustomComment").addEventListener("click", removeCurrentCustomComment);
-    $("#callForm input[name='description']").addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        renderStatusOptions(false);
-        return;
-      }
-      if (event.key === "Enter") {
-        event.preventDefault();
-        addCurrentDashboardStatus();
-      }
-    });
-    $("#callForm input[name='description']").addEventListener("focus", () => renderStatusOptions(true));
-    $("#callForm input[name='description']").addEventListener("input", () => renderStatusOptions(true));
-    $("#customCommentInput").addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        renderCustomCommentOptions(false);
-        return;
-      }
-      if (event.key === "Enter") {
-        event.preventDefault();
-        addCurrentCustomComment();
-      }
-    });
-    $("#customCommentInput").addEventListener("focus", () => renderCustomCommentOptions(true));
-    $("#customCommentInput").addEventListener("input", () => renderCustomCommentOptions(true));
-    $("#callForm").addEventListener("keydown", (event) => {
-      const input = event.target.closest("[data-new-outcome]");
-      if (input && event.key === "Enter") {
-        event.preventDefault();
-        addOutcomePreset(input.dataset.newOutcome);
-      }
-    });
-    $("#copySelectedBlocks").addEventListener("click", copySelectedBlocks);
-    $("#exportSelectedMd").addEventListener("click", () => exportSelectedBlocks("md"));
-    $("#exportSelectedTxt").addEventListener("click", () => exportSelectedBlocks("txt"));
-    $("#selectAllReportBlocks").addEventListener("click", selectAllVisibleReportBlocks);
-    $("#clearReportSelection").addEventListener("click", clearReportSelection);
-    $("#reportDateFrom").addEventListener("change", (event) => {
-      state.reportRange.preset = "custom";
-      state.reportRange.from = event.target.value;
-      state.selectedBlocks.clear();
-      state.editingReportBlockKey = null;
-      state.reportSearch.activeIndex = 0;
-      render();
-    });
-    $("#reportDateTo").addEventListener("change", (event) => {
-      state.reportRange.preset = "custom";
-      state.reportRange.to = event.target.value;
-      state.selectedBlocks.clear();
-      state.editingReportBlockKey = null;
-      state.reportSearch.activeIndex = 0;
-      render();
-    });
-    $("#reportSearchInput").addEventListener("input", (event) => {
-      state.reportSearch.query = event.target.value;
-      state.reportSearch.activeIndex = 0;
-      renderReportBlocks();
-      scrollToActiveReportMatch();
-    });
-    $("#reportSearchInput").addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        moveReportSearch(event.shiftKey ? -1 : 1);
-      }
-      if (event.key === "Escape") {
-        state.reportSearch.query = "";
-        state.reportSearch.activeIndex = 0;
-        renderReportBlocks();
-      }
-    });
-    $("#reportSearchPrev").addEventListener("click", () => moveReportSearch(-1));
-    $("#reportSearchNext").addEventListener("click", () => moveReportSearch(1));
-    $("#reportSearchClear").addEventListener("click", () => {
-      state.reportSearch.query = "";
-      state.reportSearch.activeIndex = 0;
-      renderReportBlocks();
-      $("#reportSearchInput").focus();
-    });
-    $("#reminderForm").addEventListener("submit", saveReminder);
-    $("#cancelReminderEdit").addEventListener("click", cancelReminderEdit);
-    $("#toggleReminderForm").addEventListener("click", () => setReminderFormCollapsed(true));
-    $("#showReminderForm").addEventListener("click", () => setReminderFormCollapsed(false));
-    document.querySelector(".reminder-chips").addEventListener("click", (e) => {
-      const chip = e.target.closest(".reminder-chip");
-      if (chip) setReminderFilter(chip.dataset.filter);
-    });
+    reportsView.bindEvents();
+    remindersView.bindEvents();
     knowledgeView.bindEvents();
     settingsView.bindEvents();
     $$("[data-list-input]").forEach((input) => {
@@ -2729,9 +1126,9 @@ Africa/Harare ZW
 
   async function init() {
     bindEvents();
-    window.callflow.onReminderSound(playReminderSound);
-    window.callflow.onReminderAlarm(handleReminderAlarm);
-    window.callflow.onOpenReminder(openReminderFromNotification);
+    window.callflow.onReminderSound(remindersView.playReminderSound);
+    window.callflow.onReminderAlarm(remindersView.handleAlarm);
+    window.callflow.onOpenReminder(remindersView.openFromNotification);
     const data = await CallFlowStorage.readAll();
     Object.assign(state, data);
     state.settings = normalizeSettings(state.settings);
@@ -2748,8 +1145,8 @@ Africa/Harare ZW
     const dataDir = await window.callflow.getDataDir();
     $("#dataDirLabel").textContent = dataDir;
     clockView.startClock();
-    state.reminderTimer = setInterval(renderReminders, 1000);
-    prepareReminderFormDefaults();
+    state.reminderTimer = setInterval(remindersView.renderReminders, 1000);
+    remindersView.prepareFormDefaults();
     showHealthNotice();
 
     if (state.settings.onboardingCompleted) {
