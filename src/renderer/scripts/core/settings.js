@@ -1,4 +1,6 @@
 (function () {
+  const outcomes = typeof require === "function" ? require("../../../shared/outcomes") : window.CallFlowOutcomes;
+
   const presets = {
     es: {
       frequentStatuses: [
@@ -63,15 +65,15 @@
   }
 
   function defaultSuccessLabel(language) {
-    return presetForLanguage(language).successLabels[0];
+    return outcomes.defaultSuccessLabel(language);
   }
 
   function defaultRejectionLabel(language) {
-    return presetForLanguage(language).rejectionLabel;
+    return outcomes.defaultRejectionLabel(language);
   }
 
   function defaultCallbackLabel(language) {
-    return { es: "Rellamada", en: "Callback", ru: "Повторный_звонок" }[language] || "Rellamada";
+    return outcomes.defaultCallbackLabel(language);
   }
 
   function rejectionPresetsForLanguage(language) {

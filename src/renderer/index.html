@@ -561,6 +561,18 @@
                 </div>
                 <div class="chip-list" data-list-output="settingsCallbackOutcomes"></div>
               </div>
+              <div class="settings-maintenance span-2">
+                <div>
+                  <span class="field-label">Mantenimiento y diagnóstico</span>
+                  <small class="helper">Backups completos, importación y datos útiles para soporte.</small>
+                </div>
+                <div class="inline-actions">
+                  <button type="button" id="exportBackup">Exportar backup</button>
+                  <button type="button" id="importBackup">Importar backup</button>
+                  <button type="button" id="refreshDiagnostics">Diagnóstico</button>
+                </div>
+                <pre id="diagnosticsOutput" class="diagnostics-output" aria-live="polite"></pre>
+              </div>
               <button class="primary span-2" type="submit" data-i18n="saveSettings">Guardar configuración</button>
             </form>
           </div>
@@ -589,7 +601,9 @@
     </div>
 
     <script src="./scripts/i18n.js"></script>
+    <script src="../shared/outcomes.js"></script>
     <script src="../shared/validators.js"></script>
+    <script src="../shared/schema.js"></script>
     <script src="./scripts/storage.js"></script>
     <script src="../shared/reports.js"></script>
     <script src="../shared/reminders.js"></script>
@@ -599,6 +613,12 @@
     <script src="./scripts/core/markdown.js"></script>
     <script src="./scripts/core/recurrence.js"></script>
     <script src="./scripts/core/timers.js"></script>
+    <script src="./scripts/views/dashboard-view.js"></script>
+    <script src="./scripts/views/reports-view.js"></script>
+    <script src="./scripts/views/reminders-view.js"></script>
+    <script src="./scripts/views/settings-view.js"></script>
+    <script src="./scripts/views/knowledge-view.js"></script>
+    <script src="./scripts/views/clock-view.js"></script>
     <script src="./scripts/app.js"></script>
   </body>
 </html>

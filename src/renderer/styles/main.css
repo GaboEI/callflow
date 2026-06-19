@@ -2573,3 +2573,26 @@ code {
     grid-template-columns: minmax(280px, 520px) auto;
   }
 }
+.settings-maintenance {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.diagnostics-output {
+  max-height: 160px;
+  margin: 12px 0 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}

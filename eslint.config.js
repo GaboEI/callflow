@@ -51,8 +51,16 @@ module.exports = [
         ...browserGlobals,
         ...nodeGlobals,
         CallFlowI18n: "readonly",
+        CallFlowOutcomes: "readonly",
         CallFlowReminders: "readonly",
         CallFlowReports: "readonly",
+        CallFlowSchema: "readonly",
+        CallFlowDashboardView: "readonly",
+        CallFlowReportsView: "readonly",
+        CallFlowRemindersView: "readonly",
+        CallFlowSettingsView: "readonly",
+        CallFlowKnowledgeView: "readonly",
+        CallFlowClockView: "readonly",
         CallFlowStats: "readonly",
         CallFlowStorage: "readonly"
       }

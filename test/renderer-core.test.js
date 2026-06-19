@@ -7,6 +7,7 @@ const settings = require("../src/renderer/scripts/core/settings");
 const timers = require("../src/renderer/scripts/core/timers");
 const timezones = require("../src/renderer/scripts/core/timezones");
 const validators = require("../src/shared/validators");
+const schema = require("../src/shared/schema");
 
 test("settings core applies language presets and keeps unique list values", () => {
   assert.deepEqual(settings.uniqueItems("Ventas, Ventas\nSoporte"), ["Ventas", "Soporte"]);
@@ -16,7 +17,10 @@ test("settings core applies language presets and keeps unique list values", () =
   assert.equal(settings.defaultRejectionLabel("en"), "Rejected");
   assert.deepEqual(normalized.frequentStatuses, ["No_answer", "Voicemail", "Answers_and_hangs_up", "Phone_off"]);
   assert.equal(settings.defaultCallbackLabel("en"), "Callback");
-  assert.deepEqual(normalized.outcomePresets.callback.items, ["Rellamada"]);
+  assert.deepEqual(normalized.outcomePresets.callback.items, ["Callback"]);
+  assert.deepEqual(schema.normalizeData("settings", { language: "ru", outcomePresets: { callback: { items: ["Rellamada"] } } }).outcomePresets.callback.items, [
+    "Повторный_звонок"
+  ]);
 });
 
 test("timezone core normalizes search text and localizes city labels", () => {

@@ -2641,19 +2641,27 @@ Africa/Harare ZW
 
   function render() {
     if (!state.settings) return;
-    renderHeader();
-    renderCapturedCallTime();
-    renderCallOptions();
-    renderOutcomeControls();
-    renderDashboardInlineManagers();
-    renderActiveTimezoneEditors();
-    renderListEditors();
-    renderBlocks();
-    renderStats();
-    renderReminders();
-    renderReminderFormVisibility();
-    renderNotes();
-    renderLastCall();
+    const renderParts = {
+      renderActiveTimezoneEditors,
+      renderBlocks,
+      renderCallOptions,
+      renderCapturedCallTime,
+      renderDashboardInlineManagers,
+      renderHeader,
+      renderLastCall,
+      renderListEditors,
+      renderNotes,
+      renderOutcomeControls,
+      renderReminderFormVisibility,
+      renderReminders,
+      renderStats
+    };
+    window.CallFlowDashboardView.render(renderParts);
+    window.CallFlowReportsView.render(renderParts);
+    window.CallFlowSettingsView.render(renderParts);
+    window.CallFlowRemindersView.render(renderParts);
+    window.CallFlowKnowledgeView.render(renderParts);
+    window.CallFlowClockView.render(renderParts);
     enhanceDateTimeInputs();
   }
 
@@ -3245,6 +3253,53 @@ Africa/Harare ZW
     );
   }
 
+  function renderDiagnostics(diagnostics) {
+    const output = $("#diagnosticsOutput");
+    if (!output || !diagnostics) return;
+    output.textContent = [
+      `App: ${diagnostics.appVersion || "unknown"}`,
+      `Electron: ${diagnostics.electronVersion || "unknown"}`,
+      `Platform: ${diagnostics.platform || "unknown"}`,
+      `Data: ${diagnostics.dataDir || ""}`,
+      `Schemas: ${JSON.stringify(diagnostics.schemas || {})}`,
+      `Log: ${diagnostics.logPath || ""}`,
+      `Health events: ${(diagnostics.health || []).length}`,
+      `Recent errors: ${(diagnostics.recentLogs || []).filter((entry) => entry.level === "error").length}`
+    ].join("\n");
+  }
+
+  async function refreshDiagnostics() {
+    await runAction(async () => {
+      const diagnostics = await window.callflow.getDiagnostics();
+      renderDiagnostics(diagnostics);
+      setStatusMessage("Diagnóstico actualizado", "success");
+    });
+  }
+
+  async function exportBackup() {
+    await runAction(async () => {
+      const result = await window.callflow.exportBackup();
+      if (!result.canceled) setStatusMessage("Backup exportado", "success");
+    });
+  }
+
+  async function importBackup() {
+    const language = state.settings.language || "es";
+    if (!window.confirm("Importar un backup reemplazará los datos actuales después de crear un backup local. ¿Continuar?")) return;
+    await runAction(async () => {
+      const result = await window.callflow.importBackup();
+      if (result.canceled) return;
+      const data = await CallFlowStorage.readAll();
+      Object.assign(state, data);
+      state.settings = normalizeSettings(state.settings);
+      normalizeRuntimeData();
+      applySettingsToForms();
+      CallFlowI18n.applyI18n(state.settings.language);
+      render();
+      setStatusMessage(CallFlowI18n.t("saved", language), "success");
+    });
+  }
+
   function handleDocumentChange(event) {
     if (event.target.closest("#dateTimePicker")) {
       handleDateTimePickerChange(event);
@@ -3595,6 +3650,9 @@ Africa/Harare ZW
     });
     $("#exportMd").addEventListener("click", () => exportNote("md"));
     $("#exportTxt").addEventListener("click", () => exportNote("txt"));
+    $("#exportBackup").addEventListener("click", exportBackup);
+    $("#importBackup").addEventListener("click", importBackup);
+    $("#refreshDiagnostics").addEventListener("click", refreshDiagnostics);
     $$("[data-list-input]").forEach((input) => {
       input.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {

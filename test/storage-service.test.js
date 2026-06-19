@@ -5,6 +5,7 @@ const os = require("node:os");
 const path = require("node:path");
 
 const { createStorageService } = require("../src/main/storage-service");
+const schema = require("../src/shared/schema");
 
 async function createTestStorage(options = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "callflow-storage-"));
@@ -34,7 +35,7 @@ test("does not create a calls backup for the first write", async () => {
   await service.write("calls", [{ id: "first" }]);
 
   assert.deepEqual(await listCallBackups(root), []);
-  assert.deepEqual(await service.read("calls"), [{ id: "first" }]);
+  assert.deepEqual((await service.read("calls")).map((call) => call.id), ["first"]);
 });
 
 test("creates a calls backup before overwriting existing calls", async () => {
@@ -49,8 +50,9 @@ test("creates a calls backup before overwriting existing calls", async () => {
   const backupContent = JSON.parse(
     await fs.readFile(path.join(root, "userData", "backups", "calls", backups[0]), "utf8")
   );
-  assert.deepEqual(backupContent, [{ id: "first" }]);
-  assert.deepEqual(await service.read("calls"), [{ id: "second" }]);
+  assert.equal(backupContent.schemaVersion, schema.CURRENT_SCHEMA_VERSION);
+  assert.deepEqual(backupContent.data.map((call) => call.id), ["first"]);
+  assert.deepEqual((await service.read("calls")).map((call) => call.id), ["second"]);
 });
 
 test("rotates calls backups to the configured limit", async () => {
@@ -62,4 +64,34 @@ test("rotates calls backups to the configured limit", async () => {
   await service.write("calls", [{ id: "3" }]);
 
   assert.equal((await listCallBackups(root)).length, 2);
+});
+
+test("migrates legacy calls into versioned storage while preserving read shape", async () => {
+  const { root, service } = await createTestStorage();
+  const callsPath = path.join(root, "userData", "calls.json");
+  await fs.mkdir(path.dirname(callsPath), { recursive: true });
+  await fs.writeFile(callsPath, JSON.stringify([{ id: "legacy", callId: "ABC", date: "06.18", time: "10:00" }]), "utf8");
+
+  const calls = await service.read("calls");
+  const stored = JSON.parse(await fs.readFile(callsPath, "utf8"));
+
+  assert.equal(calls[0].id, "legacy");
+  assert.equal(stored.schemaVersion, schema.CURRENT_SCHEMA_VERSION);
+  assert.equal(stored.data[0].callId, "ABC");
+});
+
+test("exports and imports a full backup bundle", async () => {
+  const { root, service } = await createTestStorage();
+  const backupPath = path.join(root, "backup.callflow-backup.json");
+
+  await service.write("settings", { language: "en", operatorName: "Agent" });
+  await service.write("calls", [{ id: "call-1", callId: "A1", date: "06.18", time: "09:00" }]);
+  await service.exportBackup(backupPath);
+  await service.write("calls", []);
+
+  const imported = await service.importBackup(backupPath);
+
+  assert.equal(imported.settings.language, "en");
+  assert.equal(imported.calls[0].callId, "A1");
+  assert.equal((await service.read("calls"))[0].callId, "A1");
 });

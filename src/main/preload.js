@@ -8,20 +8,35 @@ function assertKey(key) {
   }
 }
 
+async function invoke(channel, ...args) {
+  const response = await ipcRenderer.invoke(channel, ...args);
+  if (response && response.ok === true) return response.value;
+  if (response && response.ok === false) {
+    const error = new Error(response.error.message || "CallFlow IPC error");
+    error.code = response.error.code;
+    error.details = response.error.details;
+    throw error;
+  }
+  return response;
+}
+
 contextBridge.exposeInMainWorld("callflow", {
-  getDataDir: () => ipcRenderer.invoke("storage:getDataDir"),
-  getHealth: () => ipcRenderer.invoke("storage:getHealth"),
+  getDataDir: () => invoke("storage:getDataDir"),
+  getHealth: () => invoke("storage:getHealth"),
   read: (key) => {
     assertKey(key);
-    return ipcRenderer.invoke("storage:read", key);
+    return invoke("storage:read", key);
   },
   write: (key, value) => {
     assertKey(key);
-    return ipcRenderer.invoke("storage:write", key, value);
+    return invoke("storage:write", key, value);
   },
-  copyText: (text) => ipcRenderer.invoke("clipboard:writeText", text),
-  readClipboardText: () => ipcRenderer.invoke("clipboard:readText"),
-  exportNote: (payload) => ipcRenderer.invoke("export:note", payload),
+  copyText: (text) => invoke("clipboard:writeText", text),
+  readClipboardText: () => invoke("clipboard:readText"),
+  exportBackup: () => invoke("backup:export"),
+  importBackup: () => invoke("backup:import"),
+  exportNote: (payload) => invoke("export:note", payload),
+  getDiagnostics: () => invoke("diagnostics:get"),
   onReminderSound: (callback) => {
     ipcRenderer.on("reminder:sound", (_event, sound) => callback(sound));
   },

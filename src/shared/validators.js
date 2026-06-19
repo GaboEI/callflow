@@ -1,4 +1,6 @@
 (function () {
+  const outcomes = typeof require === "function" ? require("./outcomes") : window.CallFlowOutcomes;
+
   const LIMITS = {
     callId: 120,
     shortText: 120,
@@ -159,7 +161,12 @@
     return ["success", "rejection", "callback"].reduce((result, category) => {
       const group = isPlainObject(current[category]) ? current[category] : {};
       const items = uniqueItems(group.items, LIMITS.shortText);
-      const fallback = category === "success" ? settings.successLabel : category === "rejection" ? settings.rejectionLabel : "Rellamada";
+      const fallback =
+        category === "success"
+          ? settings.successLabel
+          : category === "rejection"
+            ? settings.rejectionLabel
+            : outcomes.defaultCallbackLabel(settings.language);
       const defaultValue = text(group.default || items[0] || fallback, LIMITS.shortText);
       result[category] = {
         default: items.includes(defaultValue) ? defaultValue : items[0] || defaultValue,

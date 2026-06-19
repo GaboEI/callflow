@@ -3,25 +3,87 @@ const path = require("path");
 const fs = require("fs/promises");
 const time = require("../shared/validators");
 const { createStorageService } = require("./storage-service");
+const { createLogger } = require("./logger");
 
 let mainWindow;
 let notificationTimer;
 let keepRunningInBackground = false;
 const notificationThrottle = new Map();
 let storage;
+let logger;
+
+const IPC_LIMITS = {
+  clipboardText: 50000,
+  exportContent: 200000,
+  fileName: 120
+};
 
 function getDataDir() {
   return app.getPath("userData");
+}
+
+function getLogger() {
+  if (!logger) {
+    logger = createLogger({ dataDir: getDataDir() });
+  }
+  return logger;
 }
 
 function getStorage() {
   if (!storage) {
     storage = createStorageService({
       dataDir: getDataDir(),
-      defaultConfigPath: path.join(__dirname, "..", "data", "default_config.json")
+      defaultConfigPath: path.join(__dirname, "..", "data", "default_config.json"),
+      logger: getLogger()
     });
   }
   return storage;
+}
+
+function structuredOk(value) {
+  return { ok: true, value };
+}
+
+function structuredError(error, fallbackCode = "CALLFLOW_ERROR") {
+  return {
+    ok: false,
+    error: {
+      code: error.code || fallbackCode,
+      message: error.message || String(error),
+      details: error.details || null
+    }
+  };
+}
+
+function ipcHandler(fn, code) {
+  return async (...args) => {
+    try {
+      return structuredOk(await fn(...args));
+    } catch (error) {
+      await getLogger().error("ipc-handler-failed", { code, message: error.message || String(error) });
+      return structuredError(error, code);
+    }
+  };
+}
+
+function assertSize(name, value, max) {
+  if (String(value || "").length > max) {
+    const error = new Error(`${name} exceeds maximum size`);
+    error.code = "PAYLOAD_TOO_LARGE";
+    throw error;
+  }
+}
+
+function sanitizeFileName(value, fallback = "callflow") {
+  const cleaned = String(value || fallback)
+    .split("")
+    .map((char) => (char.charCodeAt(0) < 32 || /[<>:"/\\|?*]/.test(char) ? "-" : char))
+    .join("")
+    .replace(/\s+/g, " ")
+    .replace(/\.+$/g, "")
+    .trim()
+    .slice(0, IPC_LIMITS.fileName);
+  return cleaned || fallback;
 }
 
 function reminderDueDate(reminder) {
@@ -159,6 +221,12 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  await getLogger().info("app-started", {
+    version: app.getVersion(),
+    electron: process.versions.electron,
+    platform: process.platform,
+    packaged: app.isPackaged
+  });
   await getStorage().ensureDataFiles();
   applySystemSettings(await loadSettings());
   createWindow();
@@ -181,15 +249,15 @@ app.on("before-quit", () => {
   app.isQuitting = true;
 });
 
-ipcMain.handle("storage:getDataDir", () => getDataDir());
+ipcMain.handle("storage:getDataDir", ipcHandler(() => getDataDir(), "GET_DATA_DIR_FAILED"));
 
-ipcMain.handle("storage:getHealth", () => getStorage().getHealth());
+ipcMain.handle("storage:getHealth", ipcHandler(() => getStorage().getHealth(), "GET_STORAGE_HEALTH_FAILED"));
 
-ipcMain.handle("storage:read", async (_event, key) => {
+ipcMain.handle("storage:read", ipcHandler(async (_event, key) => {
   return getStorage().read(key);
-});
+}, "STORAGE_READ_FAILED"));
 
-ipcMain.handle("storage:write", async (_event, key, value) => {
+ipcMain.handle("storage:write", ipcHandler(async (_event, key, value) => {
   const saved = await getStorage().write(key, value);
   if (key === "settings") {
     applySystemSettings(saved);
@@ -198,18 +266,23 @@ ipcMain.handle("storage:write", async (_event, key, value) => {
     notificationThrottle.clear();
   }
   return saved;
-});
+}, "STORAGE_WRITE_FAILED"));
 
-ipcMain.handle("clipboard:writeText", (_event, text) => {
-  clipboard.writeText(String(text || ""));
+ipcMain.handle("clipboard:writeText", ipcHandler((_event, text) => {
+  const safeText = String(text || "");
+  assertSize("Clipboard text", safeText, IPC_LIMITS.clipboardText);
+  clipboard.writeText(safeText);
   return true;
-});
+}, "CLIPBOARD_WRITE_FAILED"));
 
-ipcMain.handle("clipboard:readText", () => clipboard.readText());
+ipcMain.handle("clipboard:readText", ipcHandler(() => clipboard.readText(), "CLIPBOARD_READ_FAILED"));
 
-ipcMain.handle("export:note", async (_event, { fileName, content, extension }) => {
+ipcMain.handle("export:note", ipcHandler(async (_event, payload = {}) => {
+  const { fileName, content, extension } = payload;
   const safeExtension = extension === "txt" ? "txt" : "md";
-  const defaultPath = `${fileName || "callflow-note"}.${safeExtension}`;
+  const safeContent = String(content || "");
+  assertSize("Export content", safeContent, IPC_LIMITS.exportContent);
+  const defaultPath = `${sanitizeFileName(fileName, "callflow-note")}.${safeExtension}`;
   const result = await dialog.showSaveDialog(mainWindow, {
     title: "Export note",
     defaultPath,
@@ -220,6 +293,45 @@ ipcMain.handle("export:note", async (_event, { fileName, content, extension }) =
     return { canceled: true };
   }
 
-  await fs.writeFile(result.filePath, content || "", "utf8");
+  await fs.writeFile(result.filePath, safeContent, "utf8");
   return { canceled: false, filePath: result.filePath };
-});
+}, "EXPORT_NOTE_FAILED"));
+
+ipcMain.handle("backup:export", ipcHandler(async () => {
+  const defaultPath = `${sanitizeFileName(`callflow-backup-${new Date().toISOString().slice(0, 10)}`)}.callflow-backup.json`;
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: "Export CallFlow backup",
+    defaultPath,
+    filters: [{ name: "CallFlow Backup", extensions: ["json"] }]
+  });
+  if (result.canceled || !result.filePath) {
+    return { canceled: true };
+  }
+  await getStorage().exportBackup(result.filePath);
+  return { canceled: false, filePath: result.filePath };
+}, "BACKUP_EXPORT_FAILED"));
+
+ipcMain.handle("backup:import", ipcHandler(async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Import CallFlow backup",
+    properties: ["openFile"],
+    filters: [{ name: "CallFlow Backup", extensions: ["json"] }]
+  });
+  if (result.canceled || !result.filePaths.length) {
+    return { canceled: true };
+  }
+  const data = await getStorage().importBackup(result.filePaths[0]);
+  applySystemSettings(data.settings);
+  notificationThrottle.clear();
+  return { canceled: false, data };
+}, "BACKUP_IMPORT_FAILED"));
+
+ipcMain.handle("diagnostics:get", ipcHandler(async () => {
+  return getStorage().getDiagnostics({
+    appVersion: app.getVersion(),
+    electronVersion: process.versions.electron,
+    nodeVersion: process.versions.node,
+    platform: process.platform,
+    packaged: app.isPackaged
+  });
+}, "DIAGNOSTICS_FAILED"));
