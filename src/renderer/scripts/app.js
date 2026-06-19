@@ -646,8 +646,8 @@ Africa/Harare ZW
     state.formLists.settingsCallbackOutcomes = [...settings.outcomePresets.callback.items];
     state.presetMeta.settingsFrequentStatuses.custom = [...settings.frequentStatuses];
     timezonePicker.renderAll(settings.language);
-    renderListEditors();
-    renderActiveTimezoneEditors();
+    settingsView.renderListEditors();
+    settingsView.renderActiveTimezoneEditors();
   }
 
   function outcomePresetsFromForm(listPrefix) {
@@ -742,14 +742,14 @@ Africa/Harare ZW
   function handleLanguageChange(form, language) {
     CallFlowI18n.applyI18n(language);
     timezonePicker.renderAll(language);
-    renderActiveTimezoneEditors();
+    settingsView.renderActiveTimezoneEditors();
 
     if (form.id === "onboardingForm" && !state.settings.onboardingCompleted) {
       refreshPresetBackedStatuses("onboardingFrequentStatuses", language);
       refreshOnboardingOutcomePresets(language);
     }
 
-    renderListEditors();
+    settingsView.renderListEditors();
   }
 
   function shortTimezoneName(timezone) {
@@ -791,28 +791,26 @@ Africa/Harare ZW
     timezoneFlag,
     validators: V
   });
-
-  function renderActiveTimezoneEditors() {
-    ["onboarding", "settings"].forEach((pickerId) => {
-      const output = document.querySelector(`[data-active-timezones-output="${pickerId}"]`);
-      if (!output || !state.settings) return;
-      const zones = activeTimezones();
-      output.innerHTML = zones
-        .map(
-          (timezone, index) => `
-            <span class="chip timezone-chip">
-              ${escapeHtml(timezoneFlag(timezone))} ${escapeHtml(shortTimezoneName(timezone))}
-              ${
-                index === 0
-                  ? ""
-                  : `<button type="button" data-remove-active-timezone="${escapeHtml(timezone)}" aria-label="${escapeHtml(CallFlowI18n.t("remove", activeFormLanguage()))}">×</button>`
-              }
-            </span>
-          `
-        )
-        .join("");
-    });
-  }
+  const settingsView = window.CallFlowSettingsView.createSettingsView({
+    $$,
+    activeFormLanguage,
+    activeTimezones,
+    applySettingsToForms,
+    escapeHtml,
+    i18n: CallFlowI18n,
+    normalizeRuntimeData,
+    normalizeSettings,
+    presetForLanguage,
+    presetStatusValues,
+    renderApp: () => render(),
+    runAction,
+    setStatusMessage,
+    shortTimezoneName,
+    state,
+    storage: CallFlowStorage,
+    timezoneFlag,
+    uniqueItems
+  });
 
   async function updateActiveTimezones(timezones, lastReminderTimezone = state.settings.lastReminderTimezone) {
     const zones = V.uniqueItems([state.settings.timezone || "local", ...timezones]).slice(0, V.MAX_ACTIVE_TIMEZONES);
@@ -837,53 +835,6 @@ Africa/Harare ZW
 
   async function removeActiveTimezone(value) {
     await updateActiveTimezones(activeTimezones().filter((timezone) => timezone !== value));
-  }
-
-  function renderListEditors() {
-    const activeLanguage = activeFormLanguage();
-    Object.entries(state.formLists).forEach(([listId, items]) => {
-      const output = document.querySelector(`[data-list-output="${listId}"]`);
-      if (!output) return;
-      output.innerHTML = items.length
-        ? items
-            .map(
-              (item) => `
-                <span class="chip">
-                  ${escapeHtml(item)}
-                  <button type="button" data-remove-list-item="${listId}" data-value="${escapeHtml(item)}" aria-label="${CallFlowI18n.t("remove", activeLanguage)}">×</button>
-                </span>
-              `
-            )
-            .join("")
-        : '<span class="muted">-</span>';
-    });
-
-    $$("[data-status-suggestions]").forEach((container) => {
-      const target = container.dataset.statusSuggestions;
-      container.innerHTML = presetForLanguage(activeLanguage).frequentStatuses
-        .map((status) => `<button type="button" class="chip preset" data-preset-list-item="${target}" data-value="${escapeHtml(status)}">${escapeHtml(status)}</button>`)
-        .join("");
-    });
-  }
-
-  function addListItem(listId, value) {
-    const item = String(value || "").trim();
-    if (!item) return;
-    state.formLists[listId] = uniqueItems([...state.formLists[listId], item]);
-    if (state.presetMeta[listId] && !presetStatusValues.has(item)) {
-      state.presetMeta[listId].custom = uniqueItems([...state.presetMeta[listId].custom, item]);
-    }
-    const input = document.querySelector(`[data-list-input="${listId}"]`);
-    if (input) input.value = "";
-    renderListEditors();
-  }
-
-  function removeListItem(listId, value) {
-    state.formLists[listId] = state.formLists[listId].filter((item) => item !== value);
-    if (state.presetMeta[listId]) {
-      state.presetMeta[listId].custom = state.presetMeta[listId].custom.filter((item) => item !== value);
-    }
-    renderListEditors();
   }
 
   function renderCallOptions() {
@@ -1874,14 +1825,12 @@ Africa/Harare ZW
   function render() {
     if (!state.settings) return;
     const renderParts = {
-      renderActiveTimezoneEditors,
       renderBlocks,
       renderCallOptions,
       renderCapturedCallTime,
       renderDashboardInlineManagers,
       renderHeader,
       renderLastCall,
-      renderListEditors,
       renderOutcomeControls,
       renderReminderFormVisibility,
       renderReminders,
@@ -1889,7 +1838,7 @@ Africa/Harare ZW
     };
     window.CallFlowDashboardView.render(renderParts);
     window.CallFlowReportsView.render(renderParts);
-    window.CallFlowSettingsView.render(renderParts);
+    settingsView.render(renderParts);
     window.CallFlowRemindersView.render(renderParts);
     knowledgeView.render(renderParts);
     clockView.render(renderParts);
@@ -2424,54 +2373,6 @@ Africa/Harare ZW
     });
   }
 
-
-  function renderDiagnostics(diagnostics) {
-    const output = $("#diagnosticsOutput");
-    if (!output || !diagnostics) return;
-    output.textContent = [
-      `App: ${diagnostics.appVersion || "unknown"}`,
-      `Electron: ${diagnostics.electronVersion || "unknown"}`,
-      `Platform: ${diagnostics.platform || "unknown"}`,
-      `Data: ${diagnostics.dataDir || ""}`,
-      `Schemas: ${JSON.stringify(diagnostics.schemas || {})}`,
-      `Log: ${diagnostics.logPath || ""}`,
-      `Health events: ${(diagnostics.health || []).length}`,
-      `Recent errors: ${(diagnostics.recentLogs || []).filter((entry) => entry.level === "error").length}`
-    ].join("\n");
-  }
-
-  async function refreshDiagnostics() {
-    await runAction(async () => {
-      const diagnostics = await window.callflow.getDiagnostics();
-      renderDiagnostics(diagnostics);
-      setStatusMessage("Diagnóstico actualizado", "success");
-    });
-  }
-
-  async function exportBackup() {
-    await runAction(async () => {
-      const result = await window.callflow.exportBackup();
-      if (!result.canceled) setStatusMessage("Backup exportado", "success");
-    });
-  }
-
-  async function importBackup() {
-    const language = state.settings.language || "es";
-    if (!window.confirm("Importar un backup reemplazará los datos actuales después de crear un backup local. ¿Continuar?")) return;
-    await runAction(async () => {
-      const result = await window.callflow.importBackup();
-      if (result.canceled) return;
-      const data = await CallFlowStorage.readAll();
-      Object.assign(state, data);
-      state.settings = normalizeSettings(state.settings);
-      normalizeRuntimeData();
-      applySettingsToForms();
-      CallFlowI18n.applyI18n(state.settings.language);
-      render();
-      setStatusMessage(CallFlowI18n.t("saved", language), "success");
-    });
-  }
-
   function handleDocumentChange(event) {
     if (event.target.closest("#dateTimePicker")) {
       dateTimePicker.handleChange(event);
@@ -2541,13 +2442,13 @@ Africa/Harare ZW
     const togglePinnedClockValue = togglePinnedClockButton ? togglePinnedClockButton.dataset.togglePinnedClock : null;
     const noteId = event.target.dataset.selectNote;
     if (addListId) {
-      addListItem(addListId, document.querySelector(`[data-list-input="${addListId}"]`).value);
+      settingsView.addListItem(addListId, document.querySelector(`[data-list-input="${addListId}"]`).value);
     }
     if (removeListId) {
-      removeListItem(removeListId, event.target.dataset.value);
+      settingsView.removeListItem(removeListId, event.target.dataset.value);
     }
     if (presetListId) {
-      addListItem(presetListId, event.target.dataset.value);
+      settingsView.addListItem(presetListId, event.target.dataset.value);
     }
     if (dashboardCallTypeToRemove) {
       removeDashboardCallType(dashboardCallTypeToRemove);
@@ -2795,14 +2696,12 @@ Africa/Harare ZW
       if (chip) setReminderFilter(chip.dataset.filter);
     });
     knowledgeView.bindEvents();
-    $("#exportBackup").addEventListener("click", exportBackup);
-    $("#importBackup").addEventListener("click", importBackup);
-    $("#refreshDiagnostics").addEventListener("click", refreshDiagnostics);
+    settingsView.bindEvents();
     $$("[data-list-input]").forEach((input) => {
       input.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
-          addListItem(input.dataset.listInput, input.value);
+          settingsView.addListItem(input.dataset.listInput, input.value);
         }
       });
     });
