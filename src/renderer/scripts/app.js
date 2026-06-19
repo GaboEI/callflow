@@ -776,10 +776,21 @@ Africa/Harare ZW
     return V.uniqueItems([state.settings.timezone || "local", ...(state.settings.activeTimezones || [])]).slice(0, V.MAX_ACTIVE_TIMEZONES);
   }
 
-  function pinnedClockTimezones() {
-    const zones = activeTimezones();
-    return (state.settings.pinnedClockTimezones || []).filter((timezone) => zones.includes(timezone));
-  }
+  const clockView = window.CallFlowClockView.createClockView({
+    $,
+    escapeHtml,
+    i18n: CallFlowI18n,
+    localeForLanguage: languageLocale,
+    normalizeSettings,
+    normalizeWorkTimer,
+    runAction,
+    shortTimezoneName,
+    state,
+    storage: CallFlowStorage,
+    timers: Timers,
+    timezoneFlag,
+    validators: V
+  });
 
   function renderActiveTimezoneEditors() {
     ["onboarding", "settings"].forEach((pickerId) => {
@@ -826,25 +837,6 @@ Africa/Harare ZW
 
   async function removeActiveTimezone(value) {
     await updateActiveTimezones(activeTimezones().filter((timezone) => timezone !== value));
-  }
-
-  async function updatePinnedClockTimezones(timezones) {
-    const zones = activeTimezones();
-    state.settings = normalizeSettings({
-      ...state.settings,
-      pinnedClockTimezones: V.uniqueItems(timezones).filter((timezone) => zones.includes(timezone))
-    });
-    await runAction(async () => {
-      await CallFlowStorage.write("settings", state.settings);
-      renderWorkClock();
-    });
-  }
-
-  async function togglePinnedClock(timezone) {
-    const pinned = pinnedClockTimezones();
-    await updatePinnedClockTimezones(
-      pinned.includes(timezone) ? pinned.filter((item) => item !== timezone) : [...pinned, timezone]
-    );
   }
 
   function renderListEditors() {
@@ -1291,77 +1283,7 @@ Africa/Harare ZW
     const now = CallFlowReports.formatCallTimestamp(new Date(), state.settings);
     $("#currentBlockLabel").textContent = CallFlowReports.blockFromHour(now.hour);
     $("#operatorLabel").textContent = state.settings.operatorName || "Sin operador";
-    renderWorkClock();
-  }
-
-  function renderWorkClock() {
-    const clock = $("#workClock");
-    if (!clock || !state.settings) return;
-    const now = new Date();
-    const pinned = pinnedClockTimezones();
-    clock.innerHTML = pinned.length
-      ? pinned
-      .map((timezone) => {
-        const flag = timezoneFlag(timezone);
-        const label = shortTimezoneName(timezone);
-        const value = formatWorkClockForTimezone(now, timezone);
-        return `<span class="clock-chip" title="${escapeHtml(timezone)}"><small><span class="clock-flag">${escapeHtml(flag)}</span><span>${escapeHtml(label)}</span></small><strong>${escapeHtml(value)}</strong></span>`;
-      })
-          .join("")
-      : `<span class="clock-empty">${escapeHtml(CallFlowI18n.t("noPinnedClocks", state.settings.language || "es"))}</span>`;
-    renderClockPanel(now);
-  }
-
-  function renderClockPanel(now = new Date()) {
-    const panel = $("#clockPanel");
-    const toggle = $("#clockPanelToggle");
-    if (!panel || !toggle || !state.settings) return;
-    const pinned = new Set(pinnedClockTimezones());
-    const zones = activeTimezones();
-    toggle.textContent = zones.length > 1 ? `${pinned.size}/${zones.length} ⌄` : "⌄";
-    panel.innerHTML = `
-      <header>
-        <strong>${escapeHtml(CallFlowI18n.t("allClocks", state.settings.language || "es"))}</strong>
-      </header>
-      <div class="clock-panel-list">
-        ${zones
-          .map((timezone) => {
-            const isPinned = pinned.has(timezone);
-            return `
-              <button type="button" class="clock-panel-item${isPinned ? " pinned" : ""}" data-toggle-pinned-clock="${escapeHtml(timezone)}" title="${escapeHtml(CallFlowI18n.t(isPinned ? "unpinClock" : "pinClock", state.settings.language || "es"))}">
-                <span>${escapeHtml(`${timezoneFlag(timezone)} ${shortTimezoneName(timezone)}`)}</span>
-                <strong>${escapeHtml(formatWorkClockForTimezone(now, timezone))}</strong>
-                <small aria-hidden="true">📌</small>
-              </button>
-            `;
-          })
-          .join("")}
-      </div>
-    `;
-  }
-
-  function formatWorkClockForTimezone(date, timezone) {
-    const format = state.settings.clockFormat || "24h";
-
-    if (format === "military") {
-      const parts = new Intl.DateTimeFormat("en-GB", {
-        timeZone: V.resolveTimezone(timezone),
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
-      }).formatToParts(date);
-      const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-      return `${values.hour}${values.minute}${values.second}`;
-    }
-
-    return new Intl.DateTimeFormat(languageLocale(state.settings.language), {
-      timeZone: V.resolveTimezone(timezone),
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: format === "12h"
-    }).format(date);
+    clockView.renderWorkClock();
   }
 
   function renderCapturedCallTime() {
@@ -1375,102 +1297,6 @@ Africa/Harare ZW
 
     const stamp = CallFlowReports.formatCallTimestamp(new Date(state.pendingCallCapturedAt), state.settings);
     label.textContent = `${CallFlowI18n.t("capturedCallTime", state.settings.language || "es")}: ${stamp.date} ${stamp.time}`;
-  }
-
-  function startWorkClock() {
-    if (state.clockTimer) clearInterval(state.clockTimer);
-    if (state.timerPersistTimer) clearInterval(state.timerPersistTimer);
-    renderWorkClock();
-    renderShiftTimer();
-    state.clockTimer = setInterval(() => {
-      renderWorkClock();
-      renderShiftTimer();
-    }, 1000);
-    state.timerPersistTimer = setInterval(() => {
-      persistActiveTimerSnapshot().catch((error) => console.error("Timer snapshot failed", error));
-    }, 10000);
-  }
-
-  function currentWorkElapsed(now = Date.now()) {
-    return Timers.currentWorkElapsed(state.workTimer, now);
-  }
-
-  function currentBreakElapsed(now = Date.now()) {
-    return Timers.currentBreakElapsed(state.workTimer, now);
-  }
-
-  function renderShiftTimer() {
-    const timer = normalizeWorkTimer(state.workTimer);
-    const wrapper = $("#shiftTimer");
-    const label = $("#shiftTimerLabel");
-    const value = $("#shiftTimerValue");
-    const button = $("#shiftTimerToggle");
-    const stopButton = $("#shiftTimerStop");
-    if (!wrapper || !label || !value || !button || !stopButton || !state.settings) return;
-
-    const language = state.settings.language || "es";
-    const paused = timer.status === "paused";
-    const working = timer.status === "working";
-    const stopped = timer.status === "stopped";
-    wrapper.classList.toggle("paused", paused);
-    wrapper.classList.toggle("working", working);
-    wrapper.classList.toggle("stopped", stopped);
-    label.textContent = CallFlowI18n.t(stopped ? "totalPauseTimer" : paused ? "breakTimer" : "workTimer", language);
-    value.textContent = Timers.formatDuration(paused ? currentBreakElapsed() : currentWorkElapsed());
-    button.textContent = working ? "⏸" : "▶";
-    button.setAttribute(
-      "aria-label",
-      CallFlowI18n.t(
-        working ? "pauseWorkTimer" : timer.status === "paused" || stopped ? "resumeWorkTimer" : "startWorkTimer",
-        language
-      )
-    );
-    button.title = button.getAttribute("aria-label");
-    stopButton.disabled = stopped || timer.status === "idle";
-    stopButton.setAttribute("aria-label", CallFlowI18n.t("pauseAllTimer", language));
-    stopButton.title = stopButton.getAttribute("aria-label");
-  }
-
-  async function persistWorkTimer() {
-    state.workTimer = normalizeWorkTimer(state.workTimer);
-    await CallFlowStorage.write("workTimer", state.workTimer);
-  }
-
-  async function persistActiveTimerSnapshot() {
-    const timer = normalizeWorkTimer(state.workTimer);
-    const now = new Date();
-    if (timer.status === "working" && timer.workStartedAt) {
-      state.workTimer = {
-        ...timer,
-        workElapsedMs: currentWorkElapsed(now.getTime()),
-        workStartedAt: now.toISOString()
-      };
-      await persistWorkTimer();
-    } else if (timer.status === "paused" && timer.currentBreakStartedAt) {
-      state.workTimer = timer;
-      await persistWorkTimer();
-    }
-  }
-
-  async function toggleShiftTimer() {
-    state.workTimer = Timers.toggleShiftTimer(state.workTimer);
-    await persistWorkTimer();
-    renderShiftTimer();
-  }
-
-  async function stopShiftTimer() {
-    const timer = normalizeWorkTimer(state.workTimer);
-    if (timer.status === "idle" || timer.status === "stopped") return;
-    state.workTimer = Timers.freezeWorkTimer(timer);
-    await persistWorkTimer();
-    renderShiftTimer();
-  }
-
-  async function freezeAndPersistTimerOnUnload() {
-    const timer = normalizeWorkTimer(state.workTimer);
-    if (!["working", "paused"].includes(timer.status)) return;
-    state.workTimer = Timers.freezeWorkTimer(timer);
-    await persistWorkTimer();
   }
 
   function isoDateInSettings(date) {
@@ -2066,7 +1892,7 @@ Africa/Harare ZW
     window.CallFlowSettingsView.render(renderParts);
     window.CallFlowRemindersView.render(renderParts);
     knowledgeView.render(renderParts);
-    window.CallFlowClockView.render(renderParts);
+    clockView.render(renderParts);
     dateTimePicker.enhanceInputs();
   }
 
@@ -2806,10 +2632,8 @@ Africa/Harare ZW
     if (reminderDateShortcut) setReminderDateShortcut(reminderDateShortcut);
     if (addActiveTimezonePicker) addActiveTimezoneFromPicker(addActiveTimezonePicker);
     if (removeActiveTimezoneValue) removeActiveTimezone(removeActiveTimezoneValue);
-    if (togglePinnedClockValue) togglePinnedClock(togglePinnedClockValue);
-    if (!event.target.closest("#workClockShell")) {
-      $("#clockPanel").classList.add("hidden");
-    }
+    if (togglePinnedClockValue) clockView.togglePinnedClock(togglePinnedClockValue);
+    clockView.closePanelIfOutside(event.target);
     if (noteId) {
       knowledgeView.selectNote(noteId);
     }
@@ -2862,11 +2686,7 @@ Africa/Harare ZW
     $("#copyLastCrm").addEventListener("click", copyLastCrm);
     $("#importCallIdClipboard").addEventListener("click", importCallIdFromClipboard);
     $("#captureCallTime").addEventListener("click", captureCurrentCallTime);
-    $("#shiftTimerToggle").addEventListener("click", toggleShiftTimer);
-    $("#shiftTimerStop").addEventListener("click", stopShiftTimer);
-    $("#clockPanelToggle").addEventListener("click", () => {
-      $("#clockPanel").classList.toggle("hidden");
-    });
+    clockView.bindEvents();
     $("#sidebarToggle").addEventListener("click", () => {
       const app = $("#app");
       app.classList.toggle("sidebar-open");
@@ -3004,7 +2824,7 @@ Africa/Harare ZW
     window.addEventListener("scroll", dateTimePicker.position, true);
     document.addEventListener("keydown", handleGlobalKeydown);
     window.addEventListener("beforeunload", () => {
-      freezeAndPersistTimerOnUnload();
+      clockView.freezeAndPersistTimerOnUnload();
     });
   }
 
@@ -3018,7 +2838,7 @@ Africa/Harare ZW
     state.settings = normalizeSettings(state.settings);
     normalizeRuntimeData();
     freezeStaleTimerOnStartup();
-    await persistWorkTimer();
+    await clockView.persistWorkTimer();
     if (state.callsNeedPersist) {
       await CallFlowStorage.write("calls", state.calls);
       state.callsNeedPersist = false;
@@ -3028,7 +2848,7 @@ Africa/Harare ZW
     applySettingsToForms();
     const dataDir = await window.callflow.getDataDir();
     $("#dataDirLabel").textContent = dataDir;
-    startWorkClock();
+    clockView.startClock();
     state.reminderTimer = setInterval(renderReminders, 1000);
     prepareReminderFormDefaults();
     showHealthNotice();
