@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Notification, ipcMain, clipboard, dialog } = require("electron");
+const { app, BrowserWindow, Notification, ipcMain, clipboard, dialog, nativeImage } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
 const time = require("../shared/validators");
@@ -17,6 +17,11 @@ const IPC_LIMITS = {
   exportContent: 200000,
   fileName: 120
 };
+
+if (process.platform === "linux") {
+  app.commandLine.appendSwitch("class", "callflow");
+  app.setDesktopName("callflow.desktop");
+}
 
 function getDataDir() {
   return app.getPath("userData");
@@ -200,14 +205,21 @@ function getWindowIconPath() {
   return path.join(__dirname, "..", "..", "build", iconFile);
 }
 
+function getWindowIcon() {
+  const iconPath = getWindowIconPath();
+  const icon = nativeImage.createFromPath(iconPath);
+  return icon.isEmpty() ? iconPath : icon;
+}
+
 function createWindow() {
+  const windowIcon = getWindowIcon();
   mainWindow = new BrowserWindow({
     width: 620,
     height: 760,
     minWidth: 520,
     minHeight: 620,
     backgroundColor: "#0F172A",
-    icon: getWindowIconPath(),
+    icon: windowIcon,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -215,6 +227,7 @@ function createWindow() {
       sandbox: app.isPackaged || process.platform !== "linux"
     }
   });
+  mainWindow.setIcon(windowIcon);
 
   mainWindow.on("close", (event) => {
     if (keepRunningInBackground && !app.isQuitting) {
