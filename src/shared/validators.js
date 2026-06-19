@@ -180,11 +180,16 @@
     const source = isPlainObject(settings) ? settings : {};
     const merged = { ...defaults, ...source };
     const language = languages.has(merged.language) ? merged.language : "es";
-    const primaryTimezone = text(merged.timezone, LIMITS.shortText) || "local";
-    const activeTimezones = uniqueItems([primaryTimezone, ...(Array.isArray(merged.activeTimezones) ? merged.activeTimezones : [])], LIMITS.shortText).slice(
-      0,
-      MAX_ACTIVE_TIMEZONES
-    );
+    const requestedPrimaryTimezone = text(merged.timezone, LIMITS.shortText) || "local";
+    const candidateActiveTimezones = (
+      Array.isArray(merged.activeTimezones) && merged.activeTimezones.length
+        ? uniqueItems(merged.activeTimezones, LIMITS.shortText)
+        : [requestedPrimaryTimezone]
+    ).slice(0, MAX_ACTIVE_TIMEZONES);
+    const activeTimezones = candidateActiveTimezones.length ? candidateActiveTimezones : [requestedPrimaryTimezone];
+    const primaryTimezone = activeTimezones.includes(requestedPrimaryTimezone)
+      ? requestedPrimaryTimezone
+      : activeTimezones[0] || requestedPrimaryTimezone;
     const hasPinnedClockTimezones = Object.prototype.hasOwnProperty.call(merged, "pinnedClockTimezones");
     const pinnedClockTimezones = (
       hasPinnedClockTimezones ? uniqueItems(merged.pinnedClockTimezones, LIMITS.shortText) : activeTimezones.slice(0, 1)
@@ -196,7 +201,7 @@
       timezone: primaryTimezone,
       activeTimezones,
       pinnedClockTimezones,
-      lastReminderTimezone: activeTimezones.includes(lastReminderTimezone) ? lastReminderTimezone : activeTimezones[0] || primaryTimezone,
+      lastReminderTimezone: activeTimezones.includes(lastReminderTimezone) ? lastReminderTimezone : primaryTimezone,
       operatorName: text(merged.operatorName, LIMITS.shortText),
       callTypes: uniqueItems(merged.callTypes, LIMITS.shortText),
       frequentStatuses: uniqueItems(merged.frequentStatuses || merged.callStatuses, LIMITS.shortText),

@@ -73,12 +73,11 @@ test("anchors reminder due time to the selected work timezone", () => {
   assert.equal(validators.reminderDueDate(valid.value).toISOString(), "2026-06-18T13:00:00.000Z");
 });
 
-test("normalizes active timezones with primary first and a max of ten", () => {
+test("normalizes active timezones without forcing an old primary", () => {
   const result = validators.normalizeSettings({
     timezone: "Europe/Madrid",
     activeTimezones: [
       "Europe/Rome",
-      "Europe/Madrid",
       "America/Argentina/Buenos_Aires",
       "America/Mexico_City",
       "America/Bogota",
@@ -95,10 +94,11 @@ test("normalizes active timezones with primary first and a max of ten", () => {
   });
 
   assert.equal(result.activeTimezones.length, 10);
-  assert.equal(result.activeTimezones[0], "Europe/Madrid");
+  assert.equal(result.timezone, "Europe/Rome");
+  assert.equal(result.activeTimezones[0], "Europe/Rome");
   assert.equal(result.lastReminderTimezone, "America/Bogota");
   assert.equal(result.activeTimezones.includes("UTC"), false);
-  assert.deepEqual(result.pinnedClockTimezones, ["Europe/Madrid", "America/Bogota"]);
+  assert.deepEqual(result.pinnedClockTimezones, ["America/Bogota"]);
 });
 
 test("allows no pinned clocks while keeping active timezones available", () => {
@@ -108,8 +108,29 @@ test("allows no pinned clocks while keeping active timezones available", () => {
     pinnedClockTimezones: []
   });
 
-  assert.deepEqual(result.activeTimezones, ["Europe/Madrid", "Europe/Rome"]);
+  assert.equal(result.timezone, "Europe/Rome");
+  assert.deepEqual(result.activeTimezones, ["Europe/Rome"]);
   assert.deepEqual(result.pinnedClockTimezones, []);
+});
+
+test("falls back to the primary timezone when active timezones are missing", () => {
+  const result = validators.normalizeSettings({
+    timezone: "America/Bogota"
+  });
+
+  assert.equal(result.timezone, "America/Bogota");
+  assert.deepEqual(result.activeTimezones, ["America/Bogota"]);
+  assert.equal(result.lastReminderTimezone, "America/Bogota");
+});
+
+test("keeps at least one active timezone when active values are invalid", () => {
+  const result = validators.normalizeSettings({
+    timezone: "America/Bogota",
+    activeTimezones: ["", "   "]
+  });
+
+  assert.equal(result.timezone, "America/Bogota");
+  assert.deepEqual(result.activeTimezones, ["America/Bogota"]);
 });
 
 test("normalizes legacy call records without throwing", () => {

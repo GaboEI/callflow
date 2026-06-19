@@ -675,13 +675,16 @@ Africa/Harare ZW
     const listPrefix = form.id === "onboardingForm" ? "onboarding" : "settings";
     const language = form.language.value;
     const outcomePresets = outcomePresetsFromForm(listPrefix);
+    const selectedTimezone = form.timezone.value || state.settings.timezone || "local";
+    const currentActiveTimezones = activeTimezones();
+    const nextActiveTimezones = uniqueItems([selectedTimezone, ...currentActiveTimezones]).slice(0, V.MAX_ACTIVE_TIMEZONES);
     return {
       ...state.settings,
       language,
-      timezone: form.timezone.value,
-      activeTimezones: uniqueItems([form.timezone.value, ...(state.settings.activeTimezones || [])]).slice(0, V.MAX_ACTIVE_TIMEZONES),
+      timezone: selectedTimezone,
+      activeTimezones: nextActiveTimezones,
       pinnedClockTimezones: (state.settings.pinnedClockTimezones || []).filter((timezone) =>
-        uniqueItems([form.timezone.value, ...(state.settings.activeTimezones || [])]).includes(timezone)
+        nextActiveTimezones.includes(timezone)
       ),
       lastReminderTimezone: state.settings.lastReminderTimezone,
       operatorName: form.operatorName.value.trim(),
@@ -774,7 +777,10 @@ Africa/Harare ZW
   }
 
   function activeTimezones() {
-    return V.uniqueItems([state.settings.timezone || "local", ...(state.settings.activeTimezones || [])]).slice(0, V.MAX_ACTIVE_TIMEZONES);
+    return V.uniqueItems(state.settings.activeTimezones?.length ? state.settings.activeTimezones : [state.settings.timezone || "local"]).slice(
+      0,
+      V.MAX_ACTIVE_TIMEZONES
+    );
   }
 
   const clockView = window.CallFlowClockView.createClockView({
@@ -875,12 +881,25 @@ Africa/Harare ZW
   });
 
   async function updateActiveTimezones(timezones, lastReminderTimezone = state.settings.lastReminderTimezone) {
-    const zones = V.uniqueItems([state.settings.timezone || "local", ...timezones]).slice(0, V.MAX_ACTIVE_TIMEZONES);
+    const zones = V.uniqueItems(timezones).slice(0, V.MAX_ACTIVE_TIMEZONES);
+    if (!zones.length) {
+      setStatusMessage(
+        state.settings.language === "en"
+          ? "Keep at least one active timezone."
+          : state.settings.language === "ru"
+            ? "Оставьте хотя бы один активный часовой пояс."
+            : "Debe quedar al menos una zona horaria activa.",
+        "warning"
+      );
+      return;
+    }
+    const nextPrimaryTimezone = zones.includes(state.settings.timezone) ? state.settings.timezone : zones[0];
     state.settings = normalizeSettings({
       ...state.settings,
+      timezone: nextPrimaryTimezone,
       activeTimezones: zones,
       pinnedClockTimezones: (state.settings.pinnedClockTimezones || []).filter((timezone) => zones.includes(timezone)),
-      lastReminderTimezone: zones.includes(lastReminderTimezone) ? lastReminderTimezone : zones[0]
+      lastReminderTimezone: zones.includes(lastReminderTimezone) ? lastReminderTimezone : nextPrimaryTimezone
     });
     await runAction(async () => {
       await CallFlowStorage.write("settings", state.settings);

@@ -17,7 +17,10 @@
     } = context;
 
     function activeTimezones() {
-      return V.uniqueItems([state.settings.timezone || "local", ...(state.settings.activeTimezones || [])]).slice(0, V.MAX_ACTIVE_TIMEZONES);
+      return V.uniqueItems(state.settings.activeTimezones?.length ? state.settings.activeTimezones : [state.settings.timezone || "local"]).slice(
+        0,
+        V.MAX_ACTIVE_TIMEZONES
+      );
     }
 
     function pinnedClockTimezones() {

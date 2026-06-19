@@ -28,11 +28,11 @@
         const zones = activeTimezones();
         output.innerHTML = zones
           .map(
-            (timezone, index) => `
+            (timezone) => `
               <span class="chip timezone-chip">
                 ${escapeHtml(timezoneFlag(timezone))} ${escapeHtml(shortTimezoneName(timezone))}
                 ${
-                  index === 0
+                  zones.length <= 1
                     ? ""
                     : `<button type="button" data-remove-active-timezone="${escapeHtml(timezone)}" aria-label="${escapeHtml(i18n.t("remove", activeFormLanguage()))}">×</button>`
                 }
