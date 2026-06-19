@@ -1,80 +1,5 @@
 (function () {
-  const state = {
-    settings: null,
-    calls: [],
-    reminders: [],
-    reminderFormCollapsed: true,
-    activeAlarmReminderId: null,
-    activeAlarmPhase: null,
-    activeAlarmSoundKey: null,
-    alarmSoundTimer: null,
-    knowledgeBase: [],
-    health: [],
-    callsNeedPersist: false,
-    workTimer: null,
-    clockTimer: null,
-    timerPersistTimer: null,
-    reminderTimer: null,
-    selectedNoteId: null,
-    editingReminderId: null,
-    lastCall: null,
-    pendingCallCapturedAt: null,
-    selectedPrimaryOutcome: null,
-    openOutcomeMenu: null,
-    selectedBlocks: new Set(),
-    editingReportBlockKey: null,
-    reportRange: {
-      preset: "today",
-      from: "",
-      to: ""
-    },
-    reportSearch: {
-      query: "",
-      matches: 0,
-      activeIndex: 0
-    },
-    formLists: {
-      onboardingCallTypes: [],
-      onboardingFrequentStatuses: [],
-      onboardingSuccessOutcomes: [],
-      onboardingRejectionOutcomes: [],
-      onboardingCallbackOutcomes: [],
-      settingsCallTypes: [],
-      settingsFrequentStatuses: [],
-      settingsSuccessOutcomes: [],
-      settingsRejectionOutcomes: [],
-      settingsCallbackOutcomes: []
-    },
-    presetMeta: {
-      onboardingFrequentStatuses: { custom: [] },
-      settingsFrequentStatuses: { custom: [] }
-    },
-    timezonePickers: {
-      onboarding: {
-        searchQuery: "",
-        selectedTimezoneValue: "local",
-        isTimezoneDropdownOpen: false,
-        filteredTimezoneOptions: [],
-        highlightedTimezoneIndex: -1
-      },
-      settings: {
-        searchQuery: "",
-        selectedTimezoneValue: "local",
-        isTimezoneDropdownOpen: false,
-        filteredTimezoneOptions: [],
-        highlightedTimezoneIndex: -1
-      }
-    },
-    dateTimePicker: {
-      input: null,
-      mode: null,
-      step: "date",
-      year: null,
-      month: null,
-      hour: 0,
-      minute: 0
-    }
-  };
+  const state = window.CallFlowUiState.createInitialState();
 
   const presetStatusValues = new Set(Object.values(window.CallFlowSettings.presets).flatMap((preset) => preset.frequentStatuses));
   const fallbackTimezones = [
@@ -535,8 +460,7 @@ Africa/Harare ZW
 `.trim().split("\n").map((line) => line.split(" "))
   );
 
-  const $ = (selector) => document.querySelector(selector);
-  const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+  const { $, $$ } = window.CallFlowDom;
   const V = window.CallFlowValidators;
   const Settings = window.CallFlowSettings;
   const Timezones = window.CallFlowTimezones;
@@ -552,6 +476,11 @@ Africa/Harare ZW
   const normalizeWorkTimer = Timers.normalizeWorkTimer;
   const presetForLanguage = Settings.presetForLanguage;
   const uniqueItems = Settings.uniqueItems;
+  const { runAction, setStatusMessage } = window.CallFlowActions.createActions({
+    $,
+    state,
+    i18n: CallFlowI18n
+  });
 
   function normalizeRuntimeData() {
     state.calls = V.normalizeCollection(state.calls, V.normalizeCall, state.settings);
@@ -600,17 +529,6 @@ Africa/Harare ZW
     }
   }
 
-  function setStatusMessage(message, tone = "info") {
-    const target = $("#lastSavedLabel");
-    if (target) target.textContent = message || "";
-    const notice = $("#systemNotice");
-    if (!notice) return;
-    const showNotice = message && ["warning", "error"].includes(tone);
-    notice.textContent = showNotice ? message : "";
-    notice.classList.toggle("hidden", !showNotice);
-    notice.dataset.tone = tone;
-  }
-
   function showHealthNotice() {
     const recovered = state.health.find((event) => event.type && event.type.includes("corrupt-json"));
     if (!recovered) return;
@@ -619,493 +537,28 @@ Africa/Harare ZW
     setStatusMessage(`Se recuperaron datos de ${file}. Backup: ${backup}`, "warning");
   }
 
-  async function runAction(action, options = {}) {
-    try {
-      return await action();
-    } catch (error) {
-      console.error(options.logMessage || "CallFlow action failed", error);
-      setStatusMessage(options.userMessage || CallFlowI18n.t("actionFailed", state.settings?.language || "es"), "error");
-      return null;
-    }
-  }
-
-  function parseIsoDateParts(value) {
-    const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!match) return null;
-    const year = Number(match[1]);
-    const month = Number(match[2]) - 1;
-    const day = Number(match[3]);
-    if (month < 0 || month > 11 || day < 1 || day > 31) return null;
-    return { year, month, day };
-  }
-
-  function parseTimeParts(value) {
-    const match = String(value || "").match(/^(\d{2}):(\d{2})$/);
-    if (!match) return null;
-    const hour = Number(match[1]);
-    const minute = Number(match[2]);
-    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
-    return { hour, minute };
-  }
-
-  function inputTimezone(input) {
-    const form = input?.form;
-    if (!form) return state.settings || "local";
-    if (input.name === "date" || input.name === "time") {
-      return form.timezone?.value || state.settings?.lastReminderTimezone || activeTimezones()[0] || state.settings?.timezone || "local";
-    }
-    if (input.name === "callbackDate" || input.name === "callbackTime") {
-      return form.callbackTimezone?.value || state.settings?.lastReminderTimezone || activeTimezones()[0] || state.settings?.timezone || "local";
-    }
-    return state.settings || "local";
-  }
-
-  function currentPickerDateParts(input) {
-    const existing = parseIsoDateParts(input.value);
-    if (existing) return existing;
-    const current = V.isoDateInTimezone(new Date(), inputTimezone(input));
-    return parseIsoDateParts(current) || parseIsoDateParts(new Date().toISOString().slice(0, 10));
-  }
-
-  function currentPickerTimeParts(input) {
-    const existing = parseTimeParts(input.value);
-    if (existing) return existing;
-    return parseTimeParts(V.timeInTimezone(new Date(), inputTimezone(input))) || { hour: 0, minute: 0 };
-  }
-
-  function setPickerInputValue(input, value) {
-    input.value = value;
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-
-  function monthName(month) {
-    const language = state.settings?.language || "es";
-    const label = new Intl.DateTimeFormat(languageLocale(language), { month: "long" })
-      .format(new Date(Date.UTC(2026, month, 1)));
-    return label.charAt(0).toUpperCase() + label.slice(1);
-  }
-
-  function weekdayLabels() {
-    const language = state.settings?.language || "es";
-    const monday = new Date(Date.UTC(2026, 5, 15));
-    return Array.from({ length: 7 }, (_item, index) =>
-      new Intl.DateTimeFormat(languageLocale(language), { weekday: "short" })
-        .format(new Date(monday.getTime() + index * 86400000))
-        .slice(0, 2)
-    );
-  }
-
-  function sameIsoDay(parts, year, month, day) {
-    return parts && parts.year === year && parts.month === month && parts.day === day;
-  }
-
-  function pickerText(key) {
-    const language = state.settings?.language || "es";
-    const labels = {
-      es: {
-        previousMonth: "Mes anterior",
-        nextMonth: "Mes siguiente",
-        month: "Mes",
-        year: "Año",
-        exactMinute: "Minuto exacto",
-        apply: "OK"
-      },
-      en: {
-        previousMonth: "Previous month",
-        nextMonth: "Next month",
-        month: "Month",
-        year: "Year",
-        exactMinute: "Exact minute",
-        apply: "OK"
-      },
-      ru: {
-        previousMonth: "Предыдущий месяц",
-        nextMonth: "Следующий месяц",
-        month: "Месяц",
-        year: "Год",
-        exactMinute: "Точная минута",
-        apply: "OK"
-      }
-    };
-    return (labels[language] || labels.es)[key] || key;
-  }
-
-  function datePickerDays(year, month) {
-    const firstDay = new Date(Date.UTC(year, month, 1)).getUTCDay();
-    const leadingDays = (firstDay + 6) % 7;
-    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-    const daysInPreviousMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-    const cells = [];
-
-    for (let index = leadingDays - 1; index >= 0; index -= 1) {
-      cells.push({ year, month: month - 1, day: daysInPreviousMonth - index, muted: true });
-    }
-    for (let day = 1; day <= daysInMonth; day += 1) {
-      cells.push({ year, month, day, muted: false });
-    }
-    while (cells.length % 7 !== 0 || cells.length < 42) {
-      const nextDay = cells.filter((cell) => cell.month === month + 1).length + 1;
-      cells.push({ year, month: month + 1, day: nextDay, muted: true });
-    }
-
-    return cells.map((cell) => {
-      const normalized = new Date(Date.UTC(cell.year, cell.month, cell.day));
-      return {
-        year: normalized.getUTCFullYear(),
-        month: normalized.getUTCMonth(),
-        day: normalized.getUTCDate(),
-        muted: cell.muted
-      };
-    });
-  }
-
-  function findAssociatedTimeInput(input) {
-    const form = input.form;
-    if (!form || input.type !== "date") return null;
-    if (input.name === "callbackDate") return form.callbackTime || null;
-    if (input.name === "date") return form.time || null;
-    return null;
-  }
-
-  function positionDateTimePicker() {
-    const input = state.dateTimePicker.input;
-    const picker = $("#dateTimePicker");
-    if (!input || !picker || picker.classList.contains("hidden")) return;
-
-    const rect = input.getBoundingClientRect();
-    const width = Math.min(368, Math.max(292, Math.floor(window.innerWidth - 24)));
-    picker.style.width = `${width}px`;
-    const pickerHeight = picker.offsetHeight || 360;
-    const preferredTop = rect.bottom + 8;
-    const top = preferredTop + pickerHeight > window.innerHeight - 12
-      ? Math.max(12, rect.top - pickerHeight - 8)
-      : preferredTop;
-    const left = Math.min(Math.max(12, rect.left), window.innerWidth - width - 12);
-    picker.style.top = `${top}px`;
-    picker.style.left = `${left}px`;
-  }
-
-  function renderDateTimePicker() {
-    const picker = $("#dateTimePicker");
-    const pickerState = state.dateTimePicker;
-    const input = pickerState.input;
-    if (!picker || !input || !pickerState.mode) return;
-
-    picker.classList.remove("hidden");
-    picker.dataset.mode = pickerState.mode;
-
-    if (pickerState.mode === "date") {
-      const selected = parseIsoDateParts(input.value);
-      const today = parseIsoDateParts(V.isoDateInTimezone(new Date(), inputTimezone(input)));
-      const weekdays = weekdayLabels().map((day) => `<span>${escapeHtml(day)}</span>`).join("");
-      const monthOptions = Array.from({ length: 12 }, (_item, month) =>
-        `<option value="${month}" ${pickerState.month === month ? "selected" : ""}>${escapeHtml(monthName(month))}</option>`
-      ).join("");
-      const days = datePickerDays(pickerState.year, pickerState.month)
-        .map((cell) => {
-          const dateValue = `${cell.year}-${String(cell.month + 1).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`;
-          const classes = [
-            "cf-picker-day",
-            cell.muted ? "is-muted" : "",
-            sameIsoDay(selected, cell.year, cell.month, cell.day) ? "is-selected" : "",
-            sameIsoDay(today, cell.year, cell.month, cell.day) ? "is-today" : ""
-          ].filter(Boolean).join(" ");
-          return `<button type="button" class="${classes}" data-cf-picker-date="${dateValue}">${cell.day}</button>`;
-        })
-        .join("");
-
-      picker.innerHTML = `
-        <div class="cf-picker-header">
-          <button type="button" class="icon-button" data-cf-picker-month="-1" aria-label="${escapeHtml(pickerText("previousMonth"))}">‹</button>
-          <div class="cf-picker-month-year">
-            <select data-cf-picker-month-select aria-label="${escapeHtml(pickerText("month"))}">${monthOptions}</select>
-            <input type="number" data-cf-picker-year-input aria-label="${escapeHtml(pickerText("year"))}" min="1900" max="2200" value="${pickerState.year}" />
-          </div>
-          <button type="button" class="icon-button" data-cf-picker-month="1" aria-label="${escapeHtml(pickerText("nextMonth"))}">›</button>
-        </div>
-        <div class="cf-picker-weekdays">${weekdays}</div>
-        <div class="cf-picker-calendar">${days}</div>
-      `;
-    } else {
-      const hourButtons = Array.from({ length: 24 }, (_item, hour) => {
-        const value = String(hour).padStart(2, "0");
-        const selected = pickerState.hour === hour ? " is-selected" : "";
-        return `<button type="button" class="cf-picker-cell${selected}" data-cf-picker-hour="${hour}">${value}</button>`;
-      }).join("");
-      const minuteButtons = Array.from({ length: 12 }, (_item, index) => index * 5).map((minute) => {
-        const value = String(minute).padStart(2, "0");
-        const selected = pickerState.minute === minute ? " is-selected" : "";
-        return `<button type="button" class="cf-picker-cell${selected}" data-cf-picker-minute="${minute}">${value}</button>`;
-      }).join("");
-
-      picker.innerHTML = `
-        <div class="cf-picker-header">
-          <button type="button" class="icon-button${pickerState.step === "hour" ? " is-selected" : ""}" data-cf-picker-step="hour">HH</button>
-          <strong>${String(pickerState.hour).padStart(2, "0")}:${String(pickerState.minute).padStart(2, "0")}</strong>
-          <button type="button" class="icon-button${pickerState.step === "minute" ? " is-selected" : ""}" data-cf-picker-step="minute">MM</button>
-        </div>
-        ${
-          pickerState.step === "hour"
-            ? `<div class="cf-picker-grid hours">${hourButtons}</div>`
-            : `
-              <div class="cf-picker-grid minutes">${minuteButtons}</div>
-              <div class="cf-picker-exact-minute">
-                <label>
-                  <span>${escapeHtml(pickerText("exactMinute"))}</span>
-                  <div class="cf-exact-minute-control">
-                    <input id="exactMinuteInput" type="number" min="0" max="59" inputmode="numeric" value="${String(pickerState.minute).padStart(2, "0")}" />
-                    <div class="cf-minute-stepper" aria-label="${escapeHtml(pickerText("exactMinute"))}">
-                      <button type="button" data-cf-picker-minute-step="1" aria-label="+1">⌃</button>
-                      <button type="button" data-cf-picker-minute-step="-1" aria-label="-1">⌄</button>
-                    </div>
-                  </div>
-                </label>
-                <button type="button" data-cf-picker-apply-minute>${escapeHtml(pickerText("apply"))}</button>
-              </div>
-            `
-        }
-      `;
-    }
-
-    positionDateTimePicker();
-  }
-
-  function closeDateTimePicker() {
-    const picker = $("#dateTimePicker");
-    if (picker) picker.classList.add("hidden");
-    state.dateTimePicker.input = null;
-    state.dateTimePicker.mode = null;
-  }
-
-  function openDateTimePicker(input) {
-    if (!input || !["date", "time"].includes(input.type)) return;
-    enhanceDateTimeInputs();
-    state.dateTimePicker.input = input;
-    state.dateTimePicker.mode = input.type;
-
-    if (input.type === "date") {
-      const parts = currentPickerDateParts(input);
-      state.dateTimePicker.step = "date";
-      state.dateTimePicker.year = parts.year;
-      state.dateTimePicker.month = parts.month;
-    } else {
-      const parts = currentPickerTimeParts(input);
-      state.dateTimePicker.step = "hour";
-      state.dateTimePicker.hour = parts.hour;
-      state.dateTimePicker.minute = parts.minute;
-    }
-
-    renderDateTimePicker();
-  }
-
-  function commitPickerDate(value) {
-    const input = state.dateTimePicker.input;
-    if (!input) return;
-    setPickerInputValue(input, value);
-    const associatedTimeInput = findAssociatedTimeInput(input);
-    closeDateTimePicker();
-    if (associatedTimeInput) {
-      setTimeout(() => {
-        associatedTimeInput.focus();
-        openDateTimePicker(associatedTimeInput);
-      }, 0);
-    }
-  }
-
-  function commitPickerTime(minute) {
-    const input = state.dateTimePicker.input;
-    if (!input) return;
-    const normalizedMinute = Math.min(59, Math.max(0, Number(minute) || 0));
-    state.dateTimePicker.minute = normalizedMinute;
-    setPickerInputValue(
-      input,
-      `${String(state.dateTimePicker.hour).padStart(2, "0")}:${String(normalizedMinute).padStart(2, "0")}`
-    );
-    closeDateTimePicker();
-  }
-
-  function shiftPickerMonth(direction) {
-    const date = new Date(Date.UTC(state.dateTimePicker.year, state.dateTimePicker.month + direction, 1));
-    state.dateTimePicker.year = date.getUTCFullYear();
-    state.dateTimePicker.month = date.getUTCMonth();
-    renderDateTimePicker();
-  }
-
-  function setPickerMonth(month) {
-    const nextMonth = Math.min(11, Math.max(0, Number(month)));
-    if (Number.isNaN(nextMonth)) return;
-    state.dateTimePicker.month = nextMonth;
-    renderDateTimePicker();
-  }
-
-  function setPickerYear(year) {
-    const nextYear = Math.min(2200, Math.max(1900, Number(year)));
-    if (Number.isNaN(nextYear)) return;
-    state.dateTimePicker.year = nextYear;
-    renderDateTimePicker();
-  }
-
-  function exactMinuteInputValue() {
-    const input = $("#exactMinuteInput");
-    return Math.min(59, Math.max(0, Number(input?.value) || 0));
-  }
-
-  function nudgeExactMinute(delta) {
-    const input = $("#exactMinuteInput");
-    if (!input) return;
-    const nextMinute = (exactMinuteInputValue() + delta + 60) % 60;
-    input.value = String(nextMinute).padStart(2, "0");
-    state.dateTimePicker.minute = nextMinute;
-    renderDateTimePicker();
-  }
-
-  function handleDateTimePickerClick(event) {
-    const monthButton = event.target.closest("[data-cf-picker-month]");
-    const dateButton = event.target.closest("[data-cf-picker-date]");
-    const stepButton = event.target.closest("[data-cf-picker-step]");
-    const hourButton = event.target.closest("[data-cf-picker-hour]");
-    const minuteButton = event.target.closest("[data-cf-picker-minute]");
-    const minuteStepButton = event.target.closest("[data-cf-picker-minute-step]");
-    const applyMinute = event.target.closest("[data-cf-picker-apply-minute]");
-
-    if (monthButton) shiftPickerMonth(Number(monthButton.dataset.cfPickerMonth));
-    if (dateButton) commitPickerDate(dateButton.dataset.cfPickerDate);
-    if (stepButton) {
-      state.dateTimePicker.step = stepButton.dataset.cfPickerStep;
-      renderDateTimePicker();
-    }
-    if (hourButton) {
-      state.dateTimePicker.hour = Number(hourButton.dataset.cfPickerHour);
-      state.dateTimePicker.step = "minute";
-      renderDateTimePicker();
-    }
-    if (minuteButton) commitPickerTime(Number(minuteButton.dataset.cfPickerMinute));
-    if (minuteStepButton) nudgeExactMinute(Number(minuteStepButton.dataset.cfPickerMinuteStep));
-    if (applyMinute) commitPickerTime($("#exactMinuteInput")?.value);
-  }
-
-  function handleDateTimePickerChange(event) {
-    const monthSelect = event.target.closest("[data-cf-picker-month-select]");
-    const yearInput = event.target.closest("[data-cf-picker-year-input]");
-    const exactMinuteInput = event.target.closest("#exactMinuteInput");
-    if (monthSelect) setPickerMonth(monthSelect.value);
-    if (yearInput) setPickerYear(yearInput.value);
-    if (exactMinuteInput) {
-      exactMinuteInput.value = String(exactMinuteInputValue()).padStart(2, "0");
-      state.dateTimePicker.minute = exactMinuteInputValue();
-    }
-  }
-
-  function enhanceDateTimeInputs() {
-    $$("input[type='date'], input[type='time']").forEach((input) => {
-      if (input.dataset.callflowDateTime === "true") return;
-      input.dataset.callflowDateTime = "true";
-      input.classList.add("cf-datetime-input");
-      input.readOnly = true;
-      input.autocomplete = "off";
-      input.addEventListener("focus", () => openDateTimePicker(input));
-      input.addEventListener("click", () => openDateTimePicker(input));
-      input.addEventListener("keydown", (event) => {
-        if (["Enter", " ", "ArrowDown"].includes(event.key)) {
-          event.preventDefault();
-          openDateTimePicker(input);
-        }
-        if (event.key === "Escape") closeDateTimePicker();
-      });
-    });
-  }
-
   const languageLocale = Timezones.languageLocale;
-  const normalizeTimezoneSearch = Timezones.normalizeTimezoneSearch;
-  const timezoneLabel = (value, language) => Timezones.timezoneLabel(value, language, CallFlowI18n.t);
-  const timezoneOption = (value, language) => Timezones.timezoneOption(value, language, CallFlowI18n.t);
-
-  function timezonePickerState(pickerId) {
-    return state.timezonePickers[pickerId];
-  }
-
-  function timezonePickerForm(pickerId) {
-    return pickerId === "onboarding" ? $("#onboardingForm") : $("#settingsForm");
-  }
-
-  function timezonePickerElements(pickerId) {
-    return {
-      form: timezonePickerForm(pickerId),
-      search: document.querySelector(`[data-timezone-search="${pickerId}"]`),
-      selected: document.querySelector(`[data-timezone-selected="${pickerId}"]`),
-      results: document.querySelector(`[data-timezone-results="${pickerId}"]`)
-    };
-  }
-
-  function buildTimezoneOptions(language) {
-    return [timezoneOption("local", language), ...timezones.map((timezone) => timezoneOption(timezone, language))];
-  }
-
-  function filterTimezoneOptions(pickerId, language) {
-    const pickerState = timezonePickerState(pickerId);
-    const normalizedQuery = normalizeTimezoneSearch(pickerState.searchQuery);
-    const compactOffsetQuery = normalizedQuery.replace(":00", "");
-    const options = buildTimezoneOptions(language).filter((option) => {
-      if (!normalizedQuery) return true;
-      return option.searchText.includes(normalizedQuery) || option.searchText.includes(compactOffsetQuery);
-    });
-    pickerState.filteredTimezoneOptions = options.slice(0, 80);
-    if (pickerState.highlightedTimezoneIndex >= pickerState.filteredTimezoneOptions.length) {
-      pickerState.highlightedTimezoneIndex = pickerState.filteredTimezoneOptions.length ? 0 : -1;
-    }
-  }
-
-  function renderTimezonePicker(pickerId, language) {
-    const pickerState = timezonePickerState(pickerId);
-    const { form, search, selected, results } = timezonePickerElements(pickerId);
-    if (!form || !form.timezone || !search || !results) return;
-
-    form.timezone.value = pickerState.selectedTimezoneValue || "local";
-    search.value = pickerState.searchQuery;
-    if (selected) selected.textContent = timezoneLabel(pickerState.selectedTimezoneValue || "local", language);
-
-    results.classList.toggle("open", pickerState.isTimezoneDropdownOpen);
-    results.innerHTML = pickerState.filteredTimezoneOptions.length
-      ? pickerState.filteredTimezoneOptions
-          .map((option, index) => {
-            const active = index === pickerState.highlightedTimezoneIndex;
-            return `
-              <button type="button" class="timezone-option${active ? " active" : ""}" data-timezone-picker-option="${pickerId}" data-value="${escapeHtml(option.value)}" aria-selected="${active ? "true" : "false"}">
-                <span>${escapeHtml(option.label)}</span>
-                <small>${escapeHtml(option.value)}</small>
-              </button>
-            `;
-          })
-          .join("")
-      : '<p class="timezone-empty">No results</p>';
-  }
-
-  function openTimezoneDropdown(pickerId) {
-    const pickerState = timezonePickerState(pickerId);
-    pickerState.isTimezoneDropdownOpen = true;
-    filterTimezoneOptions(pickerId, activeFormLanguage());
-    renderTimezonePicker(pickerId, activeFormLanguage());
-  }
-
-  function closeTimezoneDropdown(pickerId) {
-    const pickerState = timezonePickerState(pickerId);
-    pickerState.isTimezoneDropdownOpen = false;
-    pickerState.highlightedTimezoneIndex = -1;
-    renderTimezonePicker(pickerId, activeFormLanguage());
-  }
-
-  function toggleTimezoneDropdown(pickerId) {
-    const pickerState = timezonePickerState(pickerId);
-    if (pickerState.isTimezoneDropdownOpen) {
-      closeTimezoneDropdown(pickerId);
-      return;
-    }
-    openTimezoneDropdown(pickerId);
-  }
 
   const escapeHtml = Markdown.escapeHtml;
   const escapeRegExp = Markdown.escapeRegExp;
+  const timezonePicker = window.CallFlowTimezonePicker.createTimezonePicker({
+    $,
+    activeFormLanguage,
+    escapeHtml,
+    i18n: CallFlowI18n,
+    state,
+    timezones,
+    timezonesCore: Timezones
+  });
+  const dateTimePicker = window.CallFlowDateTimePicker.createDateTimePicker({
+    $,
+    $$,
+    activeTimezones,
+    escapeHtml,
+    localeForLanguage: languageLocale,
+    state,
+    validators: V
+  });
 
   function compactStatusLabel(value) {
     const text = String(value || "");
@@ -1114,6 +567,16 @@ Africa/Harare ZW
   }
 
   const markdownPreview = Markdown.markdownPreview;
+  const knowledgeView = window.CallFlowKnowledgeView.createKnowledgeView({
+    $,
+    escapeHtml,
+    markdownPreview,
+    renderApp: () => render(),
+    runAction,
+    setStatusMessage,
+    state,
+    validators: V
+  });
 
   function getViewTitle(view) {
     const titles = {
@@ -1182,7 +645,7 @@ Africa/Harare ZW
     state.formLists.settingsRejectionOutcomes = [...settings.outcomePresets.rejection.items];
     state.formLists.settingsCallbackOutcomes = [...settings.outcomePresets.callback.items];
     state.presetMeta.settingsFrequentStatuses.custom = [...settings.frequentStatuses];
-    renderTimezonePickers(settings.language);
+    timezonePicker.renderAll(settings.language);
     renderListEditors();
     renderActiveTimezoneEditors();
   }
@@ -1278,7 +741,7 @@ Africa/Harare ZW
 
   function handleLanguageChange(form, language) {
     CallFlowI18n.applyI18n(language);
-    renderTimezonePickers(language);
+    timezonePicker.renderAll(language);
     renderActiveTimezoneEditors();
 
     if (form.id === "onboardingForm" && !state.settings.onboardingCompleted) {
@@ -1287,30 +750,6 @@ Africa/Harare ZW
     }
 
     renderListEditors();
-  }
-
-  function renderTimezonePickers(language) {
-    ["onboarding", "settings"].forEach((pickerId) => {
-      const form = timezonePickerForm(pickerId);
-      const pickerState = timezonePickerState(pickerId);
-      if (!form || !form.timezone || !pickerState) return;
-      pickerState.selectedTimezoneValue = form.timezone.value || pickerState.selectedTimezoneValue || "local";
-      pickerState.searchQuery = "";
-      filterTimezoneOptions(pickerId, language);
-      renderTimezonePicker(pickerId, language);
-    });
-  }
-
-  function selectTimezone(pickerId, value) {
-    const form = timezonePickerForm(pickerId);
-    const pickerState = timezonePickerState(pickerId);
-    pickerState.selectedTimezoneValue = value;
-    pickerState.searchQuery = "";
-    pickerState.isTimezoneDropdownOpen = false;
-    pickerState.highlightedTimezoneIndex = -1;
-    form.timezone.value = value;
-    filterTimezoneOptions(pickerId, form.language.value);
-    renderTimezonePicker(pickerId, form.language.value);
   }
 
   function shortTimezoneName(timezone) {
@@ -1380,8 +819,8 @@ Africa/Harare ZW
   }
 
   async function addActiveTimezoneFromPicker(pickerId) {
-    const pickerState = timezonePickerState(pickerId);
-    const value = pickerState.selectedTimezoneValue || timezonePickerForm(pickerId).timezone.value || "local";
+    const pickerState = timezonePicker.pickerState(pickerId);
+    const value = pickerState.selectedTimezoneValue || timezonePicker.form(pickerId).timezone.value || "local";
     await updateActiveTimezones([...activeTimezones(), value], value);
   }
 
@@ -2596,39 +2035,6 @@ Africa/Harare ZW
     form.callId.focus();
   }
 
-  function renderNotes() {
-    const query = $("#noteSearch").value.toLowerCase();
-    const notes = state.knowledgeBase.filter((note) =>
-      `${note.title} ${note.content}`.toLowerCase().includes(query)
-    );
-
-    $("#notesList").innerHTML = notes.length
-      ? notes
-          .map((note) => `
-            <article class="list-item">
-              <header>
-                <strong>${escapeHtml(note.title)}</strong>
-                <button data-select-note="${note.id}">Abrir</button>
-              </header>
-              <p class="muted">${escapeHtml(note.content.slice(0, 120))}</p>
-            </article>
-          `)
-          .join("")
-      : '<p class="muted">No hay notas.</p>';
-
-    const selected = state.knowledgeBase.find((note) => note.id === state.selectedNoteId);
-    const form = $("#noteForm");
-    if (selected) {
-      form.title.value = selected.title;
-      form.content.value = selected.content;
-      $("#notePreview").innerHTML = markdownPreview(selected.content);
-    } else {
-      form.title.value = "";
-      form.content.value = "";
-      $("#notePreview").innerHTML = '<span class="muted">Vista previa</span>';
-    }
-  }
-
   function renderLastCall() {
     if (!state.lastCall) {
       const latest = [...activeCalls()].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))[0];
@@ -2650,7 +2056,6 @@ Africa/Harare ZW
       renderHeader,
       renderLastCall,
       renderListEditors,
-      renderNotes,
       renderOutcomeControls,
       renderReminderFormVisibility,
       renderReminders,
@@ -2660,9 +2065,9 @@ Africa/Harare ZW
     window.CallFlowReportsView.render(renderParts);
     window.CallFlowSettingsView.render(renderParts);
     window.CallFlowRemindersView.render(renderParts);
-    window.CallFlowKnowledgeView.render(renderParts);
+    knowledgeView.render(renderParts);
     window.CallFlowClockView.render(renderParts);
-    enhanceDateTimeInputs();
+    dateTimePicker.enhanceInputs();
   }
 
   async function saveCall(event) {
@@ -3194,65 +2599,6 @@ Africa/Harare ZW
   }
 
 
-  async function saveNote(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const validation = V.validateNotePayload({ title: form.title.value, content: form.content.value });
-    if (!validation.ok) {
-      setStatusMessage(CallFlowI18n.t(validation.messageKey, state.settings.language || "es"), "error");
-      return;
-    }
-    const existing = state.knowledgeBase.find((note) => note.id === state.selectedNoteId);
-    let nextKnowledgeBase;
-    let nextSelectedNoteId = state.selectedNoteId;
-    if (existing) {
-      nextKnowledgeBase = state.knowledgeBase.map((note) =>
-        note.id === state.selectedNoteId
-          ? { ...note, title: validation.value.title, content: validation.value.content, updatedAt: new Date().toISOString() }
-          : note
-      );
-    } else {
-      const note = {
-        id: crypto.randomUUID(),
-        title: validation.value.title,
-        content: validation.value.content,
-        createdAt: new Date().toISOString()
-      };
-      nextKnowledgeBase = [...state.knowledgeBase, note];
-      nextSelectedNoteId = note.id;
-    }
-    await runAction(async () => {
-      await CallFlowStorage.write("knowledgeBase", nextKnowledgeBase);
-      state.knowledgeBase = nextKnowledgeBase;
-      state.selectedNoteId = nextSelectedNoteId;
-      render();
-      setStatusMessage(CallFlowI18n.t("noteSaved", state.settings.language || "es"), "success");
-    });
-  }
-
-  async function deleteNote() {
-    if (!state.selectedNoteId) return;
-    const nextKnowledgeBase = state.knowledgeBase.filter((note) => note.id !== state.selectedNoteId);
-    await runAction(async () => {
-      await CallFlowStorage.write("knowledgeBase", nextKnowledgeBase);
-      state.knowledgeBase = nextKnowledgeBase;
-      state.selectedNoteId = null;
-      render();
-    });
-  }
-
-  async function exportNote(extension) {
-    const note = state.knowledgeBase.find((item) => item.id === state.selectedNoteId);
-    if (!note) return;
-    await runAction(() =>
-      window.callflow.exportNote({
-        fileName: note.title.replace(/[^a-z0-9_-]+/gi, "-").toLowerCase() || "callflow-note",
-        content: note.content,
-        extension
-      })
-    );
-  }
-
   function renderDiagnostics(diagnostics) {
     const output = $("#diagnosticsOutput");
     if (!output || !diagnostics) return;
@@ -3302,7 +2648,7 @@ Africa/Harare ZW
 
   function handleDocumentChange(event) {
     if (event.target.closest("#dateTimePicker")) {
-      handleDateTimePickerChange(event);
+      dateTimePicker.handleChange(event);
       return;
     }
     if (event.target.matches("[data-report-block]")) {
@@ -3313,19 +2659,19 @@ Africa/Harare ZW
 
   function handleDocumentFocusIn(event) {
     if (event.target.matches("input[type='date'], input[type='time']")) {
-      enhanceDateTimeInputs();
-      openDateTimePicker(event.target);
+      dateTimePicker.enhanceInputs();
+      dateTimePicker.open(event.target);
     }
   }
 
   function handleDocumentClick(event) {
     const picker = event.target.closest("#dateTimePicker");
     if (picker) {
-      handleDateTimePickerClick(event);
+      dateTimePicker.handleClick(event);
       return;
     }
     if (!event.target.closest(".cf-datetime-input")) {
-      closeDateTimePicker();
+      dateTimePicker.close();
     }
     const sidebarToggle = event.target.closest("#sidebarToggle");
     const sidebarBackdrop = event.target.closest("#sidebarBackdrop");
@@ -3425,11 +2771,11 @@ Africa/Harare ZW
     }
     if (timezoneToggleId) {
       const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);
-      toggleTimezoneDropdown(timezoneToggleId);
-      if (timezonePickerState(timezoneToggleId).isTimezoneDropdownOpen) input.focus();
+      timezonePicker.toggle(timezoneToggleId);
+      if (timezonePicker.pickerState(timezoneToggleId).isTimezoneDropdownOpen) input.focus();
     }
     if (timezonePickerId) {
-      selectTimezone(timezonePickerId, timezoneOption.dataset.value);
+      timezonePicker.select(timezonePickerId, timezoneOption.dataset.value);
     }
     if (statusOption) {
       selectStatusOption(statusOption.dataset.statusOption);
@@ -3448,8 +2794,8 @@ Africa/Harare ZW
       renderOutcomeControls();
     }
     if (!event.target.closest(".timezone-picker")) {
-      closeTimezoneDropdown("onboarding");
-      closeTimezoneDropdown("settings");
+      timezonePicker.close("onboarding");
+      timezonePicker.close("settings");
     }
     if (reminderId) completeReminder(reminderId);
     if (reminderCallId) copyReminderCallId(reminderCallId);
@@ -3465,13 +2811,12 @@ Africa/Harare ZW
       $("#clockPanel").classList.add("hidden");
     }
     if (noteId) {
-      state.selectedNoteId = noteId;
-      renderNotes();
+      knowledgeView.selectNote(noteId);
     }
   }
 
   function handleWindowResize() {
-    positionDateTimePicker();
+    dateTimePicker.position();
     if (window.innerWidth >= 780) {
       $("#app").classList.remove("sidebar-open");
       $("#sidebarBackdrop").hidden = true;
@@ -3480,19 +2825,11 @@ Africa/Harare ZW
   }
 
   function handleGlobalKeydown(event) {
-    if (event.target.matches("[data-cf-picker-year-input]") && event.key === "Enter") {
-      event.preventDefault();
-      setPickerYear(event.target.value);
-    }
-    if (event.target.matches("#exactMinuteInput") && event.key === "Enter") {
-      event.preventDefault();
-      commitPickerTime(event.target.value);
-    }
-    if (event.key === "Escape") closeDateTimePicker();
+    dateTimePicker.handleGlobalKeydown(event);
   }
 
   function bindEvents() {
-    enhanceDateTimeInputs();
+    dateTimePicker.enhanceInputs();
     $$(".nav-link").forEach((button) => button.addEventListener("click", () => setView(button.dataset.view)));
     $("#onboardingForm").addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -3637,19 +2974,7 @@ Africa/Harare ZW
       const chip = e.target.closest(".reminder-chip");
       if (chip) setReminderFilter(chip.dataset.filter);
     });
-    $("#noteForm").addEventListener("submit", saveNote);
-    $("#deleteNote").addEventListener("click", deleteNote);
-    $("#newNote").addEventListener("click", () => {
-      state.selectedNoteId = null;
-      renderNotes();
-      $("#noteForm input[name='title']").focus();
-    });
-    $("#noteSearch").addEventListener("input", renderNotes);
-    $("#noteForm textarea[name='content']").addEventListener("input", (event) => {
-      $("#notePreview").innerHTML = markdownPreview(event.target.value);
-    });
-    $("#exportMd").addEventListener("click", () => exportNote("md"));
-    $("#exportTxt").addEventListener("click", () => exportNote("txt"));
+    knowledgeView.bindEvents();
     $("#exportBackup").addEventListener("click", exportBackup);
     $("#importBackup").addEventListener("click", importBackup);
     $("#refreshDiagnostics").addEventListener("click", refreshDiagnostics);
@@ -3663,58 +2988,12 @@ Africa/Harare ZW
     });
     $$("[data-timezone-search]").forEach((input) => {
       input.addEventListener("focus", () => {
-        openTimezoneDropdown(input.dataset.timezoneSearch);
+        timezonePicker.open(input.dataset.timezoneSearch);
       });
       input.addEventListener("input", () => {
-        const pickerId = input.dataset.timezoneSearch;
-        const pickerState = timezonePickerState(pickerId);
-        pickerState.searchQuery = input.value;
-        pickerState.isTimezoneDropdownOpen = true;
-        pickerState.highlightedTimezoneIndex = 0;
-        filterTimezoneOptions(pickerId, activeFormLanguage());
-        renderTimezonePicker(pickerId, activeFormLanguage());
+        timezonePicker.handleSearchInput(input);
       });
-      input.addEventListener("keydown", (event) => {
-        const pickerId = input.dataset.timezoneSearch;
-        const pickerState = timezonePickerState(pickerId);
-
-        if (event.key === "ArrowDown") {
-          event.preventDefault();
-          if (!pickerState.isTimezoneDropdownOpen) {
-            openTimezoneDropdown(pickerId);
-            return;
-          }
-          const maxIndex = pickerState.filteredTimezoneOptions.length - 1;
-          pickerState.highlightedTimezoneIndex =
-            pickerState.highlightedTimezoneIndex < maxIndex ? pickerState.highlightedTimezoneIndex + 1 : 0;
-          renderTimezonePicker(pickerId, activeFormLanguage());
-        }
-
-        if (event.key === "ArrowUp") {
-          event.preventDefault();
-          if (!pickerState.isTimezoneDropdownOpen) {
-            openTimezoneDropdown(pickerId);
-            return;
-          }
-          const maxIndex = pickerState.filteredTimezoneOptions.length - 1;
-          pickerState.highlightedTimezoneIndex =
-            pickerState.highlightedTimezoneIndex > 0 ? pickerState.highlightedTimezoneIndex - 1 : maxIndex;
-          renderTimezonePicker(pickerId, activeFormLanguage());
-        }
-
-        if (event.key === "Enter" && pickerState.isTimezoneDropdownOpen) {
-          const option = pickerState.filteredTimezoneOptions[pickerState.highlightedTimezoneIndex];
-          if (option) {
-            event.preventDefault();
-            selectTimezone(pickerId, option.value);
-          }
-        }
-
-        if (event.key === "Escape") {
-          event.preventDefault();
-          closeTimezoneDropdown(pickerId);
-        }
-      });
+      input.addEventListener("keydown", timezonePicker.handleSearchKeydown);
     });
 
     document.addEventListener("change", handleDocumentChange);
@@ -3722,7 +3001,7 @@ Africa/Harare ZW
     document.addEventListener("click", handleDocumentClick);
 
     window.addEventListener("resize", handleWindowResize);
-    window.addEventListener("scroll", positionDateTimePicker, true);
+    window.addEventListener("scroll", dateTimePicker.position, true);
     document.addEventListener("keydown", handleGlobalKeydown);
     window.addEventListener("beforeunload", () => {
       freezeAndPersistTimerOnUnload();

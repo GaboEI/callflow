@@ -61,6 +61,11 @@ module.exports = [
         CallFlowSettingsView: "readonly",
         CallFlowKnowledgeView: "readonly",
         CallFlowClockView: "readonly",
+        CallFlowActions: "readonly",
+        CallFlowDateTimePicker: "readonly",
+        CallFlowDom: "readonly",
+        CallFlowTimezonePicker: "readonly",
+        CallFlowUiState: "readonly",
         CallFlowStats: "readonly",
         CallFlowStorage: "readonly"
       }

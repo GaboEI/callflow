@@ -32,7 +32,11 @@ Security configuration:
 - `copyText(text)`
 - `readClipboardText()`
 - `exportNote(payload)`
+- `exportBackup()`
+- `importBackup()`
+- `getDiagnostics()`
 - `getDataDir()`
+- `getHealth()`
 
 Only known storage keys are allowed.
 
@@ -49,6 +53,13 @@ Responsibilities:
 - Reminder list and status changes.
 - Knowledge base editor.
 - Settings screen.
+
+Renderer module boundaries:
+
+- `src/renderer/scripts/app.js` is the runtime orchestrator: initial load, global subscriptions, navigation, shared context, and render coordination.
+- `src/renderer/scripts/core/` owns shared renderer primitives such as DOM helpers, state factory, action/error handling, date/time picker logic, settings, timers, timezones and markdown preview.
+- `src/renderer/scripts/views/` owns view-specific rendering and events. New screens should be added as a `createXView(context)` module with `render()` and `bindEvents()` rather than adding more view logic directly to `app.js`.
+- View modules receive shared dependencies through `context` and should not reach into private variables from another view.
 
 Settings compatibility:
 
@@ -76,6 +87,14 @@ User data is stored as JSON files in Electron `userData`:
 - `templates.json`
 - `reminders.json`
 - `knowledge_base.json`
+- `work_timer.json`
+
+Versioned data:
+
+- Runtime data files use a `schemaVersion` wrapper where supported.
+- `src/shared/schema.js` owns migrations and normalization for persisted data.
+- `src/main/storage-service.js` unwraps data for the renderer, applies migrations on read, and creates backups before migration or import.
+- Backup bundles contain settings, calls, reminders, knowledge base and work timer data in one exportable JSON file.
 
 The `storage/` directory remains in the repository only as a placeholder and is not used for runtime user data.
 
