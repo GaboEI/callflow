@@ -32,6 +32,7 @@
     "files": [
       "src/**/*",
       "build/icon.ico",
+      "build/icon.png",
       "package.json"
     ],
     "win": {

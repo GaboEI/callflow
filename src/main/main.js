@@ -195,6 +195,11 @@ function startReminderNotifications() {
   checkReminderNotifications().catch((error) => console.error("Reminder notification check failed", error));
 }
 
+function getWindowIconPath() {
+  const iconFile = process.platform === "win32" ? "icon.ico" : "icon.png";
+  return path.join(__dirname, "..", "..", "build", iconFile);
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 620,
@@ -202,7 +207,7 @@ function createWindow() {
     minWidth: 520,
     minHeight: 620,
     backgroundColor: "#0F172A",
-    icon: path.join(__dirname, "..", "..", "build", "icon.ico"),
+    icon: getWindowIconPath(),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
