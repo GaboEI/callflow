@@ -4,6 +4,7 @@
       $$,
       activeFormLanguage,
       activeTimezones,
+      activeTimezonesForPicker,
       applySettingsToForms,
       escapeHtml,
       i18n,
@@ -25,7 +26,7 @@
       ["onboarding", "settings"].forEach((pickerId) => {
         const output = document.querySelector(`[data-active-timezones-output="${pickerId}"]`);
         if (!output || !state.settings) return;
-        const zones = activeTimezones();
+        const zones = activeTimezonesForPicker ? activeTimezonesForPicker(pickerId) : activeTimezones();
         output.innerHTML = zones
           .map(
             (timezone) => `
@@ -34,7 +35,7 @@
                 ${
                   zones.length <= 1
                     ? ""
-                    : `<button type="button" data-remove-active-timezone="${escapeHtml(timezone)}" aria-label="${escapeHtml(i18n.t("remove", activeFormLanguage()))}">×</button>`
+                    : `<button type="button" data-remove-active-timezone="${escapeHtml(timezone)}" data-remove-active-timezone-picker="${escapeHtml(pickerId)}" aria-label="${escapeHtml(i18n.t("remove", activeFormLanguage()))}">×</button>`
                 }
               </span>
             `

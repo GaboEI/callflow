@@ -37,6 +37,7 @@
     typeof Intl.supportedValuesOf === "function"
       ? Intl.supportedValuesOf("timeZone")
       : fallbackTimezones;
+  const ONBOARDING_STEP_COUNT = 6;
   const timezoneCountries = Object.fromEntries(
     `
 Europe/Andorra AD
@@ -611,6 +612,13 @@ Africa/Harare ZW
     onboardingForm.language.value = settings.language;
     onboardingForm.timezone.value = settings.timezone;
     onboardingForm.operatorName.value = settings.operatorName || "";
+    onboardingForm.reportHeaderFormat.value = settings.reportHeaderFormat;
+    onboardingForm.linePrefixMode.value = settings.linePrefixMode || "hash";
+    onboardingForm.clockFormat.value = settings.clockFormat || "24h";
+    onboardingForm.notifyAtExactTime.checked = settings.notifyAtExactTime !== false;
+    onboardingForm.notifyBeforeMinutes.value = String(settings.notifyBeforeMinutes || 0);
+    onboardingForm.reminderSound.value = settings.reminderSound || "soft";
+    state.onboardingActiveTimezones = activeTimezones();
     state.formLists.onboardingCallTypes = [...settings.callTypes];
     state.formLists.onboardingFrequentStatuses = [...settings.frequentStatuses];
     state.formLists.onboardingSuccessOutcomes = [...settings.outcomePresets.success.items];
@@ -649,6 +657,7 @@ Africa/Harare ZW
     timezonePicker.renderAll(settings.language);
     settingsView.renderListEditors();
     settingsView.renderActiveTimezoneEditors();
+    renderOnboardingWizard();
   }
 
   function outcomePresetsFromForm(listPrefix) {
@@ -676,7 +685,7 @@ Africa/Harare ZW
     const language = form.language.value;
     const outcomePresets = outcomePresetsFromForm(listPrefix);
     const selectedTimezone = form.timezone.value || state.settings.timezone || "local";
-    const currentActiveTimezones = activeTimezones();
+    const currentActiveTimezones = form.id === "onboardingForm" ? onboardingActiveTimezones() : activeTimezones();
     const nextActiveTimezones = uniqueItems([selectedTimezone, ...currentActiveTimezones]).slice(0, V.MAX_ACTIVE_TIMEZONES);
     return {
       ...state.settings,
@@ -754,6 +763,102 @@ Africa/Harare ZW
     }
 
     settingsView.renderListEditors();
+    renderOnboardingWizard();
+  }
+
+  function detectedSystemLanguage() {
+    const language = String(navigator.language || navigator.userLanguage || "es").toLowerCase();
+    if (language.startsWith("en")) return "en";
+    if (language.startsWith("ru")) return "ru";
+    return "es";
+  }
+
+  function onboardingText(key) {
+    return CallFlowI18n.t(key, activeFormLanguage());
+  }
+
+  function renderOnboardingReview() {
+    const output = $("#onboardingReview");
+    const form = $("#onboardingForm");
+    if (!output || !form || !state.settings) return;
+    const list = (items) => (items && items.length ? items.join(", ") : "-");
+    const zones = onboardingActiveTimezones()
+      .map((timezone) => `${timezoneFlag(timezone)} ${shortTimezoneName(timezone)}`)
+      .join(", ");
+    const reviewItems = [
+      [onboardingText("onboardingReviewProfile"), `${form.operatorName.value.trim() || "-"} · ${form.language.options[form.language.selectedIndex]?.text || form.language.value}`],
+      [onboardingText("onboardingReviewTime"), `${timezoneFlag(form.timezone.value)} ${shortTimezoneName(form.timezone.value)} · ${zones || "-"}`],
+      [onboardingText("onboardingReviewCalls"), list(state.formLists.onboardingCallTypes)],
+      [
+        onboardingText("onboardingReviewOutcomes"),
+        [
+          `${onboardingText("frequentStatuses")}: ${list(state.formLists.onboardingFrequentStatuses)}`,
+          `${onboardingText("successOutcomes")}: ${list(state.formLists.onboardingSuccessOutcomes)}`,
+          `${onboardingText("rejectionOutcomes")}: ${list(state.formLists.onboardingRejectionOutcomes)}`,
+          `${onboardingText("callbackOutcomes")}: ${list(state.formLists.onboardingCallbackOutcomes)}`
+        ].join(" | ")
+      ],
+      [onboardingText("onboardingReviewReports"), `${form.reportHeaderFormat.value || "-"} · ${onboardingText("linePrefixMode")}: ${form.linePrefixMode.value}`],
+      [onboardingText("onboardingReviewReminders"), `${onboardingText("notifyBeforeMinutes")}: ${form.notifyBeforeMinutes.value} min · ${onboardingText("reminderSound")}: ${form.reminderSound.value}`]
+    ];
+    output.innerHTML = reviewItems
+      .map(
+        ([label, value]) => `
+          <div class="onboarding-review-item">
+            <strong>${escapeHtml(label)}</strong>
+            <span>${escapeHtml(value)}</span>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  function renderOnboardingWizard() {
+    const form = $("#onboardingForm");
+    if (!form) return;
+    const step = Math.max(0, Math.min(Number(state.onboardingStep) || 0, ONBOARDING_STEP_COUNT - 1));
+    state.onboardingStep = step;
+    $$("[data-onboarding-step]").forEach((section) => {
+      section.classList.toggle("hidden", Number(section.dataset.onboardingStep) !== step);
+    });
+    const current = step + 1;
+    const percent = Math.round((current / ONBOARDING_STEP_COUNT) * 100);
+    const label = onboardingText("onboardingStepLabel")
+      .replace("{current}", String(current))
+      .replace("{total}", String(ONBOARDING_STEP_COUNT));
+    $("#onboardingStepLabel").textContent = label;
+    $("#onboardingPercentLabel").textContent = `${percent}%`;
+    $("#onboardingProgressFill").style.width = `${percent}%`;
+    $("#onboardingBack").disabled = step === 0;
+    $("#onboardingNext").classList.toggle("hidden", step === ONBOARDING_STEP_COUNT - 1);
+    $("#onboardingFinish").classList.toggle("hidden", step !== ONBOARDING_STEP_COUNT - 1);
+    $("#onboardingCancel").classList.toggle("hidden", state.onboardingMode !== "reconfigure");
+    $("#onboardingPreviewNote").classList.toggle("hidden", state.onboardingMode !== "reconfigure");
+    renderOnboardingReview();
+  }
+
+  function setOnboardingStep(step) {
+    state.onboardingStep = Math.max(0, Math.min(step, ONBOARDING_STEP_COUNT - 1));
+    renderOnboardingWizard();
+  }
+
+  function openOnboardingWizard(mode = "initial") {
+    state.onboardingMode = mode;
+    state.onboardingStep = 0;
+    applySettingsToForms();
+    $("#onboarding").classList.remove("hidden");
+    $("#app").classList.add("hidden");
+    CallFlowI18n.applyI18n($("#onboardingForm").language.value || state.settings.language);
+    renderOnboardingWizard();
+  }
+
+  function closeOnboardingWizardWithoutSaving() {
+    applySettingsToForms();
+    CallFlowI18n.applyI18n(state.settings.language);
+    $("#onboarding").classList.add("hidden");
+    $("#app").classList.remove("hidden");
+    state.onboardingMode = "initial";
+    render();
   }
 
   function shortTimezoneName(timezone) {
@@ -783,6 +888,19 @@ Africa/Harare ZW
     );
   }
 
+  function onboardingActiveTimezones() {
+    const form = $("#onboardingForm");
+    const selected = form?.timezone?.value || state.settings?.timezone || "local";
+    return V.uniqueItems(state.onboardingActiveTimezones?.length ? state.onboardingActiveTimezones : [selected]).slice(
+      0,
+      V.MAX_ACTIVE_TIMEZONES
+    );
+  }
+
+  function activeTimezonesForPicker(pickerId) {
+    return pickerId === "onboarding" ? onboardingActiveTimezones() : activeTimezones();
+  }
+
   const clockView = window.CallFlowClockView.createClockView({
     $,
     escapeHtml,
@@ -802,6 +920,7 @@ Africa/Harare ZW
     $$,
     activeFormLanguage,
     activeTimezones,
+    activeTimezonesForPicker,
     applySettingsToForms,
     escapeHtml,
     i18n: CallFlowI18n,
@@ -911,10 +1030,38 @@ Africa/Harare ZW
   async function addActiveTimezoneFromPicker(pickerId) {
     const pickerState = timezonePicker.pickerState(pickerId);
     const value = pickerState.selectedTimezoneValue || timezonePicker.form(pickerId).timezone.value || "local";
+    if (pickerId === "onboarding") {
+      state.onboardingActiveTimezones = V.uniqueItems([...onboardingActiveTimezones(), value]).slice(0, V.MAX_ACTIVE_TIMEZONES);
+      settingsView.renderActiveTimezoneEditors();
+      renderOnboardingWizard();
+      return;
+    }
     await updateActiveTimezones([...activeTimezones(), value], value);
   }
 
-  async function removeActiveTimezone(value) {
+  async function removeActiveTimezone(value, pickerId = "settings") {
+    if (pickerId === "onboarding") {
+      const zones = onboardingActiveTimezones().filter((timezone) => timezone !== value);
+      if (!zones.length) {
+        setStatusMessage(
+          activeFormLanguage() === "en"
+            ? "Keep at least one active timezone."
+            : activeFormLanguage() === "ru"
+              ? "Оставьте хотя бы один активный часовой пояс."
+              : "Debe quedar al menos una zona horaria activa.",
+          "warning"
+        );
+        return;
+      }
+      state.onboardingActiveTimezones = zones;
+      if (!zones.includes($("#onboardingForm").timezone.value)) {
+        $("#onboardingForm").timezone.value = zones[0];
+      }
+      timezonePicker.renderAll(activeFormLanguage());
+      settingsView.renderActiveTimezoneEditors();
+      renderOnboardingWizard();
+      return;
+    }
     await updateActiveTimezones(activeTimezones().filter((timezone) => timezone !== value));
   }
 
@@ -1030,6 +1177,7 @@ Africa/Harare ZW
     const timezonePickerId = timezoneOption ? timezoneOption.dataset.timezonePickerOption : null;
     const addActiveTimezonePicker = event.target.dataset.addActiveTimezone;
     const removeActiveTimezoneValue = event.target.dataset.removeActiveTimezone;
+    const removeActiveTimezonePicker = event.target.dataset.removeActiveTimezonePicker || "settings";
     const togglePinnedClockButton = event.target.closest("[data-toggle-pinned-clock]");
     const togglePinnedClockValue = togglePinnedClockButton ? togglePinnedClockButton.dataset.togglePinnedClock : null;
     const noteId = event.target.dataset.selectNote;
@@ -1058,7 +1206,7 @@ Africa/Harare ZW
     }
     remindersView.handleDocumentClick(event);
     if (addActiveTimezonePicker) addActiveTimezoneFromPicker(addActiveTimezonePicker);
-    if (removeActiveTimezoneValue) removeActiveTimezone(removeActiveTimezoneValue);
+    if (removeActiveTimezoneValue) removeActiveTimezone(removeActiveTimezoneValue, removeActiveTimezonePicker);
     if (togglePinnedClockValue) clockView.togglePinnedClock(togglePinnedClockValue);
     clockView.closePanelIfOutside(event.target);
     if (noteId) {
@@ -1088,10 +1236,25 @@ Africa/Harare ZW
         await saveSettings(settingsFromForm(event.currentTarget, true));
         $("#onboarding").classList.add("hidden");
         $("#app").classList.remove("hidden");
+        state.onboardingMode = "initial";
       });
     });
     $("#onboardingForm select[name='language']").addEventListener("change", (event) => {
       handleLanguageChange($("#onboardingForm"), event.target.value);
+    });
+    $("#onboardingNext").addEventListener("click", () => {
+      if (!$("#onboardingForm").reportValidity()) return;
+      setOnboardingStep(state.onboardingStep + 1);
+    });
+    $("#onboardingBack").addEventListener("click", () => {
+      setOnboardingStep(state.onboardingStep - 1);
+    });
+    $("#onboardingCancel").addEventListener("click", closeOnboardingWizardWithoutSaving);
+    $$(".onboarding-logo-dark").forEach((logo) => {
+      logo.addEventListener("error", () => {
+        logo.classList.add("hidden");
+        document.querySelector(".onboarding-logo-fallback")?.classList.add("logo-visible");
+      });
     });
 
     $("#settingsForm").addEventListener("submit", async (event) => {
@@ -1114,6 +1277,7 @@ Africa/Harare ZW
     remindersView.bindEvents();
     knowledgeView.bindEvents();
     settingsView.bindEvents();
+    $("#openOnboardingWizard").addEventListener("click", () => openOnboardingWizard("reconfigure"));
     $$("[data-list-input]").forEach((input) => {
       input.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
@@ -1152,6 +1316,12 @@ Africa/Harare ZW
     const data = await CallFlowStorage.readAll();
     Object.assign(state, data);
     state.settings = normalizeSettings(state.settings);
+    if (!state.settings.onboardingCompleted) {
+      state.settings = normalizeSettings({
+        ...state.settings,
+        language: detectedSystemLanguage()
+      });
+    }
     normalizeRuntimeData();
     freezeStaleTimerOnStartup();
     await clockView.persistWorkTimer();
@@ -1173,8 +1343,11 @@ Africa/Harare ZW
       $("#app").classList.remove("hidden");
       $("#onboarding").classList.add("hidden");
     } else {
-      $("#onboarding").classList.remove("hidden");
-      $("#app").classList.add("hidden");
+      openOnboardingWizard("initial");
+      refreshPresetBackedStatuses("onboardingFrequentStatuses", state.settings.language);
+      refreshOnboardingOutcomePresets(state.settings.language);
+      settingsView.renderListEditors();
+      renderOnboardingWizard();
     }
 
     render();

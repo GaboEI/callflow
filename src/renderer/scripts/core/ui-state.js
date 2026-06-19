@@ -50,6 +50,9 @@
         onboardingFrequentStatuses: { custom: [] },
         settingsFrequentStatuses: { custom: [] }
       },
+      onboardingStep: 0,
+      onboardingMode: "initial",
+      onboardingActiveTimezones: [],
       timezonePickers: {
         onboarding: {
           searchQuery: "",
