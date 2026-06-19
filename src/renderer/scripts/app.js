@@ -998,6 +998,22 @@ Africa/Harare ZW
     uniqueItems,
     validators: V
   });
+  const statsView = window.CallFlowStatsView.createStatsView({
+    $$,
+    $,
+    activeCalls,
+    callIsoDate,
+    compareIsoDate,
+    displayIsoDate,
+    escapeHtml,
+    i18n: CallFlowI18n,
+    isoDateOffset,
+    runAction,
+    setStatusMessage,
+    state,
+    stats: CallFlowStats,
+    timers: Timers
+  });
 
   async function updateActiveTimezones(timezones, lastReminderTimezone = state.settings.lastReminderTimezone) {
     const zones = V.uniqueItems(timezones).slice(0, V.MAX_ACTIVE_TIMEZONES);
@@ -1133,6 +1149,7 @@ Africa/Harare ZW
     settingsView.render();
     remindersView.render();
     knowledgeView.render();
+    statsView.render();
     clockView.render();
     dateTimePicker.enhanceInputs();
   }
@@ -1192,6 +1209,7 @@ Africa/Harare ZW
     }
     dashboardView.handleDocumentClick(event);
     reportsView.handleDocumentClick(event);
+    statsView.handleDocumentClick(event);
     if (timezoneToggleId) {
       const input = document.querySelector(`[data-timezone-search="${timezoneToggleId}"]`);
       timezonePicker.toggle(timezoneToggleId);
@@ -1277,6 +1295,7 @@ Africa/Harare ZW
     remindersView.bindEvents();
     knowledgeView.bindEvents();
     settingsView.bindEvents();
+    statsView.bindEvents();
     $("#openOnboardingWizard").addEventListener("click", () => openOnboardingWizard("reconfigure"));
     $$("[data-list-input]").forEach((input) => {
       input.addEventListener("keydown", (event) => {

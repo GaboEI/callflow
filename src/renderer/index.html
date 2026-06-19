@@ -500,9 +500,86 @@
         </section>
 
         <section id="statsView" class="view">
-          <div class="panel">
-            <h2 data-i18n="stats">Estadísticas</h2>
-            <div id="statsCards" class="cards"></div>
+          <div class="stats-shell">
+            <div class="panel stats-hero-panel">
+              <div class="panel-header">
+                <div>
+                  <h2 data-i18n="stats">Estadísticas</h2>
+                  <p class="muted" data-i18n="statsIntro">Análisis de rendimiento laboral, tendencias y mejores momentos.</p>
+                </div>
+                <div class="report-export-actions">
+                  <span data-i18n="exportAnalysis">Exportar análisis</span>
+                  <button type="button" id="exportStatsMd">.md</button>
+                  <button type="button" id="exportStatsTxt">.txt</button>
+                </div>
+              </div>
+              <div class="report-toolbar stats-toolbar">
+                <div class="report-period-bar" role="group" aria-label="Periodo">
+                  <button type="button" class="report-period-chip" data-stats-period="today" data-i18n="reportToday">Hoy</button>
+                  <button type="button" class="report-period-chip" data-stats-period="yesterday" data-i18n="reportYesterday">Ayer</button>
+                  <button type="button" class="report-period-chip" data-stats-period="week" data-i18n="reportThisWeek">Esta semana</button>
+                  <button type="button" class="report-period-chip" data-stats-period="month" data-i18n="reportThisMonth">Este mes</button>
+                  <button type="button" class="report-period-chip" data-stats-period="last7" data-i18n="reportLast7">Últimos 7 días</button>
+                  <button type="button" class="report-period-chip" data-stats-period="last30" data-i18n="reportLast30">Últimos 30 días</button>
+                  <button type="button" class="report-period-chip" data-stats-period="all" data-i18n="statsAllHistory">Todo</button>
+                  <button type="button" class="report-period-chip" data-stats-period="custom" data-i18n="reportCustomRange">Rango</button>
+                </div>
+                <label class="report-range-field stats-range-field">
+                  <span data-i18n="reportDateFrom">Desde</span>
+                  <input id="statsDateFrom" type="date" />
+                </label>
+                <label class="report-range-field stats-range-field">
+                  <span data-i18n="reportDateTo">Hasta</span>
+                  <input id="statsDateTo" type="date" />
+                </label>
+              </div>
+              <div id="statsSummaryCards" class="stats-summary-grid"></div>
+            </div>
+
+            <div class="stats-analytics-grid">
+              <section class="panel stats-panel-wide">
+                <div class="panel-header">
+                  <h3 data-i18n="statsActivityMap">Mapa de actividad</h3>
+                  <span class="muted" id="statsRangeLabel"></span>
+                </div>
+                <div id="statsActivityMap" class="stats-activity-map"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <h3 data-i18n="statsOutcomeDistribution">Distribución de resultados</h3>
+                </div>
+                <div id="statsOutcomeDistribution" class="stats-bars"></div>
+              </section>
+
+              <section class="panel stats-panel-wide">
+                <div class="panel-header">
+                  <h3 data-i18n="statsHourlyPerformance">Rendimiento por hora</h3>
+                </div>
+                <div id="statsHourlyPerformance" class="stats-hour-grid"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <h3 data-i18n="statsCallTypes">Llamadas por tipo</h3>
+                </div>
+                <div id="statsTypeDistribution" class="stats-bars"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <h3 data-i18n="statsInsights">Insights automáticos</h3>
+                </div>
+                <div id="statsInsights" class="stats-insights"></div>
+              </section>
+
+              <section class="panel stats-panel-wide">
+                <div class="panel-header">
+                  <h3 data-i18n="statsDetail">Detalle seleccionado</h3>
+                </div>
+                <div id="statsDetail" class="stats-detail"></div>
+              </section>
+            </div>
           </div>
         </section>
 
@@ -713,6 +790,7 @@
     <script src="./scripts/views/settings-view.js"></script>
     <script src="./scripts/views/knowledge-view.js"></script>
     <script src="./scripts/views/clock-view.js"></script>
+    <script src="./scripts/views/stats-view.js"></script>
     <script src="./scripts/app.js"></script>
   </body>
 </html>

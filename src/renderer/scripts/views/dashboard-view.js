@@ -515,7 +515,6 @@
       const todayCalls = reports.callsForToday(activeCalls(), state.settings);
       const dailyStats = stats.buildStats(todayCalls, state.reminders, state.settings);
       $("#dashboardStats").innerHTML = statsCards(dailyStats);
-      $("#statsCards").innerHTML = statsCards(dailyStats);
     }
 
     function renderLastCall() {

@@ -29,6 +29,13 @@
         from: "",
         to: ""
       },
+      statsRange: {
+        preset: "today",
+        from: "",
+        to: ""
+      },
+      selectedStatsDay: null,
+      selectedStatsHour: null,
       reportSearch: {
         query: "",
         matches: 0,
