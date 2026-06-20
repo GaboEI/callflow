@@ -47,6 +47,23 @@
       if (!markdownRenderer) return `<p>${escapeHtml(content)}</p>`;
       const template = document.createElement("template");
       template.innerHTML = markdownRenderer.markdown(String(content || ""));
+      template.content.querySelectorAll('input[type="checkbox"]').forEach((checkbox, index) => {
+        checkbox.disabled = false;
+        checkbox.className = "script-task-checkbox";
+        checkbox.dataset.scriptTaskIndex = String(index);
+        const listItem = checkbox.closest("li");
+        if (!listItem) return;
+        listItem.classList.add("script-task-item");
+        const list = listItem.parentElement;
+        const nextElement = list?.nextElementSibling;
+        const isOrphanTask = !listItem.textContent.trim() && list?.children.length === 1;
+        const isHeadingNext = nextElement && /^H[1-6]$/.test(nextElement.tagName);
+        if (isOrphanTask && isHeadingNext) {
+          nextElement.classList.add("script-task-heading");
+          nextElement.prepend(checkbox);
+          list.remove();
+        }
+      });
       template.content.querySelectorAll("pre").forEach((pre) => {
         const wrapper = document.createElement("div");
         wrapper.className = "script-code-block";
@@ -170,6 +187,41 @@
           button.textContent = "⧉";
           button.classList.remove("copied");
         }, 1200);
+      });
+    }
+
+    function updateTaskMarker(content, taskIndex, checked) {
+      let currentIndex = 0;
+      return String(content || "").replace(/^(\s*[-*+]\s+)\[([ xX])\]/gm, (match, prefix) => {
+        const replacement = currentIndex === taskIndex ? `${prefix}[${checked ? "x" : " "}]` : match;
+        currentIndex += 1;
+        return replacement;
+      });
+    }
+
+    async function toggleTask(checkbox) {
+      const taskIndex = Number(checkbox.dataset.scriptTaskIndex);
+      if (!Number.isInteger(taskIndex)) return;
+
+      if (state.knowledgeMode === "editor") {
+        const input = $("#scriptContent");
+        input.value = updateTaskMarker(input.value, taskIndex, checkbox.checked);
+        $("#scriptEditorPreview").innerHTML = renderMarkdown(input.value);
+        return;
+      }
+
+      const note = selectedScript();
+      if (!note) return;
+      const updatedNote = {
+        ...note,
+        content: updateTaskMarker(note.content, taskIndex, checkbox.checked),
+        updatedAt: new Date().toISOString()
+      };
+      const nextKnowledgeBase = state.knowledgeBase.map((item) => (item.id === note.id ? updatedNote : item));
+      await runAction(async () => {
+        await window.CallFlowStorage.write("knowledgeBase", nextKnowledgeBase);
+        state.knowledgeBase = nextKnowledgeBase;
+        $("#scriptReaderMeta").textContent = `${t("scriptModified")}: ${formatDate(updatedNote.updatedAt)}`;
       });
     }
 
@@ -342,6 +394,10 @@
       $("#knowledgeView").addEventListener("click", (event) => {
         const copyButton = event.target.closest("[data-copy-code]");
         if (copyButton) copyCodeBlock(copyButton);
+      });
+      $("#knowledgeView").addEventListener("change", (event) => {
+        const taskCheckbox = event.target.closest("[data-script-task-index]");
+        if (taskCheckbox) toggleTask(taskCheckbox);
       });
       $("#exportMd").addEventListener("click", () => exportSelected("md"));
       $("#exportTxt").addEventListener("click", () => exportSelected("txt"));

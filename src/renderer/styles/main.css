@@ -3229,6 +3229,37 @@ code {
   margin-top: 5px;
 }
 
+.script-markdown .script-task-item,
+.script-markdown .script-task-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.script-markdown .script-task-item {
+  list-style: none;
+}
+
+.script-markdown .script-task-checkbox {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  accent-color: var(--blue);
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  color-scheme: dark;
+}
+
+.script-markdown .script-task-heading .script-task-checkbox {
+  width: 17px;
+  height: 17px;
+}
+
 .script-markdown a {
   color: #60a5fa;
   text-decoration: underline;
