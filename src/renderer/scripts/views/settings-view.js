@@ -94,15 +94,25 @@
     function renderDiagnostics(diagnostics) {
       const output = document.querySelector("#diagnosticsOutput");
       if (!output || !diagnostics) return;
+      const activeLanguage = state.settings?.language || "es";
+      const text = (key) => i18n.t(key, activeLanguage);
+      const healthCount = (diagnostics.health || []).length;
+      const recentErrors = (diagnostics.recentLogs || []).filter((entry) => entry.level === "error").length;
+      const healthSummary = healthCount || recentErrors
+        ? text("diagnosticsNeedsReview")
+        : text("diagnosticsOk");
       output.textContent = [
-        `App: ${diagnostics.appVersion || "unknown"}`,
+        `${text("diagnosticsStatus")}: ${healthSummary}`,
+        `${text("diagnosticsDataFolder")}: ${diagnostics.dataDir || text("notAvailable")}`,
+        `${text("diagnosticsSupportLog")}: ${diagnostics.logPath || text("notAvailable")}`,
+        "",
+        `${text("diagnosticsTechnicalDetails")}:`,
+        `${text("diagnosticsAppVersion")}: ${diagnostics.appVersion || "unknown"}`,
         `Electron: ${diagnostics.electronVersion || "unknown"}`,
-        `Platform: ${diagnostics.platform || "unknown"}`,
-        `Data: ${diagnostics.dataDir || ""}`,
-        `Schemas: ${JSON.stringify(diagnostics.schemas || {})}`,
-        `Log: ${diagnostics.logPath || ""}`,
-        `Health events: ${(diagnostics.health || []).length}`,
-        `Recent errors: ${(diagnostics.recentLogs || []).filter((entry) => entry.level === "error").length}`
+        `${text("diagnosticsSystem")}: ${diagnostics.platform || "unknown"}`,
+        `${text("diagnosticsDataVersions")}: ${JSON.stringify(diagnostics.schemas || {})}`,
+        `${text("diagnosticsHealthEvents")}: ${healthCount}`,
+        `${text("diagnosticsRecentErrors")}: ${recentErrors}`
       ].join("\n");
     }
 
@@ -110,7 +120,7 @@
       await runAction(async () => {
         const diagnostics = await window.callflow.getDiagnostics();
         renderDiagnostics(diagnostics);
-        setStatusMessage("Diagnóstico actualizado", "success");
+        setStatusMessage(i18n.t("diagnosticsUpdated", state.settings?.language || "es"), "success");
       });
     }
 

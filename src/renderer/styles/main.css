@@ -1260,6 +1260,159 @@ nav {
   font-size: 15px;
 }
 
+.settings-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.settings-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-heading h2 {
+  margin: 2px 0 0;
+}
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.settings-section {
+  display: grid;
+  gap: 12px;
+  grid-column: span 6;
+  min-width: 0;
+  padding: 14px;
+  background: rgba(15, 23, 42, 0.46);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.settings-section-general,
+.settings-section-time,
+.settings-section-reports,
+.settings-section-lists,
+.settings-maintenance {
+  grid-column: 1 / -1;
+}
+
+.settings-section-header {
+  display: grid;
+  gap: 3px;
+}
+
+.settings-section-header h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.settings-section-header p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.settings-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: start;
+}
+
+.settings-fields.compact {
+  gap: 10px;
+}
+
+.settings-fields label,
+.settings-fields .timezone-picker {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.settings-fields .field-xs {
+  width: min(100%, 132px);
+}
+
+.settings-fields .field-sm {
+  width: min(100%, 190px);
+}
+
+.settings-fields .field-md {
+  width: min(100%, 320px);
+}
+
+.settings-fields .field-wide {
+  width: min(100%, 620px);
+}
+
+.settings-fields input,
+.settings-fields select {
+  min-width: 0;
+}
+
+.settings-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.settings-toggle-grid .checkbox-row,
+.settings-section .checkbox-row {
+  min-height: 38px;
+  padding: 8px 10px;
+  background: rgba(11, 18, 32, 0.42);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 7px;
+}
+
+.settings-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.settings-list-grid .list-editor {
+  min-width: 0;
+  padding: 12px;
+  background: rgba(11, 18, 32, 0.36);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 8px;
+}
+
+.settings-secondary-action {
+  justify-self: start;
+}
+
+.settings-save-button {
+  min-width: 174px;
+  min-height: 38px;
+  padding: 8px 14px;
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  border-color: rgba(147, 197, 253, 0.34);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+  font-weight: 700;
+}
+
+.settings-save-button:hover {
+  border-color: rgba(191, 219, 254, 0.72);
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.24);
+}
+
+.settings-validation-tried input:invalid,
+.settings-validation-tried select:invalid {
+  border-color: rgba(239, 68, 68, 0.78);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
 .checkbox-row {
   display: flex;
   align-items: center;
@@ -4603,6 +4756,38 @@ code {
 }
 
 @media (max-width: 620px) {
+  .settings-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .settings-save-button {
+    width: 100%;
+  }
+
+  .settings-layout,
+  .settings-section,
+  .settings-section-general,
+  .settings-section-time,
+  .settings-section-reports,
+  .settings-section-lists,
+  .settings-maintenance {
+    grid-column: 1 / -1;
+  }
+
+  .settings-fields,
+  .settings-fields.compact,
+  .settings-list-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-fields .field-xs,
+  .settings-fields .field-sm,
+  .settings-fields .field-md,
+  .settings-fields .field-wide {
+    width: 100%;
+  }
+
   .finance-type-manager form {
     grid-template-columns: 1fr;
   }
@@ -5044,10 +5229,7 @@ code {
   }
 }
 .settings-maintenance {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px;
-  background: rgba(15, 23, 42, 0.42);
+  align-content: start;
 }
 
 .inline-actions {
@@ -5058,11 +5240,15 @@ code {
 }
 
 .diagnostics-output {
-  max-height: 160px;
+  max-height: 220px;
   margin: 12px 0 0;
+  padding: 12px;
   overflow: auto;
   white-space: pre-wrap;
-  color: var(--text-muted);
+  color: #cbd5e1;
+  background: rgba(7, 16, 31, 0.68);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 7px;
   font-size: 12px;
   line-height: 1.5;
 }

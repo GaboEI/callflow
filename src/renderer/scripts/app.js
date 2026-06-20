@@ -1330,8 +1330,22 @@ Africa/Harare ZW
 
     $("#settingsForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      await runAction(() => saveSettings(settingsFromForm(event.currentTarget, true)));
+      const form = event.currentTarget;
+      form.classList.add("settings-validation-tried");
+      if (!form.reportValidity()) {
+        setStatusMessage(CallFlowI18n.t("settingsValidationError", activeFormLanguage()), "error");
+        return;
+      }
+      await runAction(async () => {
+        await saveSettings(settingsFromForm(form, true));
+        form.classList.remove("settings-validation-tried");
+        setStatusMessage(`✓ ${CallFlowI18n.t("settingsSaved", state.settings.language || "es")}`, "success");
+      });
     });
+    $("#settingsForm").addEventListener("invalid", (event) => {
+      event.currentTarget.classList.add("settings-validation-tried");
+      setStatusMessage(CallFlowI18n.t("settingsValidationError", activeFormLanguage()), "error");
+    }, true);
     $("#settingsForm select[name='language']").addEventListener("change", (event) => {
       handleLanguageChange($("#settingsForm"), event.target.value);
     });

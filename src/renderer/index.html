@@ -856,139 +856,189 @@
         </section>
 
         <section id="settingsView" class="view">
-          <div class="panel">
-            <h2 data-i18n="settings">Configuración</h2>
-            <form id="settingsForm" class="form-grid">
-              <label><span data-i18n="language">Idioma</span><select name="language"></select></label>
-              <div class="timezone-picker">
-                <span data-i18n="workTimezone">Zona horaria de trabajo</span>
-                <input type="hidden" name="timezone" value="local" />
-                <div class="combobox-line">
-                  <input class="timezone-search" data-timezone-search="settings" data-i18n-placeholder="timezoneSearchPlaceholder" placeholder="Buscar ciudad, país o zona horaria..." autocomplete="off" />
-                  <button class="timezone-toggle" type="button" data-timezone-toggle="settings" aria-label="Open timezone list">⌄</button>
-                </div>
-                <small class="helper"><span data-i18n="selectedTimezone">Seleccionada actualmente</span>: <strong data-timezone-selected="settings"></strong></small>
-                <button type="button" data-add-active-timezone="settings" data-i18n="addActiveTimezone">Agregar a relojes activos</button>
-                <div class="chip-list timezone-chip-list" data-active-timezones-output="settings"></div>
-                <div class="timezone-results" data-timezone-results="settings"></div>
+          <div class="panel settings-panel">
+            <div class="settings-heading">
+              <div>
+                <span class="eyebrow" data-i18n="settingsEyebrow">Preferencias locales</span>
+                <h2 data-i18n="settings">Configuración</h2>
               </div>
-              <label><span data-i18n="operatorName">Nombre del operador</span><input name="operatorName" required /></label>
-              <label><span data-i18n="reportHeaderFormat">Formato encabezado</span><input name="reportHeaderFormat" required /></label>
-              <label>
-                <span data-i18n="linePrefixMode">Prefijo de línea</span>
-                <select name="linePrefixMode">
-                  <option value="hash" data-i18n="linePrefixHash">#</option>
-                  <option value="none" data-i18n="linePrefixNone">Sin prefijo</option>
-                  <option value="dailyNumber" data-i18n="linePrefixDailyNumber">Número diario 001</option>
-                </select>
-              </label>
-              <label>
-                <span data-i18n="clockFormat">Formato del reloj</span>
-                <select name="clockFormat">
-                  <option value="24h" data-i18n="clock24">24 horas</option>
-                  <option value="12h" data-i18n="clock12">12 horas</option>
-                  <option value="military" data-i18n="clockMilitary">Militar</option>
-                </select>
-              </label>
-              <label>
-                <span data-i18n="statsTimezone">Zona para estadísticas</span>
-                <select name="statsTimezone"></select>
-                <small class="helper" data-i18n="statsTimezoneHelper">Solo afecta análisis, cortes diarios y agrupaciones; no cambia recordatorios.</small>
-              </label>
-              <label>
-                <span data-i18n="statsCycleStartDay">Día de corte mensual</span>
-                <input name="statsCycleStartDay" type="number" min="1" max="28" />
-                <small class="helper" data-i18n="statsCycleStartDayHelper">Día en que reinicia el ciclo mensual de estadísticas.</small>
-              </label>
-              <label><span>Moneda o símbolo</span><input name="financialCurrency" placeholder="USD" maxlength="16" /></label>
-              <label><span>Pago por hora</span><input name="financialHourlyRate" type="number" step="0.01" min="0" /></label>
-              <label class="checkbox-row"><input name="financialPaidBreaks" type="checkbox" /><span data-i18n="financePaidBreaksSetting">Las pausas también son pagadas</span></label>
-              <label><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
-              <div class="settings-group span-2">
-                <h3 data-i18n="reminderAutomation">Automatización de recordatorios</h3>
-                <label class="checkbox-row">
-                  <input name="startOnLogin" type="checkbox" />
-                  <span data-i18n="startOnLogin">Iniciar con el sistema</span>
-                </label>
-                <label class="checkbox-row">
-                  <input name="runInBackground" type="checkbox" />
-                  <span data-i18n="runInBackground">Mantener en segundo plano al cerrar</span>
-                </label>
-                <label class="checkbox-row">
-                  <input name="notifyAtExactTime" type="checkbox" />
-                  <span data-i18n="notifyAtExactTime">Avisar a la hora exacta</span>
-                </label>
-                <label>
-                  <span data-i18n="notifyBeforeMinutes">Aviso anticipado</span>
-                  <select name="notifyBeforeMinutes">
-                    <option value="0">0 min</option>
-                    <option value="5">5 min</option>
-                    <option value="10">10 min</option>
-                    <option value="15">15 min</option>
-                    <option value="30">30 min</option>
-                    <option value="60">60 min</option>
-                  </select>
-                </label>
-                <label>
-                  <span data-i18n="reminderSound">Sonido de alerta</span>
-                  <div class="sound-preview-row">
-                    <select name="reminderSound">
-                      <option value="soft" data-i18n="reminderSoundSoft">Suave</option>
-                      <option value="ping" data-i18n="reminderSoundPing">Ping</option>
-                      <option value="bell" data-i18n="reminderSoundBell">Campana</option>
-                      <option value="alert" data-i18n="reminderSoundAlert">Alerta</option>
-                      <option value="chime" data-i18n="reminderSoundChime">Chime</option>
-                      <option value="none" data-i18n="reminderSoundNone">Sin sonido</option>
-                    </select>
-                    <button type="button" class="icon-button" id="previewReminderSound" data-i18n-title="previewReminderSound" title="Probar sonido">▶</button>
+              <button class="primary settings-save-button" type="submit" form="settingsForm" data-i18n="saveSettings">Guardar configuración</button>
+            </div>
+            <form id="settingsForm" class="settings-layout" novalidate>
+              <section class="settings-section settings-section-general">
+                <div class="settings-section-header">
+                  <h3 data-i18n="settingsGeneral">General</h3>
+                  <p class="muted" data-i18n="settingsGeneralHelp">Idioma, apariencia y datos visibles en reportes.</p>
+                </div>
+                <div class="settings-fields compact">
+                  <label class="field-sm"><span data-i18n="language">Idioma</span><select name="language"></select></label>
+                  <label class="field-sm"><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
+                  <label class="field-md"><span data-i18n="operatorName">Nombre del operador</span><input name="operatorName" required /></label>
+                </div>
+              </section>
+
+              <section class="settings-section settings-section-time">
+                <div class="settings-section-header">
+                  <h3 data-i18n="settingsTimeClocks">Zonas horarias y relojes</h3>
+                  <p class="muted" data-i18n="settingsTimeClocksHelp">Define la zona de trabajo y los relojes visibles durante el turno.</p>
+                </div>
+                <div class="settings-fields">
+                  <div class="timezone-picker field-wide">
+                    <span data-i18n="workTimezone">Zona horaria de trabajo</span>
+                    <input type="hidden" name="timezone" value="local" />
+                    <div class="combobox-line">
+                      <input class="timezone-search" data-timezone-search="settings" data-i18n-placeholder="timezoneSearchPlaceholder" placeholder="Buscar ciudad, país o zona horaria..." autocomplete="off" />
+                      <button class="timezone-toggle" type="button" data-timezone-toggle="settings" aria-label="Open timezone list">⌄</button>
+                    </div>
+                    <small class="helper"><span data-i18n="selectedTimezone">Seleccionada actualmente</span>: <strong data-timezone-selected="settings"></strong></small>
+                    <button type="button" class="settings-secondary-action" data-add-active-timezone="settings" data-i18n="addActiveTimezone">Agregar a relojes activos</button>
+                    <div class="chip-list timezone-chip-list" data-active-timezones-output="settings"></div>
+                    <div class="timezone-results" data-timezone-results="settings"></div>
                   </div>
-                </label>
-              </div>
-              <div class="list-editor span-2" data-list-editor="settingsCallTypes">
-                <span class="field-label" data-i18n="callTypes">Tipos de llamada</span>
-                <div class="inline-add">
-                  <input data-list-input="settingsCallTypes" data-i18n-placeholder="newCallTypePlaceholder" placeholder="Escribe un tipo de llamada..." />
-                  <button type="button" data-add-list-item="settingsCallTypes" data-i18n="add">Agregar</button>
+                  <label class="field-sm">
+                    <span data-i18n="clockFormat">Formato del reloj</span>
+                    <select name="clockFormat">
+                      <option value="24h" data-i18n="clock24">24 horas</option>
+                      <option value="12h" data-i18n="clock12">12 horas</option>
+                      <option value="military" data-i18n="clockMilitary">Militar</option>
+                    </select>
+                  </label>
                 </div>
-                <div class="chip-list" data-list-output="settingsCallTypes"></div>
-              </div>
-              <div class="list-editor span-2" data-list-editor="settingsFrequentStatuses">
-                <span class="field-label" data-i18n="frequentStatuses">Estados frecuentes</span>
-                <div class="inline-add">
-                  <input data-list-input="settingsFrequentStatuses" data-i18n-placeholder="newFrequentStatusPlaceholder" placeholder="Nuevo estado frecuente" />
-                  <button type="button" data-add-list-item="settingsFrequentStatuses" data-i18n="add">Agregar</button>
+              </section>
+
+              <section class="settings-section settings-section-reports">
+                <div class="settings-section-header">
+                  <h3 data-i18n="settingsReportsStats">Reportes y estadísticas</h3>
+                  <p class="muted" data-i18n="settingsReportsStatsHelp">Ajusta cómo se copian reportes y cómo se agrupan las métricas.</p>
                 </div>
-                <div class="chip-list" data-list-output="settingsFrequentStatuses"></div>
-              </div>
-              <div class="list-editor span-2" data-list-editor="settingsSuccessOutcomes">
-                <span class="field-label" data-i18n="successOutcomes">Resultados exitosos</span>
-                <small class="helper" data-i18n="outcomePresetsHelper">El primer resultado de cada lista se usa como etiqueta principal.</small>
-                <div class="inline-add">
-                  <input data-list-input="settingsSuccessOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
-                  <button type="button" data-add-list-item="settingsSuccessOutcomes" data-i18n="add">Agregar</button>
+                <div class="settings-fields">
+                  <label class="field-wide"><span data-i18n="reportHeaderFormat">Formato encabezado</span><input name="reportHeaderFormat" required /></label>
+                  <label class="field-sm">
+                    <span data-i18n="linePrefixMode">Prefijo de línea</span>
+                    <select name="linePrefixMode">
+                      <option value="hash" data-i18n="linePrefixHash">#</option>
+                      <option value="none" data-i18n="linePrefixNone">Sin prefijo</option>
+                      <option value="dailyNumber" data-i18n="linePrefixDailyNumber">Número diario 001</option>
+                    </select>
+                  </label>
+                  <label class="field-md">
+                    <span data-i18n="statsTimezone">Zona para estadísticas</span>
+                    <select name="statsTimezone"></select>
+                    <small class="helper" data-i18n="statsTimezoneHelper">Solo afecta análisis, cortes diarios y agrupaciones; no cambia recordatorios.</small>
+                  </label>
+                  <label class="field-xs">
+                    <span data-i18n="statsCycleStartDay">Día de corte mensual</span>
+                    <input name="statsCycleStartDay" type="number" min="1" max="28" />
+                    <small class="helper" data-i18n="statsCycleStartDayHelper">Día en que reinicia el ciclo mensual de estadísticas.</small>
+                  </label>
+                  <label class="field-xs"><span>Moneda o símbolo</span><input name="financialCurrency" placeholder="USD" maxlength="16" /></label>
+                  <label class="field-xs"><span>Pago por hora</span><input name="financialHourlyRate" type="number" step="0.01" min="0" /></label>
+                  <label class="checkbox-row field-md"><input name="financialPaidBreaks" type="checkbox" /><span data-i18n="financePaidBreaksSetting">Las pausas también son pagadas</span></label>
                 </div>
-                <div class="chip-list" data-list-output="settingsSuccessOutcomes"></div>
-              </div>
-              <div class="list-editor span-2" data-list-editor="settingsRejectionOutcomes">
-                <span class="field-label" data-i18n="rejectionOutcomes">Resultados de rechazo</span>
-                <div class="inline-add">
-                  <input data-list-input="settingsRejectionOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
-                  <button type="button" data-add-list-item="settingsRejectionOutcomes" data-i18n="add">Agregar</button>
+              </section>
+
+              <section class="settings-section settings-section-reminders">
+                <div class="settings-section-header">
+                  <h3 data-i18n="reminderAutomation">Automatización de recordatorios</h3>
+                  <p class="muted" data-i18n="settingsRemindersHelp">Controla avisos, sonido y comportamiento de la app al cerrar.</p>
                 </div>
-                <div class="chip-list" data-list-output="settingsRejectionOutcomes"></div>
-              </div>
-              <div class="list-editor span-2" data-list-editor="settingsCallbackOutcomes">
-                <span class="field-label" data-i18n="callbackOutcomes">Resultados de rellamada</span>
-                <div class="inline-add">
-                  <input data-list-input="settingsCallbackOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
-                  <button type="button" data-add-list-item="settingsCallbackOutcomes" data-i18n="add">Agregar</button>
+                <div class="settings-toggle-grid">
+                  <label class="checkbox-row">
+                    <input name="startOnLogin" type="checkbox" />
+                    <span data-i18n="startOnLogin">Iniciar con el sistema</span>
+                  </label>
+                  <label class="checkbox-row">
+                    <input name="runInBackground" type="checkbox" />
+                    <span data-i18n="runInBackground">Mantener en segundo plano al cerrar</span>
+                  </label>
+                  <label class="checkbox-row">
+                    <input name="notifyAtExactTime" type="checkbox" />
+                    <span data-i18n="notifyAtExactTime">Avisar a la hora exacta</span>
+                  </label>
                 </div>
-                <div class="chip-list" data-list-output="settingsCallbackOutcomes"></div>
-              </div>
-              <div class="settings-maintenance span-2">
-                <div>
-                  <span class="field-label" data-i18n="maintenanceDiagnostics">Mantenimiento y diagnóstico</span>
-                  <small class="helper" data-i18n="maintenanceDiagnosticsHelper">Backups completos, importación y datos útiles para soporte.</small>
+                <div class="settings-fields compact">
+                  <label class="field-sm">
+                    <span data-i18n="notifyBeforeMinutes">Aviso anticipado</span>
+                    <select name="notifyBeforeMinutes">
+                      <option value="0">0 min</option>
+                      <option value="5">5 min</option>
+                      <option value="10">10 min</option>
+                      <option value="15">15 min</option>
+                      <option value="30">30 min</option>
+                      <option value="60">60 min</option>
+                    </select>
+                  </label>
+                  <label class="field-md">
+                    <span data-i18n="reminderSound">Sonido de alerta</span>
+                    <div class="sound-preview-row">
+                      <select name="reminderSound">
+                        <option value="soft" data-i18n="reminderSoundSoft">Suave</option>
+                        <option value="ping" data-i18n="reminderSoundPing">Ping</option>
+                        <option value="bell" data-i18n="reminderSoundBell">Campana</option>
+                        <option value="alert" data-i18n="reminderSoundAlert">Alerta</option>
+                        <option value="chime" data-i18n="reminderSoundChime">Chime</option>
+                        <option value="none" data-i18n="reminderSoundNone">Sin sonido</option>
+                      </select>
+                      <button type="button" class="icon-button" id="previewReminderSound" data-i18n-title="previewReminderSound" title="Probar sonido">▶</button>
+                    </div>
+                  </label>
+                </div>
+              </section>
+
+              <section class="settings-section settings-section-lists">
+                <div class="settings-section-header">
+                  <h3 data-i18n="settingsCallSetup">Tipos de llamada y estados</h3>
+                  <p class="muted" data-i18n="settingsCallSetupHelp">Personaliza los valores rápidos del Dashboard sin cambiar llamadas existentes.</p>
+                </div>
+                <div class="settings-list-grid">
+                  <div class="list-editor" data-list-editor="settingsCallTypes">
+                    <span class="field-label" data-i18n="callTypes">Tipos de llamada</span>
+                    <div class="inline-add">
+                      <input data-list-input="settingsCallTypes" data-i18n-placeholder="newCallTypePlaceholder" placeholder="Escribe un tipo de llamada..." />
+                      <button type="button" data-add-list-item="settingsCallTypes" data-i18n="add">Agregar</button>
+                    </div>
+                    <div class="chip-list" data-list-output="settingsCallTypes"></div>
+                  </div>
+                  <div class="list-editor" data-list-editor="settingsFrequentStatuses">
+                    <span class="field-label" data-i18n="frequentStatuses">Estados frecuentes</span>
+                    <div class="inline-add">
+                      <input data-list-input="settingsFrequentStatuses" data-i18n-placeholder="newFrequentStatusPlaceholder" placeholder="Nuevo estado frecuente" />
+                      <button type="button" data-add-list-item="settingsFrequentStatuses" data-i18n="add">Agregar</button>
+                    </div>
+                    <div class="chip-list" data-list-output="settingsFrequentStatuses"></div>
+                  </div>
+                  <div class="list-editor" data-list-editor="settingsSuccessOutcomes">
+                    <span class="field-label" data-i18n="successOutcomes">Resultados exitosos</span>
+                    <small class="helper" data-i18n="outcomePresetsHelper">El primer resultado de cada lista se usa como etiqueta principal.</small>
+                    <div class="inline-add">
+                      <input data-list-input="settingsSuccessOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+                      <button type="button" data-add-list-item="settingsSuccessOutcomes" data-i18n="add">Agregar</button>
+                    </div>
+                    <div class="chip-list" data-list-output="settingsSuccessOutcomes"></div>
+                  </div>
+                  <div class="list-editor" data-list-editor="settingsRejectionOutcomes">
+                    <span class="field-label" data-i18n="rejectionOutcomes">Resultados de rechazo</span>
+                    <div class="inline-add">
+                      <input data-list-input="settingsRejectionOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+                      <button type="button" data-add-list-item="settingsRejectionOutcomes" data-i18n="add">Agregar</button>
+                    </div>
+                    <div class="chip-list" data-list-output="settingsRejectionOutcomes"></div>
+                  </div>
+                  <div class="list-editor" data-list-editor="settingsCallbackOutcomes">
+                    <span class="field-label" data-i18n="callbackOutcomes">Resultados de rellamada</span>
+                    <div class="inline-add">
+                      <input data-list-input="settingsCallbackOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+                      <button type="button" data-add-list-item="settingsCallbackOutcomes" data-i18n="add">Agregar</button>
+                    </div>
+                    <div class="chip-list" data-list-output="settingsCallbackOutcomes"></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="settings-section settings-maintenance">
+                <div class="settings-section-header">
+                  <h3 data-i18n="maintenanceDiagnostics">Mantenimiento y diagnóstico</h3>
+                  <p class="muted" data-i18n="maintenanceDiagnosticsHelper">Backups completos, importación y datos útiles para soporte.</p>
                 </div>
                 <div class="inline-actions">
                   <button type="button" id="openOnboardingWizard" data-i18n="reconfigureOnboarding">Reconfigurar asistente</button>
@@ -997,8 +1047,7 @@
                   <button type="button" id="refreshDiagnostics" data-i18n="diagnostics">Diagnóstico</button>
                 </div>
                 <pre id="diagnosticsOutput" class="diagnostics-output" aria-live="polite"></pre>
-              </div>
-              <button class="primary span-2" type="submit" data-i18n="saveSettings">Guardar configuración</button>
+              </section>
             </form>
           </div>
         </section>

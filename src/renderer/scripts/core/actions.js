@@ -11,7 +11,7 @@
       if (target) target.textContent = message || "";
       const notice = $("#systemNotice");
       if (!notice) return;
-      const showNotice = message && ["warning", "error"].includes(tone);
+      const showNotice = Boolean(message);
       notice.textContent = showNotice ? message : "";
       notice.classList.toggle("hidden", !showNotice);
       notice.dataset.tone = tone;
