@@ -199,6 +199,14 @@
             <h2 data-i18n="onboardingStepReviewTitle">Revisión final</h2>
             <p class="muted" data-i18n="onboardingStepReviewHelp">Confirma la configuración. Al finalizar se guardan solo preferencias; llamadas, reportes, recordatorios y estadísticas permanecen intactos.</p>
             <div class="onboarding-review" id="onboardingReview"></div>
+            <div class="onboarding-legal-note">
+              <strong data-i18n="legalOnboardingTitle">Términos y privacidad</strong>
+              <p class="muted" data-i18n="legalOnboardingSummary">CallFlow guarda tus datos localmente en este equipo. Eres responsable de la información que introduces, importas o copias en la aplicación.</p>
+              <label class="checkbox-row">
+                <input name="acceptedLegalTerms" type="checkbox" />
+                <span data-i18n="legalAcceptText">Acepto los términos y condiciones y la política de privacidad.</span>
+              </label>
+            </div>
           </section>
 
           <div class="onboarding-actions span-2">
@@ -872,6 +880,7 @@
               <button type="button" class="settings-tab" data-settings-tab="reminders" data-i18n="reminderAutomation">Recordatorios</button>
               <button type="button" class="settings-tab" data-settings-tab="lists" data-i18n="settingsCallSetup">Tipos y estados</button>
               <button type="button" class="settings-tab" data-settings-tab="maintenance" data-i18n="maintenanceDiagnostics">Mantenimiento</button>
+              <button type="button" class="settings-tab" data-settings-tab="about" data-i18n="settingsAboutLegal">Acerca de y legal</button>
             </div>
             <form id="settingsForm" class="settings-layout" novalidate>
               <section class="settings-section settings-tab-panel active" data-settings-panel="general">
@@ -1073,6 +1082,63 @@
                   <summary data-i18n="diagnosticsTechnicalDetails">Detalles técnicos para soporte</summary>
                   <pre id="diagnosticsOutput" class="diagnostics-output"></pre>
                 </details>
+              </section>
+
+              <section class="settings-section settings-about settings-tab-panel hidden" data-settings-panel="about">
+                <div class="settings-section-header">
+                  <h3 data-i18n="settingsAboutLegal">Acerca de y legal</h3>
+                  <p class="muted" data-i18n="aboutLegalHelp">Información de versión, privacidad local y bases legales editables del proyecto.</p>
+                </div>
+                <div class="about-card about-card-primary">
+                  <div>
+                    <span class="eyebrow" data-i18n="aboutAppName">Aplicación</span>
+                    <h4>CallFlow</h4>
+                    <p class="muted" data-i18n="aboutAppDescription">Asistente local de productividad para registrar llamadas, reportes, recordatorios, scripts y estadísticas de turno.</p>
+                  </div>
+                  <div class="about-meta-grid">
+                    <div>
+                      <span data-i18n="aboutVersion">Versión</span>
+                      <strong id="aboutAppVersion">0.1.16</strong>
+                    </div>
+                    <div>
+                      <span data-i18n="aboutStatus">Estado</span>
+                      <strong data-i18n="aboutStatusPreview">Beta / preview</strong>
+                    </div>
+                    <div>
+                      <span data-i18n="aboutProject">Proyecto</span>
+                      <strong>GaboEI / CallFlow</strong>
+                    </div>
+                  </div>
+                  <div class="inline-actions">
+                    <a class="button-link" href="https://github.com/GaboEI/callflow" target="_blank" rel="noreferrer" data-i18n="aboutRepository">Repositorio GitHub</a>
+                    <button type="button" id="checkUpdates" data-i18n="checkUpdates">Comprobar actualizaciones</button>
+                  </div>
+                </div>
+                <div class="about-grid">
+                  <article class="about-card">
+                    <h4 data-i18n="legalPrivacyTitle">Privacidad y datos locales</h4>
+                    <p data-i18n="legalPrivacySummary">CallFlow no está diseñado para recopilar datos del usuario ni enviar información a servidores externos. La configuración, llamadas, reportes, scripts y recordatorios se guardan localmente en este equipo.</p>
+                    <small class="helper"><span data-i18n="diagnosticsDataFolder">Carpeta de datos</span>: <strong id="aboutDataDir" data-i18n="notAvailable">No disponible</strong></small>
+                  </article>
+                  <article class="about-card">
+                    <h4 data-i18n="legalTermsTitle">Términos y condiciones</h4>
+                    <p data-i18n="legalTermsSummary">Base editable: el uso de CallFlow es responsabilidad del usuario, incluyendo datos sensibles, cumplimiento de normas internas y respaldo de información local.</p>
+                    <small class="helper"><span data-i18n="legalTermsVersion">Versión de términos</span>: <strong id="aboutTermsVersion">2026-06-21</strong></small>
+                  </article>
+                  <article class="about-card">
+                    <h4 data-i18n="aboutLicense">Licencia</h4>
+                    <p data-i18n="aboutLicensePending">La licencia final del repositorio todavía no fue seleccionada. Hay una comparación editable preparada antes de aplicar MIT, Apache 2.0, GPL, AGPL u otra opción.</p>
+                  </article>
+                  <article class="about-card">
+                    <h4 data-i18n="legalThirdPartyTitle">Licencias de terceros</h4>
+                    <p data-i18n="legalThirdPartySummary">CallFlow usa dependencias de Electron y librerías incluidas en el empaquetado. Los avisos de terceros quedan preparados para la versión instalable.</p>
+                  </article>
+                </div>
+                <details class="settings-details">
+                  <summary data-i18n="legalInstallerPrep">Notas para instalador Windows</summary>
+                  <p class="muted" data-i18n="legalInstallerPrepText">La documentación legal editable ya contempla licencia, términos, privacidad, autor, versión y carpeta local de datos para el empaquetado final.</p>
+                </details>
+                <p class="copyright-note" data-i18n="aboutCopyright">Copyright © 2026 GaboEI. Base legal editable, pendiente de revisión final.</p>
               </section>
             </form>
           </div>

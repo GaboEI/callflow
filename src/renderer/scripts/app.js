@@ -38,6 +38,7 @@
       ? Intl.supportedValuesOf("timeZone")
       : fallbackTimezones;
   const ONBOARDING_STEP_COUNT = 7;
+  const LEGAL_TERMS_VERSION = "2026-06-21";
   const timezoneCountries = Object.fromEntries(
     `
 Europe/Andorra AD
@@ -631,6 +632,11 @@ Africa/Harare ZW
     onboardingForm.financialCurrency.value = settings.financial?.currency || "USD";
     onboardingForm.financialHourlyRate.value = settings.financial?.hourlyRate || "";
     onboardingForm.financialPaidBreaks.checked = Boolean(settings.financial?.paidBreaks);
+    if (onboardingForm.acceptedLegalTerms) {
+      onboardingForm.acceptedLegalTerms.checked = Boolean(
+        settings.legalAcceptance?.termsVersion === LEGAL_TERMS_VERSION || settings.onboardingCompleted
+      );
+    }
     state.onboardingActiveTimezones = activeTimezones();
     state.formLists.onboardingCallTypes = [...settings.callTypes];
     state.formLists.onboardingFrequentStatuses = [...settings.frequentStatuses];
@@ -750,6 +756,16 @@ Africa/Harare ZW
           }
         : state.settings.financial || {},
       theme: form.theme ? form.theme.value : "dark",
+      legalAcceptance: form.acceptedLegalTerms?.checked
+        ? {
+            ...(state.settings.legalAcceptance || {}),
+            acceptedAt: state.settings.legalAcceptance?.termsVersion === LEGAL_TERMS_VERSION
+              ? state.settings.legalAcceptance.acceptedAt
+              : new Date().toISOString(),
+            termsVersion: LEGAL_TERMS_VERSION,
+            privacyVersion: LEGAL_TERMS_VERSION
+          }
+        : state.settings.legalAcceptance || null,
       onboardingCompleted
     };
   }
@@ -1304,6 +1320,12 @@ Africa/Harare ZW
     $$(".nav-link").forEach((button) => button.addEventListener("click", () => setView(button.dataset.view)));
     $("#onboardingForm").addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (state.onboardingMode === "initial" && !event.currentTarget.acceptedLegalTerms?.checked) {
+        setOnboardingStep(ONBOARDING_STEP_COUNT - 1);
+        setStatusMessage(CallFlowI18n.t("legalAcceptanceRequired", activeFormLanguage()), "error");
+        event.currentTarget.acceptedLegalTerms?.focus();
+        return;
+      }
       await runAction(async () => {
         await saveSettings(settingsFromForm(event.currentTarget, true));
         $("#onboarding").classList.add("hidden");

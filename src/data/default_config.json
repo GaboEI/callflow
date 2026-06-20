@@ -35,5 +35,6 @@
   "notifyAtExactTime": true,
   "reminderSound": "soft",
   "theme": "dark",
+  "legalAcceptance": null,
   "onboardingCompleted": false
 }

@@ -23,6 +23,7 @@
     } = context;
     let activeSettingsTab = "general";
     let activeSettingsList = "settingsCallTypes";
+    const legalTermsVersion = "2026-06-21";
 
     function setSettingsTab(tabId = "general") {
       activeSettingsTab = tabId;
@@ -36,6 +37,7 @@
         panel.classList.toggle("active", active);
         panel.classList.toggle("hidden", !active);
       });
+      if (activeSettingsTab === "about") refreshAboutInfo();
     }
 
     function setSettingsList(listId = "settingsCallTypes") {
@@ -156,6 +158,27 @@
       });
     }
 
+    async function refreshAboutInfo() {
+      if (!window.callflow?.getDiagnostics) return;
+      const language = state.settings?.language || "es";
+      const versionOutput = document.querySelector("#aboutAppVersion");
+      const dataDirOutput = document.querySelector("#aboutDataDir");
+      const termsOutput = document.querySelector("#aboutTermsVersion");
+      if (termsOutput) termsOutput.textContent = legalTermsVersion;
+      try {
+        const diagnostics = await window.callflow.getDiagnostics();
+        if (versionOutput) versionOutput.textContent = diagnostics.appVersion || "0.1.16";
+        if (dataDirOutput) dataDirOutput.textContent = diagnostics.dataDir || i18n.t("notAvailable", language);
+      } catch (_error) {
+        if (versionOutput) versionOutput.textContent = "0.1.16";
+        if (dataDirOutput) dataDirOutput.textContent = i18n.t("notAvailable", language);
+      }
+    }
+
+    function checkUpdates() {
+      setStatusMessage(i18n.t("updatesManual", state.settings?.language || "es"), "warning");
+    }
+
     async function exportBackup() {
       await runAction(async () => {
         const result = await window.callflow.exportBackup();
@@ -197,12 +220,14 @@
       document.querySelector("#exportBackup").addEventListener("click", exportBackup);
       document.querySelector("#importBackup").addEventListener("click", importBackup);
       document.querySelector("#refreshDiagnostics").addEventListener("click", refreshDiagnostics);
+      document.querySelector("#checkUpdates")?.addEventListener("click", checkUpdates);
     }
 
     return {
       addListItem,
       bindEvents,
       importBackup,
+      refreshAboutInfo,
       refreshDiagnostics,
       removeListItem,
       render,

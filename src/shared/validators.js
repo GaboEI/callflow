@@ -177,6 +177,19 @@
     }, {});
   }
 
+  function normalizeLegalAcceptance(value) {
+    if (!isPlainObject(value)) return null;
+    const acceptedAt = validIsoDateTime(value.acceptedAt) ? value.acceptedAt : "";
+    const termsVersion = text(value.termsVersion, LIMITS.shortText);
+    const privacyVersion = text(value.privacyVersion, LIMITS.shortText);
+    if (!acceptedAt || !termsVersion) return null;
+    return {
+      acceptedAt,
+      termsVersion,
+      privacyVersion: privacyVersion || termsVersion
+    };
+  }
+
   function normalizeSettings(settings, defaults = {}) {
     const source = isPlainObject(settings) ? settings : {};
     const merged = { ...defaults, ...source };
@@ -273,6 +286,7 @@
       notifyAtExactTime: merged.notifyAtExactTime !== false,
       reminderSound: reminderSounds.has(merged.reminderSound) ? merged.reminderSound : "soft",
       theme: merged.theme === "dark" ? "dark" : "dark",
+      legalAcceptance: normalizeLegalAcceptance(merged.legalAcceptance),
       onboardingCompleted: Boolean(merged.onboardingCompleted)
     };
     normalized.outcomePresets = normalizeOutcomePresets(normalized);

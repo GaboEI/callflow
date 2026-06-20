@@ -694,6 +694,28 @@ body[data-theme="light"] .onboarding-logo-fallback {
   line-height: 1.45;
 }
 
+.onboarding-legal-note {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.54);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+}
+
+.onboarding-legal-note p {
+  margin: 0;
+}
+
+.onboarding-legal-note .checkbox-row {
+  align-items: center;
+  width: fit-content;
+  min-height: 30px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
 @media (max-width: 560px) {
   .onboarding {
     padding: 12px;
@@ -1353,6 +1375,10 @@ nav {
   width: min(100%, 1180px);
 }
 
+.settings-tab-panel[data-settings-panel="about"] {
+  width: min(100%, 1040px);
+}
+
 .settings-tab-panel.hidden,
 .settings-list-panel.hidden {
   display: none;
@@ -1442,6 +1468,95 @@ nav {
   min-height: 0;
   margin: 0;
   padding: 0;
+}
+
+.settings-about {
+  align-content: start;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.about-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  background: rgba(11, 18, 32, 0.36);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+}
+
+.about-card-primary {
+  grid-template-columns: minmax(260px, 1fr) minmax(300px, 0.9fr);
+  align-items: start;
+}
+
+.about-card h4 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.about-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.about-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.about-meta-grid div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 9px 10px;
+  background: rgba(15, 23, 42, 0.58);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 8px;
+}
+
+.about-meta-grid span,
+.copyright-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.about-meta-grid strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 12px;
+  color: #dbeafe;
+  text-decoration: none;
+  background: rgba(59, 130, 246, 0.16);
+  border: 1px solid rgba(59, 130, 246, 0.32);
+  border-radius: 8px;
+}
+
+.button-link:hover {
+  background: rgba(59, 130, 246, 0.24);
+}
+
+.copyright-note {
+  margin: 0;
 }
 
 #settingsForm .checkbox-row span {
@@ -4991,7 +5106,8 @@ code {
 
   .settings-panel,
   .settings-section,
-  .settings-tab-panel[data-settings-panel="lists"] {
+  .settings-tab-panel[data-settings-panel="lists"],
+  .settings-tab-panel[data-settings-panel="about"] {
     width: 100%;
   }
 
@@ -5018,6 +5134,12 @@ code {
   .settings-fields,
   .settings-fields.compact,
   .settings-list-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-grid,
+  .about-card-primary,
+  .about-meta-grid {
     grid-template-columns: 1fr;
   }
 
