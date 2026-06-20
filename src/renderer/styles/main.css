@@ -500,7 +500,12 @@ h2 {
 }
 
 .system-notice {
-  margin-bottom: 12px;
+  position: fixed;
+  z-index: 220;
+  top: 72px;
+  right: 22px;
+  width: min(380px, calc(100vw - 32px));
+  margin: 0;
   border: 1px solid rgba(59, 130, 246, 0.36);
   border-radius: 6px;
   background: rgba(59, 130, 246, 0.12);
@@ -508,6 +513,9 @@ h2 {
   padding: 9px 12px;
   font-size: 13px;
   line-height: 1.35;
+  box-shadow: 0 16px 42px rgba(2, 6, 23, 0.38);
+  backdrop-filter: blur(14px);
+  pointer-events: none;
 }
 
 .system-notice[data-tone="success"] {
@@ -886,6 +894,11 @@ nav {
   scrollbar-gutter: stable;
 }
 
+#settingsView.view.active {
+  overflow: hidden;
+  padding-right: 0;
+}
+
 .statusbar {
   grid-column: 1;
   grid-row: 2;
@@ -1262,7 +1275,10 @@ nav {
 
 .settings-panel {
   display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 16px;
+  height: 100%;
+  min-height: 0;
 }
 
 .settings-heading {
@@ -1313,6 +1329,10 @@ nav {
 
 .settings-layout {
   display: block;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
 }
 
 .settings-section {
