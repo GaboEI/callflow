@@ -1378,10 +1378,6 @@ nav {
   gap: 8px;
 }
 
-.status-outcome-row:has([data-outcome-menu="callback"].open) {
-  margin-bottom: 240px;
-}
-
 .outcome-menu-list {
   display: grid;
   gap: 4px;
@@ -3654,6 +3650,10 @@ code {
 }
 
 @media (max-width: 979px) {
+  .status-outcome-row:has([data-outcome-menu="callback"].open) {
+    margin-bottom: 240px;
+  }
+
   #dashboardView .button-row {
     gap: 8px;
   }
@@ -3845,6 +3845,20 @@ code {
     grid-column: 2;
     justify-self: end;
     width: min(100%, 386px);
+  }
+
+  .status-outcome-row:has([data-outcome-menu="callback"].open) {
+    margin-bottom: 0;
+  }
+
+  .outcome-control[data-outcome-control="callback"] .outcome-menu {
+    right: calc(100% + 12px);
+  }
+
+  .call-form:has([data-outcome-menu="callback"].open) .callback-fields {
+    align-content: start;
+    width: min(100%, 280px);
+    margin-bottom: 88px;
   }
 
   .cards.compact {
