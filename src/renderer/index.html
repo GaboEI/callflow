@@ -215,6 +215,7 @@
           <button class="nav-link" data-view="reports" data-i18n="reports">Reportes</button>
           <button class="nav-link" data-view="reminders" data-i18n="reminders">Recordatorios</button>
           <button class="nav-link" data-view="stats" data-i18n="stats">Estadísticas</button>
+          <button class="nav-link" data-view="calculator" data-i18n="calculator">Calculadora</button>
           <button class="nav-link" data-view="knowledge" data-i18n="knowledge">Scripts</button>
           <button class="nav-link" data-view="settings" data-i18n="settings">Configuración</button>
         </nav>
@@ -612,6 +613,48 @@
           </div>
         </section>
 
+        <section id="calculatorView" class="view">
+          <div class="calculator-shell">
+            <section class="panel calculator-panel">
+              <div class="panel-header">
+                <div>
+                  <h2 data-i18n="calculator">Calculadora</h2>
+                  <p class="muted">Cálculos rápidos y configuración económica del turno.</p>
+                </div>
+              </div>
+              <div class="calculator-grid">
+                <article class="calculator-box">
+                  <h3>Cálculo rápido</h3>
+                  <label>
+                    <span>Operación</span>
+                    <input id="quickCalcExpression" placeholder="Ejemplo: 120 * 3 - 15%" autocomplete="off" />
+                  </label>
+                  <div class="calculator-keypad" id="quickCalcKeypad"></div>
+                  <div class="calculator-result">
+                    <span class="muted">Resultado</span>
+                    <strong id="quickCalcResult">0</strong>
+                  </div>
+                </article>
+                <article class="calculator-box">
+                  <h3>Finanzas / salario</h3>
+                  <form id="financeSettingsForm" class="calculator-finance-form">
+                    <label><span>Moneda o símbolo</span><input name="currency" placeholder="USD" /></label>
+                    <label><span>Pago por hora</span><input name="hourlyRate" type="number" step="0.01" min="0" /></label>
+                    <label><span>Bonos / pluses</span><input name="bonuses" type="number" step="0.01" /></label>
+                    <label><span>Multas / descuentos</span><input name="deductions" type="number" step="0.01" /></label>
+                    <label><span>Ajuste manual</span><input name="adjustments" type="number" step="0.01" /></label>
+                    <button class="primary span-2" type="submit">Guardar finanzas</button>
+                  </form>
+                  <div class="calculator-result">
+                    <span class="muted">Estimado con tiempo actual</span>
+                    <strong id="financePreview">0</strong>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </section>
+
         <section id="knowledgeView" class="view">
           <div class="script-library" id="scriptLibrary">
             <div class="script-library-header">
@@ -834,6 +877,7 @@
       </main>
 
       <footer class="statusbar" aria-label="Estado de CallFlow">
+        <button type="button" class="statusbar-calculator-toggle" id="quickCalculatorToggle" title="Calculadora">⌗</button>
         <div class="shift-timer statusbar-timer" id="shiftTimer">
           <button class="shift-toggle" type="button" id="shiftTimerToggle" data-i18n-title="startWorkTimer" title="Iniciar jornada">▶</button>
           <button class="shift-toggle total-pause-toggle" type="button" id="shiftTimerStop" data-i18n-title="pauseAllTimer" title="Pausa total">■</button>
@@ -844,6 +888,19 @@
         </div>
       </footer>
     </div>
+
+    <aside id="quickCalculatorPanel" class="quick-calculator-panel hidden" aria-label="Calculadora rápida">
+      <div class="quick-calculator-header">
+        <strong>Calculadora</strong>
+        <button type="button" class="icon-button" id="quickCalculatorClose">×</button>
+      </div>
+      <input id="floatingCalcExpression" placeholder="0" autocomplete="off" />
+      <div class="calculator-keypad compact" id="floatingCalcKeypad"></div>
+      <div class="calculator-result compact">
+        <span class="muted">Resultado</span>
+        <strong id="floatingCalcResult">0</strong>
+      </div>
+    </aside>
 
     <div id="dateTimePicker" class="cf-datetime-picker hidden" role="dialog" aria-live="polite"></div>
 
@@ -892,6 +949,7 @@
     <script src="./scripts/views/knowledge-view.js"></script>
     <script src="./scripts/views/clock-view.js"></script>
     <script src="./scripts/views/stats-view.js"></script>
+    <script src="./scripts/views/calculator-view.js"></script>
     <script src="./scripts/app.js"></script>
   </body>
 </html>

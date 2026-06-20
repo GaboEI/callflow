@@ -585,6 +585,7 @@ Africa/Harare ZW
       reports: "Reportes",
       reminders: "Recordatorios",
       stats: "Estadísticas",
+      calculator: "Calculadora",
       knowledge: "Scripts",
       settings: "Configuración"
     };
@@ -1030,6 +1031,16 @@ Africa/Harare ZW
     timers: Timers,
     validators: V
   });
+  const calculatorView = window.CallFlowCalculatorView.createCalculatorView({
+    $,
+    escapeHtml,
+    normalizeSettings,
+    runAction,
+    setStatusMessage,
+    state,
+    storage: CallFlowStorage,
+    timers: Timers
+  });
 
   async function updateActiveTimezones(timezones, lastReminderTimezone = state.settings.lastReminderTimezone) {
     const zones = V.uniqueItems(timezones).slice(0, V.MAX_ACTIVE_TIMEZONES);
@@ -1167,6 +1178,7 @@ Africa/Harare ZW
     remindersView.render();
     knowledgeView.render();
     statsView.render();
+    calculatorView.render();
     clockView.render();
     dateTimePicker.enhanceInputs();
   }
@@ -1202,6 +1214,7 @@ Africa/Harare ZW
       $("#sidebarBackdrop").hidden = true;
     }
     if (sidebarToggle) return;
+    calculatorView.closeFloatingIfOutside(event.target);
     const timezoneToggle = event.target.closest("[data-timezone-toggle]");
     const timezoneOption = event.target.closest("[data-timezone-picker-option]");
     const addListId = event.target.dataset.addListItem;
@@ -1301,6 +1314,7 @@ Africa/Harare ZW
     });
     dashboardView.bindEvents();
     clockView.bindEvents();
+    calculatorView.bindEvents();
     $("#sidebarToggle").addEventListener("click", () => {
       const app = $("#app");
       app.classList.toggle("sidebar-open");

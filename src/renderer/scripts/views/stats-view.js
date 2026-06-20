@@ -165,37 +165,49 @@
       return timers.formatDuration(ms || 0);
     }
 
+    function workMsForRange(range = statsRangeBounds()) {
+      const today = isoDateInStatsTimezone();
+      const timer = state.workTimer || {};
+      if (range.from === today && range.to === today) {
+        return timers.currentDailyWorkElapsed(timer);
+      }
+      if (compareIsoDate(range.from, today) <= 0 && compareIsoDate(today, range.to) <= 0) {
+        return timers.currentDailyWorkElapsed(timer);
+      }
+      return 0;
+    }
+
+    function breakMsForRange(range = statsRangeBounds()) {
+      const today = isoDateInStatsTimezone();
+      const breaks = (state.workTimer?.breaks || [])
+        .filter((item) => {
+          const breakDate = V.isoDateInTimezone(new Date(item.startedAt), statsTimezone());
+          return compareIsoDate(breakDate, range.from) >= 0 && compareIsoDate(breakDate, range.to) <= 0;
+        })
+        .reduce((sum, item) => sum + (Number(item.durationMs) || 0), 0);
+      return compareIsoDate(range.from, today) <= 0 && compareIsoDate(today, range.to) <= 0
+        ? breaks + timers.currentBreakElapsed(state.workTimer)
+        : breaks;
+    }
+
     function workTimeSummary() {
       const range = statsRangeBounds();
-      const today = isoDateInStatsTimezone();
-      const currentCycleStart = cycleStartForDate(today);
-      if (range.from !== today || range.to !== today) {
-        if (range.from === currentCycleStart && range.to === today) {
-          const workMs = timers.currentWorkElapsed(state.workTimer);
-          const breakMs = (state.workTimer?.breaks || [])
-            .filter((item) => {
-              const breakDate = V.isoDateInTimezone(new Date(item.startedAt), statsTimezone());
-              return compareIsoDate(breakDate, range.from) >= 0 && compareIsoDate(breakDate, range.to) <= 0;
-            })
-            .reduce((sum, item) => sum + (Number(item.durationMs) || 0), 0) +
-            timers.currentBreakElapsed(state.workTimer);
-          return {
-            work: formattedDuration(workMs),
-            breaks: formattedDuration(breakMs)
-          };
-        }
-        return {
-          work: t("statsAvailableWithHistory"),
-          breaks: t("statsAvailableWithHistory")
-        };
-      }
-      const workMs = timers.currentWorkElapsed(state.workTimer);
-      const breakMs = (state.workTimer?.breaks || []).reduce((sum, item) => sum + (Number(item.durationMs) || 0), 0) +
-        timers.currentBreakElapsed(state.workTimer);
+      const workMs = workMsForRange(range);
+      const breakMs = breakMsForRange(range);
       return {
+        workMs,
+        breakMs,
         work: formattedDuration(workMs),
         breaks: formattedDuration(breakMs)
       };
+    }
+
+    function financialSummary(workMs) {
+      const config = state.settings.financial || {};
+      const hourlyRate = Number(config.hourlyRate) || 0;
+      const currency = config.currency || "USD";
+      const amount = (workMs / 3600000) * hourlyRate + (Number(config.bonuses) || 0) + (Number(config.adjustments) || 0) - (Number(config.deductions) || 0);
+      return `${currency} ${Math.round(amount * 100) / 100}`;
     }
 
     function renderSummary(analysis) {
@@ -209,7 +221,8 @@
         [t("statsNoAnswer"), analysis.noAnswer, "", ""],
         [t("statsAvgCallsHour"), analysis.averages.callsPerActiveHour || t("statsNoData"), "", ""],
         [t("statsWorkTime"), time.work, "", "secondary"],
-        [t("statsBreakTime"), time.breaks, "", "secondary"]
+        [t("statsBreakTime"), time.breaks, "", "secondary"],
+        [t("statsEstimatedEarnings"), financialSummary(time.workMs), "success-metric", "secondary"]
       ];
       $("#statsSummaryCards").innerHTML = cards
         .map(
