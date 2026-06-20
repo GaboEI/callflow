@@ -3262,9 +3262,9 @@ code {
 
 .script-markdown pre {
   overflow: auto;
-  padding: 14px;
-  background: #050b16;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  padding: 13px 46px 13px 14px;
+  background: #202630;
+  border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 7px;
 }
 
@@ -3275,21 +3275,20 @@ code {
 
 .script-code-block pre {
   margin: 0;
-  padding-top: 38px;
 }
 
 .script-copy-code {
   position: absolute;
   z-index: 2;
-  top: 7px;
-  right: 7px;
+  top: 8px;
+  right: 8px;
   display: grid;
   place-items: center;
-  width: 28px;
-  min-height: 26px;
+  width: 25px;
+  min-height: 24px;
   padding: 0;
   color: #94a3b8;
-  background: rgba(15, 23, 42, 0.94);
+  background: #2d3541;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 5px;
   font-size: 15px;
@@ -3307,9 +3306,13 @@ code {
 }
 
 .script-markdown pre code {
+  display: block;
   padding: 0;
-  color: #dbeafe;
+  color: #e2e8f0;
   background: transparent;
+  border: 0;
+  border-radius: 0;
+  white-space: pre;
 }
 
 .script-markdown table {
