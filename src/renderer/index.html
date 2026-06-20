@@ -577,8 +577,16 @@
                   </div>
                   <div class="timesheet-navigation">
                     <button type="button" id="timesheetPreviousMonth" aria-label="Mes anterior">‹</button>
-                    <input id="timesheetMonth" type="month" aria-label="Mes del registro" />
+                    <button type="button" id="timesheetMonthTrigger" class="timesheet-month-trigger" aria-haspopup="dialog" aria-expanded="false" data-i18n-title="statsChooseMonth" title="Elegir mes y año"><span id="timesheetMonthLabel"></span><small>⌄</small></button>
                     <button type="button" id="timesheetNextMonth" aria-label="Mes siguiente">›</button>
+                    <div id="timesheetMonthPicker" class="timesheet-month-picker hidden" role="dialog" aria-label="Mes y año">
+                      <div class="timesheet-year-control">
+                        <button type="button" data-timesheet-year-shift="-1" aria-label="Año anterior">‹</button>
+                        <input id="timesheetYear" type="number" min="1900" max="2200" aria-label="Año" />
+                        <button type="button" data-timesheet-year-shift="1" aria-label="Año siguiente">›</button>
+                      </div>
+                      <div id="timesheetMonthOptions" class="timesheet-month-options"></div>
+                    </div>
                   </div>
                 </div>
                 <div id="statsTimesheet" class="stats-timesheet"></div>

@@ -21,6 +21,7 @@
     let scheduleEditing = false;
     let selectedScheduleHours = new Set();
     let timesheetAnchor = null;
+    let timesheetPickerYear = null;
 
     function language() {
       return state.settings.language || "es";
@@ -365,6 +366,48 @@
       return new Date(year, month - 1, 1);
     }
 
+    function statsLocale() {
+      return { es: "es-ES", en: "en-US", ru: "ru-RU" }[language()] || "es-ES";
+    }
+
+    function monthLabel(year, month) {
+      return new Intl.DateTimeFormat(statsLocale(), { month: "long", year: "numeric" }).format(new Date(year, month, 1));
+    }
+
+    function renderTimesheetMonthPicker() {
+      const current = currentTimesheetAnchor();
+      const anchor = timesheetAnchor || current;
+      const year = timesheetPickerYear ?? anchor.getFullYear();
+      timesheetPickerYear = Math.min(current.getFullYear(), Math.max(1900, year));
+      $("#timesheetYear").value = String(timesheetPickerYear);
+      $("#timesheetMonthOptions").innerHTML = Array.from({ length: 12 }, (_item, month) => {
+        const future = timesheetPickerYear === current.getFullYear() && month > current.getMonth();
+        const active = timesheetPickerYear === anchor.getFullYear() && month === anchor.getMonth();
+        const label = new Intl.DateTimeFormat(statsLocale(), { month: "short" }).format(new Date(timesheetPickerYear, month, 1));
+        return `<button type="button" data-timesheet-month="${month}" class="${active ? "active" : ""}" ${future ? "disabled" : ""}>${escapeHtml(label)}</button>`;
+      }).join("");
+    }
+
+    function toggleTimesheetMonthPicker(force) {
+      const picker = $("#timesheetMonthPicker");
+      const open = typeof force === "boolean" ? force : picker.classList.contains("hidden");
+      picker.classList.toggle("hidden", !open);
+      $("#timesheetMonthTrigger").setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) {
+        timesheetPickerYear = (timesheetAnchor || currentTimesheetAnchor()).getFullYear();
+        renderTimesheetMonthPicker();
+        $("#timesheetYear").focus();
+      }
+    }
+
+    function selectTimesheetMonth(month) {
+      const current = currentTimesheetAnchor();
+      timesheetAnchor = new Date(timesheetPickerYear, month, 1);
+      if (timesheetAnchor > current) timesheetAnchor = current;
+      toggleTimesheetMonthPicker(false);
+      renderTimesheet();
+    }
+
     function renderTimesheet() {
       const anchor = timesheetAnchor || currentTimesheetAnchor();
       const year = anchor.getFullYear();
@@ -372,10 +415,9 @@
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const today = isoDateInStatsTimezone();
       const entries = timers.dailyWorkEntries(state.workTimer);
-      const monthInput = $("#timesheetMonth");
-      monthInput.value = `${year}-${String(month + 1).padStart(2, "0")}`;
-      monthInput.max = today.slice(0, 7);
-      $("#timesheetNextMonth").disabled = monthInput.value >= monthInput.max;
+      $("#timesheetMonthLabel").textContent = monthLabel(year, month);
+      $("#timesheetNextMonth").disabled = anchor >= currentTimesheetAnchor();
+      renderTimesheetMonthPicker();
       $("#statsTimesheet").innerHTML = Array.from({ length: daysInMonth }, (_item, index) => {
         const day = index + 1;
         const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -669,18 +711,36 @@
       $("#saveSchedule").addEventListener("click", saveSchedule);
       $("#timesheetPreviousMonth").addEventListener("click", () => shiftTimesheetMonth(-1));
       $("#timesheetNextMonth").addEventListener("click", () => shiftTimesheetMonth(1));
-      $("#timesheetMonth").addEventListener("change", (event) => {
-        const [year, month] = event.target.value.split("-").map(Number);
-        if (year && month) timesheetAnchor = new Date(year, month - 1, 1);
-        if (timesheetAnchor > currentTimesheetAnchor()) timesheetAnchor = currentTimesheetAnchor();
-        renderTimesheet();
+      $("#timesheetMonthTrigger").addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleTimesheetMonthPicker();
+      });
+      $("#timesheetMonthPicker").addEventListener("click", (event) => {
+        event.stopPropagation();
+        const yearShift = event.target.closest("[data-timesheet-year-shift]");
+        const month = event.target.closest("[data-timesheet-month]");
+        if (yearShift) {
+          timesheetPickerYear += Number(yearShift.dataset.timesheetYearShift);
+          renderTimesheetMonthPicker();
+        }
+        if (month) selectTimesheetMonth(Number(month.dataset.timesheetMonth));
+      });
+      $("#timesheetYear").addEventListener("change", (event) => {
+        timesheetPickerYear = Number(event.target.value) || currentTimesheetAnchor().getFullYear();
+        renderTimesheetMonthPicker();
       });
       $("#statsTimesheet").addEventListener("click", (event) => {
         const day = event.target.closest("[data-timesheet-date]");
         if (day) openTimeAdjustment(day.dataset.timesheetDate);
       });
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") closeTimeAdjustment();
+        if (event.key === "Escape") {
+          toggleTimesheetMonthPicker(false);
+          closeTimeAdjustment();
+        }
+      });
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".timesheet-navigation")) toggleTimesheetMonthPicker(false);
       });
       $("#statsView").addEventListener("mouseover", handlePointer);
       $("#statsView").addEventListener("mouseleave", () => {
