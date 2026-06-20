@@ -156,6 +156,73 @@
       return hours * numberValue(config.hourlyRate) + numberValue(config.bonuses) + numberValue(config.adjustments) - numberValue(config.deductions);
     }
 
+    function currentDailyWorkMs() {
+      return timers.currentDailyWorkElapsed(state.workTimer);
+    }
+
+    function monthlyFinanceSeries() {
+      const config = financeSettings();
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const today = now.getDate();
+      const hourlyRate = numberValue(config.hourlyRate);
+      const currentDailyAmount = (currentDailyWorkMs() / 3600000) * hourlyRate;
+      return Array.from({ length: daysInMonth }, (_item, index) => {
+        const day = index + 1;
+        return {
+          day,
+          value: day === today ? currentDailyAmount : 0
+        };
+      });
+    }
+
+    function renderMonthlyFinanceChart() {
+      const chart = $("#monthlyFinanceChart");
+      const total = $("#monthlyFinanceTotal");
+      if (!chart || !total) return;
+      const config = financeSettings();
+      const series = monthlyFinanceSeries();
+      const monthlyAdjustments = numberValue(config.bonuses) + numberValue(config.adjustments) - numberValue(config.deductions);
+      const totalAmount = series.reduce((sum, item) => sum + item.value, 0) + monthlyAdjustments;
+      total.textContent = currencyFormat(totalAmount, config);
+      const max = Math.max(1, ...series.map((item) => Math.abs(item.value)));
+      const width = 720;
+      const height = 190;
+      const padX = 20;
+      const top = 22;
+      const baseline = 132;
+      const usableWidth = width - padX * 2;
+      const points = series.map((item, index) => {
+        const x = padX + (index / Math.max(1, series.length - 1)) * usableWidth;
+        const y = baseline - (item.value / max) * 84;
+        return { ...item, x, y };
+      });
+      const line = points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+      const fill = `${padX},${baseline} ${line} ${width - padX},${baseline}`;
+      const bars = points
+        .map((point) => {
+          const active = point.value > 0;
+          return `<rect x="${(point.x - 3).toFixed(1)}" y="${Math.min(point.y, baseline).toFixed(1)}" width="6" height="${Math.max(2, Math.abs(baseline - point.y)).toFixed(1)}" rx="3" class="${active ? "is-active" : ""}"></rect>`;
+        })
+        .join("");
+      const labels = points
+        .filter((point) => point.day === 1 || point.day % 5 === 0 || point.day === series.length)
+        .map((point) => `<text x="${point.x.toFixed(1)}" y="172">${point.day}</text>`)
+        .join("");
+      chart.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(currencyFormat(totalAmount, config))}">
+          <line x1="${padX}" y1="${baseline}" x2="${width - padX}" y2="${baseline}" class="finance-chart-axis"></line>
+          <polyline points="${fill}" class="finance-chart-fill"></polyline>
+          <polyline points="${line}" class="finance-chart-line"></polyline>
+          <g class="finance-chart-bars">${bars}</g>
+          <g class="finance-chart-labels">${labels}</g>
+          <text x="${padX}" y="${top}" class="finance-chart-total">${escapeHtml(currencyFormat(totalAmount, config))}</text>
+        </svg>
+      `;
+    }
+
     function renderFinanceForm() {
       const form = $("#financeSettingsForm");
       if (!form) return;
@@ -166,6 +233,7 @@
       form.deductions.value = config.deductions || "";
       form.adjustments.value = config.adjustments || "";
       $("#financePreview").textContent = currencyFormat(estimatedFinance(), config);
+      renderMonthlyFinanceChart();
     }
 
     async function saveFinance(event) {
@@ -205,6 +273,7 @@
       renderFinanceForm();
       calculate("#quickCalcExpression", "#quickCalcResult", "#quickCalcHistory");
       calculate("#floatingCalcExpression", "#floatingCalcResult", "#floatingCalcHistory");
+      renderMonthlyFinanceChart();
     }
 
     function bindEvents() {

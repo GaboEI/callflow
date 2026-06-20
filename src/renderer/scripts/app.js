@@ -37,7 +37,7 @@
     typeof Intl.supportedValuesOf === "function"
       ? Intl.supportedValuesOf("timeZone")
       : fallbackTimezones;
-  const ONBOARDING_STEP_COUNT = 6;
+  const ONBOARDING_STEP_COUNT = 7;
   const timezoneCountries = Object.fromEntries(
     `
 Europe/Andorra AD
@@ -626,6 +626,11 @@ Africa/Harare ZW
     onboardingForm.notifyAtExactTime.checked = settings.notifyAtExactTime !== false;
     onboardingForm.notifyBeforeMinutes.value = String(settings.notifyBeforeMinutes || 0);
     onboardingForm.reminderSound.value = settings.reminderSound || "soft";
+    onboardingForm.financialCurrency.value = settings.financial?.currency || "USD";
+    onboardingForm.financialHourlyRate.value = settings.financial?.hourlyRate || "";
+    onboardingForm.financialBonuses.value = settings.financial?.bonuses || "";
+    onboardingForm.financialDeductions.value = settings.financial?.deductions || "";
+    onboardingForm.financialAdjustments.value = settings.financial?.adjustments || "";
     state.onboardingActiveTimezones = activeTimezones();
     state.formLists.onboardingCallTypes = [...settings.callTypes];
     state.formLists.onboardingFrequentStatuses = [...settings.frequentStatuses];
@@ -732,6 +737,15 @@ Africa/Harare ZW
         ? Number(form.notifyBeforeMinutes.value) || 0
         : Number(state.settings.notifyBeforeMinutes) || 0,
       reminderSound: form.reminderSound ? form.reminderSound.value : state.settings.reminderSound || "soft",
+      financial: form.financialCurrency
+        ? {
+            currency: String(form.financialCurrency.value || "USD").trim().slice(0, 16) || "USD",
+            hourlyRate: Number(form.financialHourlyRate.value) || 0,
+            bonuses: Number(form.financialBonuses.value) || 0,
+            deductions: Number(form.financialDeductions.value) || 0,
+            adjustments: Number(form.financialAdjustments.value) || 0
+          }
+        : state.settings.financial || {},
       theme: form.theme ? form.theme.value : "dark",
       onboardingCompleted
     };
@@ -815,7 +829,11 @@ Africa/Harare ZW
       ],
       [onboardingText("onboardingReviewReports"), `${form.reportHeaderFormat.value || "-"} · ${onboardingText("linePrefixMode")}: ${form.linePrefixMode.value} · ${onboardingText("statsCycleStartDay")}: ${form.statsCycleStartDay.value || "1"}`],
       [onboardingText("statsTimezone"), `${timezoneFlag(form.statsTimezone.value)} ${shortTimezoneName(form.statsTimezone.value)}`],
-      [onboardingText("onboardingReviewReminders"), `${onboardingText("notifyBeforeMinutes")}: ${form.notifyBeforeMinutes.value} min · ${onboardingText("reminderSound")}: ${form.reminderSound.value}`]
+      [onboardingText("onboardingReviewReminders"), `${onboardingText("notifyBeforeMinutes")}: ${form.notifyBeforeMinutes.value} min · ${onboardingText("reminderSound")}: ${form.reminderSound.value}`],
+      [
+        onboardingText("onboardingReviewFinance"),
+        `${form.financialCurrency.value || "USD"} · ${onboardingText("financialHourlyRate")}: ${form.financialHourlyRate.value || "0"}`
+      ]
     ];
     output.innerHTML = reviewItems
       .map(

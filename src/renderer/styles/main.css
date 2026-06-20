@@ -1944,6 +1944,96 @@ code {
   grid-column: 1 / -1;
 }
 
+.finance-save-button {
+  justify-self: end;
+  min-width: 160px;
+  border-color: rgba(34, 197, 94, 0.48);
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--green);
+  font-weight: 700;
+}
+
+.finance-save-button:hover {
+  border-color: rgba(34, 197, 94, 0.66);
+  background: rgba(34, 197, 94, 0.18);
+}
+
+.calculator-chart-box {
+  margin-top: 12px;
+}
+
+.calculator-chart-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.calculator-chart-header p {
+  margin: 4px 0 0;
+}
+
+.calculator-chart-header strong {
+  white-space: nowrap;
+  color: var(--green);
+  font-size: 18px;
+}
+
+.finance-chart {
+  min-height: 220px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(34, 211, 238, 0.05), transparent),
+    #07101f;
+}
+
+.finance-chart svg {
+  display: block;
+  width: 100%;
+  height: 220px;
+}
+
+.finance-chart-axis {
+  stroke: rgba(148, 163, 184, 0.26);
+  stroke-width: 1;
+}
+
+.finance-chart-fill {
+  fill: rgba(34, 197, 94, 0.09);
+  stroke: none;
+}
+
+.finance-chart-line {
+  fill: none;
+  stroke: #22d3ee;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.32));
+}
+
+.finance-chart-bars rect {
+  fill: rgba(37, 99, 235, 0.2);
+}
+
+.finance-chart-bars rect.is-active {
+  fill: rgba(34, 197, 94, 0.72);
+}
+
+.finance-chart-labels text {
+  fill: var(--muted);
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+.finance-chart-total {
+  fill: var(--green);
+  font-size: 18px;
+  font-weight: 700;
+}
+
 .quick-calculator-panel {
   position: fixed;
   right: 16px;
@@ -4044,6 +4134,10 @@ code {
   .stats-summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .calculator-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 620px) {
@@ -4087,6 +4181,22 @@ code {
   .stats-detail-grid,
   .stats-insights {
     grid-template-columns: 1fr;
+  }
+
+  .calculator-finance-form {
+    grid-template-columns: 1fr;
+  }
+
+  .calculator-finance-form .span-2 {
+    grid-column: auto;
+  }
+
+  .finance-save-button {
+    justify-self: stretch;
+  }
+
+  .calculator-chart-header {
+    display: grid;
   }
 
   .work-clock-shell {

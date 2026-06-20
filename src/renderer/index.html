@@ -185,6 +185,16 @@
           </section>
 
           <section class="onboarding-step span-2 hidden" data-onboarding-step="5">
+            <h2 data-i18n="onboardingStepFinanceTitle">Finanzas del turno</h2>
+            <p class="muted" data-i18n="onboardingStepFinanceHelp">Define cómo estimar tus ganancias desde el reloj de trabajo. Puedes ajustarlo luego desde Calculadora.</p>
+            <label><span>Moneda o símbolo</span><input name="financialCurrency" placeholder="USD" /></label>
+            <label><span>Pago por hora</span><input name="financialHourlyRate" type="number" step="0.01" min="0" /></label>
+            <label><span>Bonos / pluses</span><input name="financialBonuses" type="number" step="0.01" /></label>
+            <label><span>Multas / descuentos</span><input name="financialDeductions" type="number" step="0.01" /></label>
+            <label><span>Ajuste manual</span><input name="financialAdjustments" type="number" step="0.01" /></label>
+          </section>
+
+          <section class="onboarding-step span-2 hidden" data-onboarding-step="6">
             <h2 data-i18n="onboardingStepReviewTitle">Revisión final</h2>
             <p class="muted" data-i18n="onboardingStepReviewHelp">Confirma la configuración. Al finalizar se guardan solo preferencias; llamadas, reportes, recordatorios y estadísticas permanecen intactos.</p>
             <div class="onboarding-review" id="onboardingReview"></div>
@@ -644,7 +654,7 @@
                     <label><span>Bonos / pluses</span><input name="bonuses" type="number" step="0.01" /></label>
                     <label><span>Multas / descuentos</span><input name="deductions" type="number" step="0.01" /></label>
                     <label><span>Ajuste manual</span><input name="adjustments" type="number" step="0.01" /></label>
-                    <button class="primary span-2" type="submit">Guardar finanzas</button>
+                    <button class="finance-save-button span-2" type="submit">Guardar finanzas</button>
                   </form>
                   <div class="calculator-result">
                     <span class="muted">Estimado con tiempo actual</span>
@@ -652,6 +662,16 @@
                   </div>
                 </article>
               </div>
+              <article class="calculator-box calculator-chart-box">
+                <div class="calculator-chart-header">
+                  <div>
+                    <h3>Ganancia del mes</h3>
+                    <p class="muted">Estimación diaria según tu tarifa y el tiempo registrado.</p>
+                  </div>
+                  <strong id="monthlyFinanceTotal">0</strong>
+                </div>
+                <div class="finance-chart" id="monthlyFinanceChart" aria-label="Gráfica mensual de ganancias"></div>
+              </article>
             </section>
           </div>
         </section>
