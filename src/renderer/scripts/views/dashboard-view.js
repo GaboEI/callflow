@@ -242,6 +242,9 @@
     function renderOutcomeMenu(category) {
       const language = state.settings.language || "es";
       const presetsForCategory = state.settings.outcomePresets[category] || { items: [] };
+      const clearButton = category === "callback"
+        ? '<div class="outcome-menu-footer"><button type="button" class="outcome-clear outcome-clear-icon" data-clear-outcome title="Quitar selección" aria-label="Quitar selección">×</button><button type="button" class="outcome-confirm" data-confirm-outcome="callback" title="Confirmar selección" aria-label="Confirmar selección">✓</button></div>'
+        : `<button type="button" class="outcome-clear" data-clear-outcome>${escapeHtml(i18n.t("clearOutcome", language))}</button>`;
       return `
         <div class="outcome-menu-list">
           ${presetsForCategory.items
@@ -259,13 +262,18 @@
           <input data-new-outcome="${category}" placeholder="${escapeHtml(i18n.t("newOutcome", language))}" />
           <button type="button" data-add-outcome="${category}">${escapeHtml(i18n.t("addOutcome", language))}</button>
         </div>
-        ${category === "callback" ? '<button type="button" class="outcome-confirm" data-confirm-outcome="callback" title="Confirmar selección" aria-label="Confirmar selección">✓</button>' : ""}
-        <button type="button" class="outcome-clear" data-clear-outcome>${escapeHtml(i18n.t("clearOutcome", language))}</button>
+        ${category === "callback" ? '<div class="outcome-menu-callback-slot"></div>' : ""}
+        ${clearButton}
       `;
     }
 
     function renderOutcomeControls() {
       if (!state.settings) return;
+      const callbackFields = $("#callbackFields");
+      const statusOutcomeRow = document.querySelector(".status-outcome-row");
+      if (callbackFields && callbackFields.closest(".outcome-menu") && statusOutcomeRow) {
+        statusOutcomeRow.insertAdjacentElement("afterend", callbackFields);
+      }
       ["success", "rejection", "callback"].forEach((category) => {
         const button = document.querySelector(`[data-outcome-toggle="${category}"]`);
         const label = document.querySelector(`[data-outcome-label="${category}"]`);
@@ -281,7 +289,12 @@
       });
 
       const callbackSelected = state.selectedPrimaryOutcome?.category === "callback";
-      $("#callbackFields").classList.toggle("hidden", !callbackSelected);
+      const callbackMenu = document.querySelector('[data-outcome-menu="callback"]');
+      const callbackSlot = callbackMenu?.querySelector(".outcome-menu-callback-slot");
+      if (callbackFields && callbackSlot && callbackSelected && state.openOutcomeMenu === "callback") {
+        callbackSlot.appendChild(callbackFields);
+      }
+      $("#callbackFields").classList.toggle("hidden", !(callbackSelected && state.openOutcomeMenu === "callback"));
       renderReminderTimezoneSelectors();
     }
 
