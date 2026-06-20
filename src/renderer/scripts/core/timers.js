@@ -8,6 +8,7 @@
       dailyWorkDate: null,
       dailyWorkElapsedMs: 0,
       dailyWorkStartedAt: null,
+      dailyWorkHistory: {},
       currentBreakStartedAt: null,
       breaks: []
     };
@@ -19,6 +20,10 @@
       ...(timer || {}),
       workElapsedMs: Number(timer && timer.workElapsedMs) || 0,
       dailyWorkElapsedMs: Number(timer && timer.dailyWorkElapsedMs) || 0,
+      dailyWorkHistory:
+        timer && timer.dailyWorkHistory && typeof timer.dailyWorkHistory === "object" && !Array.isArray(timer.dailyWorkHistory)
+          ? { ...timer.dailyWorkHistory }
+          : {},
       breaks: Array.isArray(timer && timer.breaks) ? timer.breaks : []
     };
   }
@@ -41,8 +46,16 @@
     const normalized = normalizeWorkTimer(timer);
     if (!dayKey) return normalized;
     if (normalized.dailyWorkDate === dayKey) return normalized;
+    const dailyWorkHistory = { ...normalized.dailyWorkHistory };
+    if (normalized.dailyWorkDate && (normalized.dailyWorkElapsedMs > 0 || normalized.dailyWorkStartedAt)) {
+      dailyWorkHistory[normalized.dailyWorkDate] = Math.max(
+        Number(dailyWorkHistory[normalized.dailyWorkDate]) || 0,
+        currentDailyWorkElapsed(normalized, now.getTime())
+      );
+    }
     return {
       ...normalized,
+      dailyWorkHistory,
       dailyWorkDate: dayKey,
       dailyWorkElapsedMs: 0,
       dailyWorkStartedAt: normalized.status === "working" ? now.toISOString() : null
@@ -53,6 +66,13 @@
     const normalized = normalizeWorkTimer(timer);
     if (normalized.status !== "working" || !normalized.dailyWorkStartedAt) return normalized.dailyWorkElapsedMs;
     return normalized.dailyWorkElapsedMs + Math.max(0, now - new Date(normalized.dailyWorkStartedAt).getTime());
+  }
+
+  function dailyWorkEntries(timer, now = Date.now()) {
+    const normalized = normalizeWorkTimer(timer);
+    const entries = { ...normalized.dailyWorkHistory };
+    if (normalized.dailyWorkDate) entries[normalized.dailyWorkDate] = currentDailyWorkElapsed(normalized, now);
+    return entries;
   }
 
   function currentBreakElapsed(timer, now = Date.now()) {
@@ -117,6 +137,7 @@
   const api = {
     currentBreakElapsed,
     currentDailyWorkElapsed,
+    dailyWorkEntries,
     currentWorkElapsed,
     defaultWorkTimer,
     ensureDailyWorkTimer,

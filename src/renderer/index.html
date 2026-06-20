@@ -148,11 +148,6 @@
                 <option value="dailyNumber" data-i18n="linePrefixDailyNumber">Número diario 001</option>
               </select>
             </label>
-            <label>
-              <span data-i18n="statsCycleStartDay">Día de corte mensual</span>
-              <input name="statsCycleStartDay" type="number" min="1" max="28" />
-              <small class="helper" data-i18n="statsCycleStartDayHelper">Día en que reinicia el ciclo mensual de estadísticas.</small>
-            </label>
             <div class="settings-group onboarding-reminder-group span-2">
               <h3 data-i18n="reminderAutomation">Automatización de recordatorios</h3>
               <label class="checkbox-row">
@@ -186,12 +181,14 @@
 
           <section class="onboarding-step span-2 hidden" data-onboarding-step="5">
             <h2 data-i18n="onboardingStepFinanceTitle">Finanzas del turno</h2>
-            <p class="muted" data-i18n="onboardingStepFinanceHelp">Define cómo estimar tus ganancias desde el reloj de trabajo. Puedes ajustarlo luego desde Calculadora.</p>
+            <p class="muted">Define la moneda, la tarifa y el inicio del ciclo. Podrás cambiarlos luego desde Configuración.</p>
             <label><span>Moneda o símbolo</span><input name="financialCurrency" placeholder="USD" /></label>
             <label><span>Pago por hora</span><input name="financialHourlyRate" type="number" step="0.01" min="0" /></label>
-            <label><span>Bonos / pluses</span><input name="financialBonuses" type="number" step="0.01" /></label>
-            <label><span>Multas / descuentos</span><input name="financialDeductions" type="number" step="0.01" /></label>
-            <label><span>Ajuste manual</span><input name="financialAdjustments" type="number" step="0.01" /></label>
+            <label>
+              <span>Día de inicio del ciclo mensual</span>
+              <input name="statsCycleStartDay" type="number" min="1" max="28" />
+              <small class="helper">Por defecto es 1. Si te pagan del día 10 al 10, selecciona 10.</small>
+            </label>
           </section>
 
           <section class="onboarding-step span-2 hidden" data-onboarding-step="6">
@@ -647,28 +644,42 @@
                   <div class="calculator-history" id="quickCalcHistory"></div>
                 </article>
                 <article class="calculator-box">
-                  <h3>Finanzas / salario</h3>
-                  <form id="financeSettingsForm" class="calculator-finance-form">
-                    <label><span>Moneda o símbolo</span><input name="currency" placeholder="USD" /></label>
-                    <label><span>Pago por hora</span><input name="hourlyRate" type="number" step="0.01" min="0" /></label>
-                    <label><span>Bonos / pluses</span><input name="bonuses" type="number" step="0.01" /></label>
-                    <label><span>Multas / descuentos</span><input name="deductions" type="number" step="0.01" /></label>
-                    <label><span>Ajuste manual</span><input name="adjustments" type="number" step="0.01" /></label>
-                    <button class="finance-save-button span-2" type="submit">Guardar finanzas</button>
+                  <div class="finance-box-header">
+                    <div><h3>Finanzas del ciclo</h3><p class="muted" id="financeConfigSummary"></p></div>
+                  </div>
+                  <form id="financeTransactionForm" class="finance-transaction-form">
+                    <label><span>Fecha</span><input name="date" type="date" required /></label>
+                    <label><span>Movimiento</span><select name="type"><option value="bonus">Bono / plus</option><option value="deduction">Multa / descuento</option><option value="adjustment">Ajuste positivo</option></select></label>
+                    <label><span>Importe</span><input name="amount" type="number" step="0.01" min="0.01" required /></label>
+                    <label><span>Descripción</span><input name="note" maxlength="240" placeholder="Ejemplo: bono de calidad" /></label>
+                    <button class="finance-save-button span-2" type="submit">Agregar movimiento</button>
                   </form>
                   <div class="calculator-result">
-                    <span class="muted">Estimado con tiempo actual</span>
+                    <span class="muted">Generado por horas en el ciclo visible</span>
                     <strong id="financePreview">0</strong>
                   </div>
+                  <div class="finance-transaction-list" id="financeTransactionList"></div>
                 </article>
               </div>
               <article class="calculator-box calculator-chart-box">
                 <div class="calculator-chart-header">
                   <div>
-                    <h3>Ganancia del mes</h3>
-                    <p class="muted">Estimación diaria según tu tarifa y el tiempo registrado.</p>
+                    <h3 id="financeChartTitle">Ganancias del ciclo</h3>
+                    <p class="muted" id="financeChartRange">Estimación según tiempo registrado y movimientos.</p>
                   </div>
                   <strong id="monthlyFinanceTotal">0</strong>
+                </div>
+                <div class="finance-chart-toolbar">
+                  <div class="finance-period-toggle" role="group" aria-label="Agrupación de estadísticas">
+                    <button type="button" class="active" data-finance-mode="month">Mes</button>
+                    <button type="button" data-finance-mode="year">Año</button>
+                  </div>
+                  <div class="finance-period-navigation">
+                    <button type="button" id="financePeriodPrevious" aria-label="Período anterior">‹</button>
+                    <input id="financeMonthPicker" type="month" aria-label="Seleccionar mes" />
+                    <input id="financeYearPicker" class="hidden" type="number" min="2000" max="2200" aria-label="Seleccionar año" />
+                    <button type="button" id="financePeriodNext" aria-label="Período siguiente">›</button>
+                  </div>
                 </div>
                 <div class="finance-chart" id="monthlyFinanceChart" aria-label="Gráfica mensual de ganancias"></div>
               </article>
@@ -795,6 +806,8 @@
                 <input name="statsCycleStartDay" type="number" min="1" max="28" />
                 <small class="helper" data-i18n="statsCycleStartDayHelper">Día en que reinicia el ciclo mensual de estadísticas.</small>
               </label>
+              <label><span>Moneda o símbolo</span><input name="financialCurrency" placeholder="USD" maxlength="16" /></label>
+              <label><span>Pago por hora</span><input name="financialHourlyRate" type="number" step="0.01" min="0" /></label>
               <label><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
               <div class="settings-group span-2">
                 <h3 data-i18n="reminderAutomation">Automatización de recordatorios</h3>

@@ -21,6 +21,10 @@ const DEFAULT_DATA = {
     previousStatus: null,
     workElapsedMs: 0,
     workStartedAt: null,
+    dailyWorkDate: null,
+    dailyWorkElapsedMs: 0,
+    dailyWorkStartedAt: null,
+    dailyWorkHistory: {},
     currentBreakStartedAt: null,
     breaks: []
   }

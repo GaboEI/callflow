@@ -197,6 +197,29 @@
     const lastReminderTimezone = text(merged.lastReminderTimezone, LIMITS.shortText);
     const statsTimezone = text(merged.statsTimezone, LIMITS.shortText) || primaryTimezone || "local";
     const statsCycleStartDay = Math.min(28, Math.max(1, Number(merged.statsCycleStartDay) || 1));
+    const sourceFinancial = isPlainObject(merged.financial) ? merged.financial : {};
+    const legacyFinanceDate = isoDateInTimezone(new Date(), statsTimezone);
+    const legacyTransactions = Array.isArray(sourceFinancial.transactions)
+      ? []
+      : [
+          { id: "legacy-bonus", date: legacyFinanceDate, type: "bonus", amount: sourceFinancial.bonuses, note: "Bono migrado" },
+          { id: "legacy-deduction", date: legacyFinanceDate, type: "deduction", amount: sourceFinancial.deductions, note: "Descuento migrado" },
+          { id: "legacy-adjustment", date: legacyFinanceDate, type: "adjustment", amount: sourceFinancial.adjustments, note: "Ajuste migrado" }
+        ];
+    const financialTransactions = [
+      ...(Array.isArray(sourceFinancial.transactions) ? sourceFinancial.transactions : []),
+      ...legacyTransactions
+    ]
+      .filter(isPlainObject)
+      .map((item) => ({
+        id: text(item.id, LIMITS.shortText) || randomId("finance"),
+        date: validIsoDate(item.date) ? item.date : isoDateInTimezone(new Date(), statsTimezone),
+        type: ["bonus", "deduction", "adjustment"].includes(item.type) ? item.type : "adjustment",
+        amount: Math.max(0, Number(item.amount) || 0),
+        note: text(item.note, LIMITS.mediumText),
+        createdAt: validIsoDateTime(item.createdAt) ? item.createdAt : new Date().toISOString()
+      }))
+      .filter((item) => item.amount > 0);
     const normalized = {
       ...merged,
       language,
@@ -206,6 +229,11 @@
       lastReminderTimezone: activeTimezones.includes(lastReminderTimezone) ? lastReminderTimezone : primaryTimezone,
       statsTimezone,
       statsCycleStartDay,
+      financial: {
+        currency: text(sourceFinancial.currency, 16) || "USD",
+        hourlyRate: Math.max(0, Number(sourceFinancial.hourlyRate) || 0),
+        transactions: financialTransactions
+      },
       operatorName: text(merged.operatorName, LIMITS.shortText),
       callTypes: uniqueItems(merged.callTypes, LIMITS.shortText),
       frequentStatuses: uniqueItems(merged.frequentStatuses || merged.callStatuses, LIMITS.shortText),
@@ -308,6 +336,13 @@
       dailyWorkDate: validIsoDate(source.dailyWorkDate) ? source.dailyWorkDate : null,
       dailyWorkElapsedMs: Math.max(0, Number(source.dailyWorkElapsedMs) || 0),
       dailyWorkStartedAt: validIsoDateTime(source.dailyWorkStartedAt) ? source.dailyWorkStartedAt : null,
+      dailyWorkHistory: isPlainObject(source.dailyWorkHistory)
+        ? Object.fromEntries(
+            Object.entries(source.dailyWorkHistory)
+              .filter(([date]) => validIsoDate(date))
+              .map(([date, durationMs]) => [date, Math.max(0, Number(durationMs) || 0)])
+          )
+        : {},
       currentBreakStartedAt: validIsoDateTime(source.currentBreakStartedAt) ? source.currentBreakStartedAt : null,
       breaks: Array.isArray(source.breaks)
         ? source.breaks

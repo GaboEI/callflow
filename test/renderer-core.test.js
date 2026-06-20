@@ -109,4 +109,31 @@ test("timer core tracks daily work separately from total work", () => {
   assert.equal(nextDay.workElapsedMs, 3900000);
   assert.equal(nextDay.dailyWorkElapsedMs, 0);
   assert.equal(nextDay.dailyWorkDate, "2026-06-19");
+  assert.equal(nextDay.dailyWorkHistory["2026-06-18"], 360000);
+  assert.deepEqual(timers.dailyWorkEntries(nextDay), { "2026-06-18": 360000, "2026-06-19": 0 });
+
+  const activeNextDay = timers.ensureDailyWorkTimer(working, "2026-06-19", now);
+  assert.equal(activeNextDay.dailyWorkHistory["2026-06-18"], 360000);
+});
+
+test("settings normalize dated finance transactions", () => {
+  const normalized = validators.normalizeSettings({
+    financial: {
+      currency: "USD",
+      hourlyRate: 7,
+      transactions: [
+        { id: "bonus-1", date: "2026-06-18", type: "bonus", amount: 10, note: "Quality" },
+        { id: "invalid", date: "bad", type: "deduction", amount: 0 }
+      ]
+    }
+  });
+  assert.equal(normalized.financial.hourlyRate, 7);
+  assert.deepEqual(normalized.financial.transactions.map((item) => item.id), ["bonus-1"]);
+  assert.equal(settings.normalizeSettings(normalized, validators).financial.transactions.length, 1);
+
+  const migrated = validators.normalizeSettings({ financial: { bonuses: 12, deductions: 3 } });
+  assert.deepEqual(migrated.financial.transactions.map((item) => [item.type, item.amount]), [
+    ["bonus", 12],
+    ["deduction", 3]
+  ]);
 });

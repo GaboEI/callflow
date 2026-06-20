@@ -140,6 +140,7 @@
       lastReminderTimezone: sanitized.lastReminderTimezone,
       statsTimezone: sanitized.statsTimezone,
       statsCycleStartDay: sanitized.statsCycleStartDay,
+      financial: sanitized.financial,
       callTypes: sanitized.callTypes,
       frequentStatuses: sanitized.frequentStatuses,
       customComments: sanitized.customComments,

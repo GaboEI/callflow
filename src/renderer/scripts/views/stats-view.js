@@ -166,15 +166,12 @@
     }
 
     function workMsForRange(range = statsRangeBounds()) {
-      const today = isoDateInStatsTimezone();
       const timer = state.workTimer || {};
-      if (range.from === today && range.to === today) {
-        return timers.currentDailyWorkElapsed(timer);
-      }
-      if (compareIsoDate(range.from, today) <= 0 && compareIsoDate(today, range.to) <= 0) {
-        return timers.currentDailyWorkElapsed(timer);
-      }
-      return 0;
+      return Object.entries(timers.dailyWorkEntries(timer)).reduce((total, [date, durationMs]) => {
+        return compareIsoDate(date, range.from) >= 0 && compareIsoDate(date, range.to) <= 0
+          ? total + (Number(durationMs) || 0)
+          : total;
+      }, 0);
     }
 
     function breakMsForRange(range = statsRangeBounds()) {
@@ -206,7 +203,12 @@
       const config = state.settings.financial || {};
       const hourlyRate = Number(config.hourlyRate) || 0;
       const currency = config.currency || "USD";
-      const amount = (workMs / 3600000) * hourlyRate + (Number(config.bonuses) || 0) + (Number(config.adjustments) || 0) - (Number(config.deductions) || 0);
+      const range = statsRangeBounds();
+      const adjustments = (config.transactions || []).reduce((sum, item) => {
+        if (compareIsoDate(item.date, range.from) < 0 || compareIsoDate(item.date, range.to) > 0) return sum;
+        return sum + (item.type === "deduction" ? -Number(item.amount) : Number(item.amount));
+      }, 0);
+      const amount = (workMs / 3600000) * hourlyRate + adjustments;
       return `${currency} ${Math.round(amount * 100) / 100}`;
     }
 

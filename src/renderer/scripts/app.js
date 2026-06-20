@@ -628,9 +628,6 @@ Africa/Harare ZW
     onboardingForm.reminderSound.value = settings.reminderSound || "soft";
     onboardingForm.financialCurrency.value = settings.financial?.currency || "USD";
     onboardingForm.financialHourlyRate.value = settings.financial?.hourlyRate || "";
-    onboardingForm.financialBonuses.value = settings.financial?.bonuses || "";
-    onboardingForm.financialDeductions.value = settings.financial?.deductions || "";
-    onboardingForm.financialAdjustments.value = settings.financial?.adjustments || "";
     state.onboardingActiveTimezones = activeTimezones();
     state.formLists.onboardingCallTypes = [...settings.callTypes];
     state.formLists.onboardingFrequentStatuses = [...settings.frequentStatuses];
@@ -659,6 +656,8 @@ Africa/Harare ZW
     settingsForm.statsTimezone.innerHTML = statsTimezoneOptionsHtml;
     settingsForm.statsTimezone.value = settings.statsTimezone || settings.timezone || "local";
     settingsForm.statsCycleStartDay.value = String(settings.statsCycleStartDay || 1);
+    settingsForm.financialCurrency.value = settings.financial?.currency || "USD";
+    settingsForm.financialHourlyRate.value = settings.financial?.hourlyRate || "";
     settingsForm.startOnLogin.checked = Boolean(settings.startOnLogin);
     settingsForm.runInBackground.checked = Boolean(settings.runInBackground);
     settingsForm.notifyAtExactTime.checked = settings.notifyAtExactTime !== false;
@@ -741,9 +740,7 @@ Africa/Harare ZW
         ? {
             currency: String(form.financialCurrency.value || "USD").trim().slice(0, 16) || "USD",
             hourlyRate: Number(form.financialHourlyRate.value) || 0,
-            bonuses: Number(form.financialBonuses.value) || 0,
-            deductions: Number(form.financialDeductions.value) || 0,
-            adjustments: Number(form.financialAdjustments.value) || 0
+            transactions: state.settings.financial?.transactions || []
           }
         : state.settings.financial || {},
       theme: form.theme ? form.theme.value : "dark",

@@ -1858,7 +1858,7 @@ code {
 
 .calculator-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(260px, 0.72fr) minmax(360px, 1.28fr);
   gap: 12px;
 }
 
@@ -1887,8 +1887,8 @@ code {
 }
 
 .calculator-keypad button {
-  min-height: 34px;
-  padding: 6px 8px;
+  min-height: 29px;
+  padding: 4px 8px;
 }
 
 .calculator-key-utility {
@@ -1940,6 +1940,61 @@ code {
   gap: 10px;
 }
 
+.finance-box-header h3,
+.finance-box-header p {
+  margin: 0;
+}
+
+.finance-box-header p {
+  margin-top: 4px;
+}
+
+.finance-transaction-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.finance-transaction-form .span-2 {
+  grid-column: 1 / -1;
+}
+
+.finance-transaction-list {
+  display: grid;
+  gap: 6px;
+  max-height: 124px;
+  overflow-y: auto;
+}
+
+.finance-transaction-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 28px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: rgba(7, 16, 31, 0.72);
+}
+
+.finance-transaction-item span,
+.finance-transaction-item small {
+  display: block;
+  min-width: 0;
+}
+
+.finance-transaction-item small {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-transaction-item b.positive { color: var(--green); }
+.finance-transaction-item b.negative { color: #f87171; }
+.finance-transaction-item button { min-height: 28px; padding: 2px 7px; }
+.finance-empty { margin: 0; padding: 8px 2px; }
+
 .calculator-finance-form .span-2 {
   grid-column: 1 / -1;
 }
@@ -1979,9 +2034,47 @@ code {
   font-size: 18px;
 }
 
+.finance-chart-toolbar,
+.finance-period-toggle,
+.finance-period-navigation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.finance-chart-toolbar {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.finance-period-toggle {
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #07101f;
+}
+
+.finance-period-toggle button {
+  min-height: 28px;
+  border-color: transparent;
+  padding: 4px 12px;
+}
+
+.finance-period-toggle button.active {
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(37, 99, 235, 0.2);
+  color: #bfdbfe;
+}
+
+.finance-period-navigation input {
+  width: 150px;
+}
+
 .finance-chart {
+  position: relative;
   min-height: 220px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
   background:
@@ -1991,8 +2084,8 @@ code {
 
 .finance-chart svg {
   display: block;
-  width: 100%;
-  height: 220px;
+  width: max(100%, 720px);
+  height: 230px;
 }
 
 .finance-chart-axis {
@@ -2010,8 +2103,50 @@ code {
   stroke: #22d3ee;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 4;
-  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.32));
+  stroke-width: 2;
+  filter: drop-shadow(0 0 4px rgba(34, 211, 238, 0.22));
+}
+
+.finance-chart-grid {
+  stroke: rgba(148, 163, 184, 0.14);
+  stroke-width: 1;
+}
+
+.finance-chart-grid.vertical {
+  stroke: rgba(148, 163, 184, 0.08);
+}
+
+.finance-chart-point {
+  fill: #0f172a;
+  stroke: #67e8f9;
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+.finance-chart-point.is-active {
+  fill: #22d3ee;
+}
+
+.finance-chart-point:hover,
+.finance-chart-point:focus {
+  r: 7;
+  outline: none;
+  stroke: #f8fafc;
+}
+
+.finance-chart-tooltip {
+  position: sticky;
+  left: 10px;
+  bottom: 8px;
+  display: block;
+  width: max-content;
+  margin-top: -36px;
+  padding: 5px 8px;
+  border: 1px solid rgba(103, 232, 249, 0.4);
+  border-radius: 6px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 12px;
 }
 
 .finance-chart-bars rect {
