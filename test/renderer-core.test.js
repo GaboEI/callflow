@@ -137,3 +137,36 @@ test("settings normalize dated finance transactions", () => {
     ["deduction", 3]
   ]);
 });
+
+test("finance settings preserve paid breaks and custom movement directions", () => {
+  const normalized = validators.normalizeSettings({
+    financial: {
+      currency: "EUR",
+      hourlyRate: 12,
+      paidBreaks: true,
+      movementTypes: [{ id: "commission", label: "Commission", direction: "income" }],
+      transactions: [{ id: "fee", date: "2026-06-20", type: "commission", direction: "expense", amount: 4 }]
+    }
+  });
+
+  assert.equal(normalized.financial.paidBreaks, true);
+  assert.equal(normalized.financial.movementTypes[0].direction, "income");
+  assert.equal(normalized.financial.transactions[0].direction, "expense");
+});
+
+test("manual time adjustments are aggregated by day and never produce negative work", () => {
+  const timer = {
+    dailyWorkHistory: { "2026-06-19": 30 * 60000 },
+    timeAdjustments: [
+      { date: "2026-06-19", minutes: -120 },
+      { date: "2026-06-19", minutes: 60 },
+      { date: "2026-06-18", minutes: 90 }
+    ]
+  };
+
+  assert.deepEqual(timers.dailyWorkEntries(timer), {
+    "2026-06-19": 0,
+    "2026-06-18": 90 * 60000
+  });
+  assert.equal(validators.normalizeWorkTimer(timer).timeAdjustments.length, 3);
+});

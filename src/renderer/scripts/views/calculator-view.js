@@ -1,6 +1,6 @@
 (function () {
   function createCalculatorView(context) {
-    const { $, escapeHtml, normalizeSettings, runAction, setStatusMessage, state, storage, timers } = context;
+    const { $, escapeHtml, i18n, normalizeSettings, runAction, setStatusMessage, state, storage, timers, validators: V } = context;
 
     const keypadItems = [
       { label: "C", value: "clear", kind: "utility" },
@@ -33,10 +33,16 @@
     let financeMode = "month";
     let financeAnchor = null;
 
+    function t(key) {
+      return i18n.t(key, state.settings.language || "es");
+    }
+
     function financeSettings() {
       return {
         currency: "USD",
         hourlyRate: 0,
+        paidBreaks: false,
+        movementTypes: [],
         transactions: [],
         ...(state.settings?.financial || {})
       };
@@ -202,7 +208,7 @@
     }
 
     function transactionValue(item) {
-      return item.type === "deduction" ? -numberValue(item.amount) : numberValue(item.amount);
+      return item.direction === "expense" || item.type === "deduction" ? -numberValue(item.amount) : numberValue(item.amount);
     }
 
     function transactionsInRange(start, end) {
@@ -215,8 +221,20 @@
       const config = financeSettings();
       const key = isoDate(date);
       const workMs = numberValue(timers.dailyWorkEntries(state.workTimer)[key]);
+      const paidBreakMs = config.paidBreaks ? breakMsForDate(key) : 0;
       const movements = config.transactions.filter((item) => item.date === key).reduce((sum, item) => sum + transactionValue(item), 0);
-      return (workMs / 3600000) * numberValue(config.hourlyRate) + movements;
+      return ((workMs + paidBreakMs) / 3600000) * numberValue(config.hourlyRate) + movements;
+    }
+
+    function breakMsForDate(key) {
+      const timezone = state.settings.statsTimezone || state.settings.timezone || "local";
+      const completed = (state.workTimer?.breaks || []).reduce((sum, item) => {
+        return V.isoDateInTimezone(new Date(item.startedAt), timezone) === key ? sum + numberValue(item.durationMs) : sum;
+      }, 0);
+      const current = state.workTimer?.currentBreakStartedAt && V.isoDateInTimezone(new Date(), timezone) === key
+        ? timers.currentBreakElapsed(state.workTimer)
+        : 0;
+      return completed + current;
     }
 
     function financeSeries() {
@@ -305,10 +323,20 @@
         const parsed = dateFromIso(date);
         return parsed >= bounds.start && parsed <= bounds.visibleEnd ? sum + numberValue(duration) : sum;
       }, 0);
-      $("#financeConfigSummary").textContent = `${config.currency} · ${currencyFormat(config.hourlyRate, config)} por hora · ciclo desde el día ${state.settings.statsCycleStartDay || 1}`;
-      $("#financePreview").textContent = currencyFormat((workMs / 3600000) * config.hourlyRate, config);
+      let paidBreakMs = 0;
+      if (config.paidBreaks) {
+        for (let date = new Date(bounds.start); date <= bounds.visibleEnd; date = addDays(date, 1)) paidBreakMs += breakMsForDate(isoDate(date));
+      }
+      $("#financeConfigSummary").textContent = `${config.currency} · ${currencyFormat(config.hourlyRate, config)} por hora · ciclo desde el día ${state.settings.statsCycleStartDay || 1} · ${config.paidBreaks ? i18n.t("financePaidBreaks", state.settings.language) : i18n.t("financeUnpaidBreaks", state.settings.language)}`;
+      $("#financePreview").textContent = currencyFormat(((workMs + paidBreakMs) / 3600000) * config.hourlyRate, config);
       const transactionForm = $("#financeTransactionForm");
-      if (!transactionForm.date.value) transactionForm.date.value = isoDate(new Date());
+      transactionForm.date.max = isoDate(new Date());
+      if (!transactionForm.date.value || transactionForm.date.value > transactionForm.date.max) transactionForm.date.value = transactionForm.date.max;
+      const selectedType = transactionForm.type.value;
+      transactionForm.type.innerHTML = config.movementTypes
+        .map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>`)
+        .join("");
+      if (config.movementTypes.some((item) => item.id === selectedType)) transactionForm.type.value = selectedType;
       const monthPicker = $("#financeMonthPicker");
       const anchor = financeAnchor || currentFinanceAnchor();
       monthPicker.value = `${anchor.getFullYear()}-${String(anchor.getMonth() + 1).padStart(2, "0")}`;
@@ -323,9 +351,16 @@
       $("#financeYearPicker").classList.toggle("hidden", financeMode !== "year");
       document.querySelectorAll("[data-finance-mode]").forEach((button) => button.classList.toggle("active", button.dataset.financeMode === financeMode));
       const movements = transactionsInRange(bounds.start, bounds.visibleEnd).sort((a, b) => b.date.localeCompare(a.date));
+      $("#financeMovementCount").textContent = String(movements.length);
+      $("#financeMovementsRange").textContent = financeRangeLabel();
       $("#financeTransactionList").innerHTML = movements.length
-        ? movements.map((item) => `<div class="finance-transaction-item"><span><strong>${item.type === "deduction" ? "Multa" : item.type === "bonus" ? "Bono" : "Ajuste"}</strong><small>${escapeHtml(item.date)}${item.note ? ` · ${escapeHtml(item.note)}` : ""}</small></span><b class="${item.type === "deduction" ? "negative" : "positive"}">${item.type === "deduction" ? "−" : "+"}${escapeHtml(currencyFormat(item.amount, config))}</b><button type="button" data-delete-finance="${escapeHtml(item.id)}" aria-label="Eliminar movimiento">×</button></div>`).join("")
-        : `<p class="muted finance-empty">No hay bonos, multas ni ajustes en este período.</p>`;
+        ? movements.map((item) => `<div class="finance-transaction-item"><span><strong>${escapeHtml(item.label || config.movementTypes.find((type) => type.id === item.type)?.label || item.type)}</strong><small>${escapeHtml(item.date)}${item.note ? ` · ${escapeHtml(item.note)}` : ""}</small></span><b class="${item.direction === "expense" || item.type === "deduction" ? "negative" : "positive"}">${item.direction === "expense" || item.type === "deduction" ? "−" : "+"}${escapeHtml(currencyFormat(item.amount, config))}</b><button type="button" data-delete-finance="${escapeHtml(item.id)}" aria-label="Eliminar movimiento">×</button></div>`).join("")
+        : `<p class="muted finance-empty">${escapeHtml(t("financeNoMovements"))}</p>`;
+      $("#financeMovementTypeList").innerHTML = config.movementTypes.map((item) => `
+        <span class="finance-movement-type-chip">
+          <b>${escapeHtml(item.label)}</b><small>${item.direction === "expense" ? "−" : "+"}</small>
+          <button type="button" data-delete-finance-type="${escapeHtml(item.id)}" aria-label="Eliminar tipo">×</button>
+        </span>`).join("");
       renderMonthlyFinanceChart();
     }
 
@@ -333,10 +368,13 @@
       event.preventDefault();
       const form = event.currentTarget;
       const config = financeSettings();
+      const movementType = config.movementTypes.find((item) => item.id === form.type.value) || config.movementTypes[0];
       const transaction = {
         id: crypto.randomUUID ? crypto.randomUUID() : `finance-${Date.now()}`,
         date: form.date.value,
-        type: form.type.value,
+        type: movementType.id,
+        label: movementType.label,
+        direction: movementType.direction,
         amount: numberValue(form.amount.value),
         note: String(form.note.value || "").trim(),
         createdAt: new Date().toISOString()
@@ -362,6 +400,55 @@
         render();
         setStatusMessage("Movimiento eliminado", "success");
       });
+    }
+
+    async function addFinanceMovementType(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const config = financeSettings();
+      const label = String(form.label.value || "").trim();
+      if (!label) return;
+      const type = {
+        id: `movement-${Date.now()}`,
+        label,
+        direction: form.direction.value === "expense" ? "expense" : "income",
+        locked: false
+      };
+      state.settings = normalizeSettings({
+        ...state.settings,
+        financial: { ...config, movementTypes: [...config.movementTypes, type] }
+      });
+      await runAction(async () => {
+        await storage.write("settings", state.settings);
+        form.reset();
+        render();
+        setStatusMessage("Tipo de movimiento agregado", "success");
+      });
+    }
+
+    async function deleteFinanceMovementType(id) {
+      const config = financeSettings();
+      if (config.movementTypes.length <= 1) {
+        setStatusMessage("Debe quedar al menos un tipo de movimiento", "warning");
+        return;
+      }
+      state.settings = normalizeSettings({
+        ...state.settings,
+        financial: { ...config, movementTypes: config.movementTypes.filter((item) => item.id !== id) }
+      });
+      await runAction(async () => {
+        await storage.write("settings", state.settings);
+        render();
+      });
+    }
+
+    function openFinanceMovements() {
+      renderFinanceForm();
+      $("#financeMovementsModal").classList.remove("hidden");
+    }
+
+    function closeFinanceMovements() {
+      $("#financeMovementsModal").classList.add("hidden");
     }
 
     function shiftFinancePeriod(direction) {
@@ -417,6 +504,16 @@
         const button = event.target.closest("[data-delete-finance]");
         if (button) deleteFinanceTransaction(button.dataset.deleteFinance);
       });
+      $("#financeMovementTypeForm").addEventListener("submit", addFinanceMovementType);
+      $("#financeMovementTypeList").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-delete-finance-type]");
+        if (button) deleteFinanceMovementType(button.dataset.deleteFinanceType);
+      });
+      $("#openFinanceMovements").addEventListener("click", openFinanceMovements);
+      $("#closeFinanceMovements").addEventListener("click", closeFinanceMovements);
+      $("#financeMovementsModal").addEventListener("click", (event) => {
+        if (event.target.id === "financeMovementsModal") closeFinanceMovements();
+      });
       $("#monthlyFinanceChart").addEventListener("click", (event) => showChartPoint(event.target));
       $("#monthlyFinanceChart").addEventListener("keydown", (event) => {
         if (event.key === "Enter" || event.key === " ") showChartPoint(event.target);
@@ -443,7 +540,10 @@
       $("#quickCalculatorToggle").addEventListener("click", openFloating);
       $("#quickCalculatorClose").addEventListener("click", closeFloating);
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") closeFloating();
+        if (event.key === "Escape") {
+          closeFloating();
+          closeFinanceMovements();
+        }
       });
     }
 

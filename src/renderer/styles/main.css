@@ -1995,6 +1995,75 @@ code {
 .finance-transaction-item button { min-height: 28px; padding: 2px 7px; }
 .finance-empty { margin: 0; padding: 8px 2px; }
 
+.finance-movements-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border-color: rgba(96, 165, 250, 0.35);
+  color: #bfdbfe;
+}
+
+.finance-movements-button strong {
+  min-width: 25px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.2);
+}
+
+.finance-movements-modal-card {
+  width: min(760px, 100%);
+}
+
+.finance-type-manager {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: rgba(7, 16, 31, 0.65);
+}
+
+.finance-type-manager h4 {
+  margin: 0 0 9px;
+}
+
+.finance-type-manager form {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 0.8fr) auto;
+  gap: 8px;
+}
+
+.finance-movement-type-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.finance-movement-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #0f172a;
+}
+
+.finance-movement-type-chip small {
+  color: var(--muted);
+}
+
+.finance-movement-type-chip button {
+  min-height: 22px;
+  padding: 0 5px;
+  border: 0;
+}
+
+.finance-transaction-list-modal {
+  max-height: 360px;
+}
+
 .calculator-finance-form .span-2 {
   grid-column: 1 / -1;
 }
@@ -2255,12 +2324,104 @@ code {
   white-space: nowrap;
 }
 
+.stats-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .stats-activity-map {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10px, 1fr));
   gap: 4px;
   max-height: 118px;
   overflow: hidden;
+}
+
+.stats-empty-message {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed rgba(96, 165, 250, 0.24);
+  border-radius: 8px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.app-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 6, 23, 0.76);
+  backdrop-filter: blur(5px);
+}
+
+.app-modal-card {
+  width: min(620px, 100%);
+  max-height: min(720px, calc(100vh - 40px));
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 12px;
+  background: #0f172a;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.52);
+}
+
+.app-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.app-modal-header h3,
+.app-modal-header p {
+  margin: 0;
+}
+
+.app-modal-header p {
+  margin-top: 4px;
+}
+
+.time-adjustment-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.time-adjustment-form .span-2 {
+  grid-column: 1 / -1;
+}
+
+.time-adjustment-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 16px;
+}
+
+.time-adjustment-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #07101f;
+}
+
+.time-adjustment-item span,
+.time-adjustment-item small {
+  display: block;
+}
+
+.time-adjustment-item small {
+  margin-top: 2px;
+  color: var(--muted);
 }
 
 .stats-day-cell {
@@ -4068,6 +4229,20 @@ code {
 }
 
 @media (max-width: 620px) {
+  .finance-type-manager form,
+  .time-adjustment-form {
+    grid-template-columns: 1fr;
+  }
+
+  .time-adjustment-form .span-2 {
+    grid-column: auto;
+  }
+
+  .stats-header-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .script-library-header,
   .script-reader-toolbar {
     align-items: stretch;

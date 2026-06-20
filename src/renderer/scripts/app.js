@@ -628,6 +628,7 @@ Africa/Harare ZW
     onboardingForm.reminderSound.value = settings.reminderSound || "soft";
     onboardingForm.financialCurrency.value = settings.financial?.currency || "USD";
     onboardingForm.financialHourlyRate.value = settings.financial?.hourlyRate || "";
+    onboardingForm.financialPaidBreaks.checked = Boolean(settings.financial?.paidBreaks);
     state.onboardingActiveTimezones = activeTimezones();
     state.formLists.onboardingCallTypes = [...settings.callTypes];
     state.formLists.onboardingFrequentStatuses = [...settings.frequentStatuses];
@@ -658,6 +659,7 @@ Africa/Harare ZW
     settingsForm.statsCycleStartDay.value = String(settings.statsCycleStartDay || 1);
     settingsForm.financialCurrency.value = settings.financial?.currency || "USD";
     settingsForm.financialHourlyRate.value = settings.financial?.hourlyRate || "";
+    settingsForm.financialPaidBreaks.checked = Boolean(settings.financial?.paidBreaks);
     settingsForm.startOnLogin.checked = Boolean(settings.startOnLogin);
     settingsForm.runInBackground.checked = Boolean(settings.runInBackground);
     settingsForm.notifyAtExactTime.checked = settings.notifyAtExactTime !== false;
@@ -740,6 +742,8 @@ Africa/Harare ZW
         ? {
             currency: String(form.financialCurrency.value || "USD").trim().slice(0, 16) || "USD",
             hourlyRate: Number(form.financialHourlyRate.value) || 0,
+            paidBreaks: Boolean(form.financialPaidBreaks?.checked),
+            movementTypes: state.settings.financial?.movementTypes || [],
             transactions: state.settings.financial?.transactions || []
           }
         : state.settings.financial || {},
@@ -1044,7 +1048,8 @@ Africa/Harare ZW
     state,
     stats: CallFlowStats,
     timers: Timers,
-    validators: V
+    validators: V,
+    storage: CallFlowStorage
   });
   const calculatorView = window.CallFlowCalculatorView.createCalculatorView({
     $,
@@ -1054,7 +1059,9 @@ Africa/Harare ZW
     setStatusMessage,
     state,
     storage: CallFlowStorage,
-    timers: Timers
+    timers: Timers,
+    validators: V,
+    i18n: CallFlowI18n
   });
 
   async function updateActiveTimezones(timezones, lastReminderTimezone = state.settings.lastReminderTimezone) {

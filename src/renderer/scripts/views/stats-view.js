@@ -13,6 +13,7 @@
       setStatusMessage,
       state,
       stats,
+      storage,
       timers,
       validators: V
     } = context;
@@ -199,17 +200,26 @@
       };
     }
 
-    function financialSummary(workMs) {
+    function paidMsForRange(time) {
+      return time.workMs + (state.settings.financial?.paidBreaks ? time.breakMs : 0);
+    }
+
+    function financialSummary(time) {
       const config = state.settings.financial || {};
       const hourlyRate = Number(config.hourlyRate) || 0;
       const currency = config.currency || "USD";
       const range = statsRangeBounds();
       const adjustments = (config.transactions || []).reduce((sum, item) => {
         if (compareIsoDate(item.date, range.from) < 0 || compareIsoDate(item.date, range.to) > 0) return sum;
-        return sum + (item.type === "deduction" ? -Number(item.amount) : Number(item.amount));
+        return sum + (item.direction === "expense" || item.type === "deduction" ? -Number(item.amount) : Number(item.amount));
       }, 0);
-      const amount = (workMs / 3600000) * hourlyRate + adjustments;
+      const amount = (paidMsForRange(time) / 3600000) * hourlyRate + adjustments;
       return `${currency} ${Math.round(amount * 100) / 100}`;
+    }
+
+    function callsPerWorkedHour(totalCalls, workMs) {
+      if (workMs <= 0) return t("statsNoWorkTime");
+      return Math.round((totalCalls / (workMs / 3600000)) * 10) / 10;
     }
 
     function renderSummary(analysis) {
@@ -221,10 +231,10 @@
         [t("statsNegativeResults"), analysis.rejections, "rejection-metric", "primary"],
         [t("statsCallbacks"), analysis.callback, "callback-metric", ""],
         [t("statsNoAnswer"), analysis.noAnswer, "", ""],
-        [t("statsAvgCallsHour"), analysis.averages.callsPerActiveHour || t("statsNoData"), "", ""],
+        [t("statsAvgCallsHour"), callsPerWorkedHour(analysis.total, time.workMs), "", ""],
         [t("statsWorkTime"), time.work, "", "secondary"],
         [t("statsBreakTime"), time.breaks, "", "secondary"],
-        [t("statsEstimatedEarnings"), financialSummary(time.workMs), "success-metric", "secondary"]
+        [t("statsEstimatedEarnings"), financialSummary(time), "success-metric", "secondary"]
       ];
       $("#statsSummaryCards").innerHTML = cards
         .map(
@@ -246,7 +256,9 @@
         days.push(date);
         if (days.length > 370) break;
       }
-      $("#statsActivityMap").innerHTML = days.length
+      $("#statsActivityMap").innerHTML = analysis.total === 0
+        ? `<p class="stats-empty-message">${escapeHtml(t("statsNoCallsRange"))}</p>`
+        : days.length
         ? days
             .map((date) => {
               const count = analysis.byDay[date] || 0;
@@ -256,6 +268,77 @@
             })
             .join("")
         : `<p class="muted">${escapeHtml(t("statsNoData"))}</p>`;
+    }
+
+    function openTimeAdjustment() {
+      const form = $("#timeAdjustmentForm");
+      form.date.value = isoDateInStatsTimezone();
+      form.date.max = form.date.value;
+      form.hours.value = "0";
+      form.minutes.value = "0";
+      form.note.value = "";
+      renderTimeAdjustments();
+      $("#timeAdjustmentModal").classList.remove("hidden");
+      form.hours.focus();
+    }
+
+    function closeTimeAdjustment() {
+      $("#timeAdjustmentModal").classList.add("hidden");
+    }
+
+    function renderTimeAdjustments() {
+      const adjustments = (state.workTimer?.timeAdjustments || [])
+        .sort((a, b) => b.date.localeCompare(a.date));
+      $("#timeAdjustmentList").innerHTML = adjustments.length
+        ? adjustments.map((item) => `
+            <div class="time-adjustment-item">
+              <span><strong>${item.minutes > 0 ? "+" : "−"}${escapeHtml(timers.formatDuration(Math.abs(item.minutes) * 60000).slice(0, 5))}</strong><small>${escapeHtml(displayIsoDate(item.date))}${item.note ? ` · ${escapeHtml(item.note)}` : ""}</small></span>
+              <button type="button" data-delete-time-adjustment="${escapeHtml(item.id)}" aria-label="${escapeHtml(t("delete"))}">×</button>
+            </div>`).join("")
+        : `<p class="muted">${escapeHtml(t("statsNoTimeAdjustments"))}</p>`;
+    }
+
+    async function saveTimeAdjustment(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const totalMinutes = (Number(form.hours.value) || 0) * 60 + (Number(form.minutes.value) || 0);
+      if (!form.date.value || totalMinutes <= 0) {
+        setStatusMessage(t("statsAdjustmentRequired"), "warning");
+        return;
+      }
+      const direction = form.action.value === "subtract" ? -1 : 1;
+      const adjustment = {
+        id: crypto.randomUUID ? crypto.randomUUID() : `time-${Date.now()}`,
+        date: form.date.value,
+        minutes: totalMinutes * direction,
+        note: String(form.note.value || "").trim(),
+        createdAt: new Date().toISOString()
+      };
+      state.workTimer = V.normalizeWorkTimer({
+        ...state.workTimer,
+        timeAdjustments: [...(state.workTimer?.timeAdjustments || []), adjustment]
+      });
+      await runAction(async () => {
+        await storage.write("workTimer", state.workTimer);
+        render();
+        renderTimeAdjustments();
+        form.hours.value = "0";
+        form.minutes.value = "0";
+        form.note.value = "";
+        setStatusMessage(t("statsAdjustmentSaved"), "success");
+      });
+    }
+
+    async function deleteTimeAdjustment(id) {
+      state.workTimer = V.normalizeWorkTimer({
+        ...state.workTimer,
+        timeAdjustments: (state.workTimer?.timeAdjustments || []).filter((item) => item.id !== id)
+      });
+      await runAction(async () => {
+        await storage.write("workTimer", state.workTimer);
+        render();
+        renderTimeAdjustments();
+      });
     }
 
     function renderBars(containerId, entries, total, options = {}) {
@@ -429,7 +512,7 @@
         `- ${t("statsNegativeResults")}: ${analysis.rejections} (${analysis.rates.rejection}%)`,
         `- ${t("statsCallbacks")}: ${analysis.callback}`,
         `- ${t("statsNoAnswer")}: ${analysis.noAnswer}`,
-        `- ${t("statsAvgCallsHour")}: ${analysis.averages.callsPerActiveHour || t("statsNoData")}`,
+        `- ${t("statsAvgCallsHour")}: ${callsPerWorkedHour(analysis.total, workTimeSummary().workMs)}`,
         "",
         `## ${t("statsInsights")}`,
         `- ${t("statsBestDay")}: ${analysis.insights.bestDay ? displayIsoDate(analysis.insights.bestDay) : t("statsNoData")}`,
@@ -508,6 +591,17 @@
       });
       $("#exportStatsMd").addEventListener("click", () => exportStats("md"));
       $("#exportStatsTxt").addEventListener("click", () => exportStats("txt"));
+      $("#openTimeAdjustment").addEventListener("click", openTimeAdjustment);
+      $("#closeTimeAdjustment").addEventListener("click", closeTimeAdjustment);
+      $("#timeAdjustmentModal").addEventListener("click", (event) => {
+        if (event.target.id === "timeAdjustmentModal") closeTimeAdjustment();
+        const button = event.target.closest("[data-delete-time-adjustment]");
+        if (button) deleteTimeAdjustment(button.dataset.deleteTimeAdjustment);
+      });
+      $("#timeAdjustmentForm").addEventListener("submit", saveTimeAdjustment);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeTimeAdjustment();
+      });
       $("#statsView").addEventListener("mouseover", handlePointer);
       $("#statsView").addEventListener("mouseleave", () => {
         state.hoveredStatsDay = null;

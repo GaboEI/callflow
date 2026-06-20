@@ -198,6 +198,22 @@
     const statsTimezone = text(merged.statsTimezone, LIMITS.shortText) || primaryTimezone || "local";
     const statsCycleStartDay = Math.min(28, Math.max(1, Number(merged.statsCycleStartDay) || 1));
     const sourceFinancial = isPlainObject(merged.financial) ? merged.financial : {};
+    const defaultMovementTypes = [
+      { id: "bonus", label: "Bono / plus", direction: "income", locked: true },
+      { id: "deduction", label: "Multa / descuento", direction: "expense", locked: true },
+      { id: "adjustment", label: "Ajuste positivo", direction: "income", locked: true }
+    ];
+    const movementTypes = (Array.isArray(sourceFinancial.movementTypes) && sourceFinancial.movementTypes.length
+      ? sourceFinancial.movementTypes
+      : defaultMovementTypes)
+      .filter(isPlainObject)
+      .slice(0, 24)
+      .map((item, index) => ({
+        id: text(item.id, LIMITS.shortText) || `movement-${index + 1}`,
+        label: text(item.label, LIMITS.shortText) || "Movimiento",
+        direction: item.direction === "expense" ? "expense" : "income",
+        locked: false
+      }));
     const legacyFinanceDate = isoDateInTimezone(new Date(), statsTimezone);
     const legacyTransactions = Array.isArray(sourceFinancial.transactions)
       ? []
@@ -214,7 +230,12 @@
       .map((item) => ({
         id: text(item.id, LIMITS.shortText) || randomId("finance"),
         date: validIsoDate(item.date) ? item.date : isoDateInTimezone(new Date(), statsTimezone),
-        type: ["bonus", "deduction", "adjustment"].includes(item.type) ? item.type : "adjustment",
+        type: text(item.type, LIMITS.shortText) || "adjustment",
+        label: text(item.label, LIMITS.shortText) || movementTypes.find((type) => type.id === item.type)?.label || "Movimiento",
+        direction:
+          item.direction === "expense" || item.direction === "income"
+            ? item.direction
+            : movementTypes.find((type) => type.id === item.type)?.direction || (item.type === "deduction" ? "expense" : "income"),
         amount: Math.max(0, Number(item.amount) || 0),
         note: text(item.note, LIMITS.mediumText),
         createdAt: validIsoDateTime(item.createdAt) ? item.createdAt : new Date().toISOString()
@@ -232,6 +253,8 @@
       financial: {
         currency: text(sourceFinancial.currency, 16) || "USD",
         hourlyRate: Math.max(0, Number(sourceFinancial.hourlyRate) || 0),
+        paidBreaks: Boolean(sourceFinancial.paidBreaks),
+        movementTypes,
         transactions: financialTransactions
       },
       operatorName: text(merged.operatorName, LIMITS.shortText),
@@ -343,6 +366,18 @@
               .map(([date, durationMs]) => [date, Math.max(0, Number(durationMs) || 0)])
           )
         : {},
+      timeAdjustments: Array.isArray(source.timeAdjustments)
+        ? source.timeAdjustments
+            .filter(isPlainObject)
+            .map((item) => ({
+              id: text(item.id, LIMITS.shortText) || randomId("time"),
+              date: validIsoDate(item.date) ? item.date : null,
+              minutes: Math.max(-1440, Math.min(1440, Number(item.minutes) || 0)),
+              note: text(item.note, LIMITS.mediumText),
+              createdAt: validIsoDateTime(item.createdAt) ? item.createdAt : new Date().toISOString()
+            }))
+            .filter((item) => item.date && item.minutes)
+        : [],
       currentBreakStartedAt: validIsoDateTime(source.currentBreakStartedAt) ? source.currentBreakStartedAt : null,
       breaks: Array.isArray(source.breaks)
         ? source.breaks

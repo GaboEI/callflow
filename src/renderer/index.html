@@ -184,6 +184,10 @@
             <p class="muted">Define la moneda, la tarifa y el inicio del ciclo. Podrás cambiarlos luego desde Configuración.</p>
             <label><span>Moneda o símbolo</span><input name="financialCurrency" placeholder="USD" /></label>
             <label><span>Pago por hora</span><input name="financialHourlyRate" type="number" step="0.01" min="0" /></label>
+            <label class="checkbox-row span-2">
+              <input name="financialPaidBreaks" type="checkbox" />
+              <span data-i18n="financePaidBreaksSetting">Las pausas también son pagadas</span>
+            </label>
             <label>
               <span>Día de inicio del ciclo mensual</span>
               <input name="statsCycleStartDay" type="number" min="1" max="28" />
@@ -532,10 +536,13 @@
                   <h2 data-i18n="stats">Estadísticas</h2>
                   <p class="muted" data-i18n="statsIntro">Análisis de rendimiento laboral, tendencias y mejores momentos.</p>
                 </div>
-                <div class="report-export-actions">
-                  <span data-i18n="exportAnalysis">Exportar análisis</span>
-                  <button type="button" id="exportStatsMd">.md</button>
-                  <button type="button" id="exportStatsTxt">.txt</button>
+                <div class="stats-header-actions">
+                  <button type="button" id="openTimeAdjustment" data-i18n="statsAdjustTime">Ajustar horas</button>
+                  <div class="report-export-actions">
+                    <span data-i18n="exportAnalysis">Exportar análisis</span>
+                    <button type="button" id="exportStatsMd">.md</button>
+                    <button type="button" id="exportStatsTxt">.txt</button>
+                  </div>
                 </div>
               </div>
               <div class="report-toolbar stats-toolbar">
@@ -618,6 +625,23 @@
               </section>
             </div>
           </div>
+          <div id="timeAdjustmentModal" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="timeAdjustmentTitle">
+            <section class="app-modal-card stats-time-modal">
+              <div class="app-modal-header">
+                <div><h3 id="timeAdjustmentTitle" data-i18n="statsAdjustTime">Ajustar horas</h3><p class="muted" data-i18n="statsAdjustTimeHelp">Agrega o resta tiempo de una fecha olvidada.</p></div>
+                <button type="button" class="icon-button" id="closeTimeAdjustment" aria-label="Cerrar">×</button>
+              </div>
+              <form id="timeAdjustmentForm" class="time-adjustment-form">
+                <label><span data-i18n="statsAdjustmentDate">Fecha</span><input name="date" type="date" required /></label>
+                <label><span data-i18n="statsAdjustmentAction">Acción</span><select name="action"><option value="add" data-i18n="statsAddTime">Agregar tiempo</option><option value="subtract" data-i18n="statsSubtractTime">Restar tiempo</option></select></label>
+                <label><span data-i18n="statsHours">Horas</span><input name="hours" type="number" min="0" max="24" value="0" /></label>
+                <label><span data-i18n="statsMinutes">Minutos</span><input name="minutes" type="number" min="0" max="59" value="0" /></label>
+                <label class="span-2"><span data-i18n="note">Nota</span><input name="note" maxlength="240" /></label>
+                <button type="submit" class="primary span-2" data-i18n="statsSaveAdjustment">Guardar ajuste</button>
+              </form>
+              <div id="timeAdjustmentList" class="time-adjustment-list"></div>
+            </section>
+          </div>
         </section>
 
         <section id="calculatorView" class="view">
@@ -649,7 +673,7 @@
                   </div>
                   <form id="financeTransactionForm" class="finance-transaction-form">
                     <label><span>Fecha</span><input name="date" type="date" required /></label>
-                    <label><span>Movimiento</span><select name="type"><option value="bonus">Bono / plus</option><option value="deduction">Multa / descuento</option><option value="adjustment">Ajuste positivo</option></select></label>
+                    <label><span>Movimiento</span><select name="type"></select></label>
                     <label><span>Importe</span><input name="amount" type="number" step="0.01" min="0.01" required /></label>
                     <label><span>Descripción</span><input name="note" maxlength="240" placeholder="Ejemplo: bono de calidad" /></label>
                     <button class="finance-save-button span-2" type="submit">Agregar movimiento</button>
@@ -658,7 +682,7 @@
                     <span class="muted">Generado por horas en el ciclo visible</span>
                     <strong id="financePreview">0</strong>
                   </div>
-                  <div class="finance-transaction-list" id="financeTransactionList"></div>
+                  <button type="button" id="openFinanceMovements" class="finance-movements-button"><span data-i18n="financeViewMovements">Ver movimientos detallados</span><strong id="financeMovementCount">0</strong></button>
                 </article>
               </div>
               <article class="calculator-box calculator-chart-box">
@@ -683,6 +707,24 @@
                 </div>
                 <div class="finance-chart" id="monthlyFinanceChart" aria-label="Gráfica mensual de ganancias"></div>
               </article>
+              <div id="financeMovementsModal" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="financeMovementsTitle">
+                <section class="app-modal-card finance-movements-modal-card">
+                  <div class="app-modal-header">
+                    <div><h3 id="financeMovementsTitle" data-i18n="financeDetailedMovements">Movimientos detallados</h3><p class="muted" id="financeMovementsRange"></p></div>
+                    <button type="button" class="icon-button" id="closeFinanceMovements" aria-label="Cerrar">×</button>
+                  </div>
+                  <div class="finance-type-manager">
+                    <h4 data-i18n="financeMovementTypes">Tipos de movimiento</h4>
+                    <form id="financeMovementTypeForm">
+                      <input name="label" maxlength="120" data-i18n-placeholder="financeMovementExample" placeholder="Ejemplo: comisión" required />
+                      <select name="direction"><option value="income" data-i18n="financeAddsIncome">Suma al ingreso</option><option value="expense" data-i18n="financeSubtractsIncome">Resta del ingreso</option></select>
+                      <button type="submit" data-i18n="financeAddType">Agregar tipo</button>
+                    </form>
+                    <div id="financeMovementTypeList" class="finance-movement-type-list"></div>
+                  </div>
+                  <div class="finance-transaction-list finance-transaction-list-modal" id="financeTransactionList"></div>
+                </section>
+              </div>
             </section>
           </div>
         </section>
@@ -808,6 +850,7 @@
               </label>
               <label><span>Moneda o símbolo</span><input name="financialCurrency" placeholder="USD" maxlength="16" /></label>
               <label><span>Pago por hora</span><input name="financialHourlyRate" type="number" step="0.01" min="0" /></label>
+              <label class="checkbox-row"><input name="financialPaidBreaks" type="checkbox" /><span data-i18n="financePaidBreaksSetting">Las pausas también son pagadas</span></label>
               <label><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
               <div class="settings-group span-2">
                 <h3 data-i18n="reminderAutomation">Automatización de recordatorios</h3>

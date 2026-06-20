@@ -9,6 +9,7 @@
       dailyWorkElapsedMs: 0,
       dailyWorkStartedAt: null,
       dailyWorkHistory: {},
+      timeAdjustments: [],
       currentBreakStartedAt: null,
       breaks: []
     };
@@ -24,6 +25,7 @@
         timer && timer.dailyWorkHistory && typeof timer.dailyWorkHistory === "object" && !Array.isArray(timer.dailyWorkHistory)
           ? { ...timer.dailyWorkHistory }
           : {},
+      timeAdjustments: Array.isArray(timer && timer.timeAdjustments) ? [...timer.timeAdjustments] : [],
       breaks: Array.isArray(timer && timer.breaks) ? timer.breaks : []
     };
   }
@@ -72,6 +74,14 @@
     const normalized = normalizeWorkTimer(timer);
     const entries = { ...normalized.dailyWorkHistory };
     if (normalized.dailyWorkDate) entries[normalized.dailyWorkDate] = currentDailyWorkElapsed(normalized, now);
+    const adjustmentsByDate = {};
+    normalized.timeAdjustments.forEach((item) => {
+      if (!item.date) return;
+      adjustmentsByDate[item.date] = (adjustmentsByDate[item.date] || 0) + (Number(item.minutes) || 0) * 60000;
+    });
+    Object.entries(adjustmentsByDate).forEach(([date, adjustmentMs]) => {
+      entries[date] = Math.max(0, (Number(entries[date]) || 0) + adjustmentMs);
+    });
     return entries;
   }
 

@@ -25,6 +25,7 @@ const DEFAULT_DATA = {
     dailyWorkElapsedMs: 0,
     dailyWorkStartedAt: null,
     dailyWorkHistory: {},
+    timeAdjustments: [],
     currentBreakStartedAt: null,
     breaks: []
   }
