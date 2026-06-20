@@ -1277,6 +1277,11 @@ nav {
   min-width: 0;
 }
 
+.status-field .field-heading {
+  align-self: end;
+  margin-bottom: 0;
+}
+
 .primary-outcomes {
   display: grid;
   grid-template-columns: 1fr;
@@ -1300,6 +1305,7 @@ nav {
   font-size: 13px;
   font-weight: 400;
   line-height: 1.25;
+  transform: translateY(-2px);
 }
 
 .outcome-button {
