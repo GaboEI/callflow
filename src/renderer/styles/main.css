@@ -141,11 +141,15 @@ input[type="time"].cf-datetime-input:focus {
 }
 
 .cf-date-range-trigger {
+  cursor: pointer;
+}
+
+.cf-date-range-trigger--selected {
   display: grid;
   gap: 3px;
   min-width: 172px;
   min-height: 36px;
-  border-color: rgba(59, 130, 246, 0.38);
+  border-color: rgba(59, 130, 246, 0.78);
   background:
     linear-gradient(90deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.06) 34px, transparent 35px),
     #0b1220;
@@ -153,8 +157,8 @@ input[type="time"].cf-datetime-input:focus {
   text-align: left;
 }
 
-.cf-date-range-trigger:hover,
-.cf-date-range-trigger:focus {
+.cf-date-range-trigger--selected:hover,
+.cf-date-range-trigger--selected:focus {
   border-color: rgba(59, 130, 246, 0.78);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }

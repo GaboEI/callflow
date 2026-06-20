@@ -116,6 +116,7 @@
           year: "Año",
           exactMinute: "Minuto exacto",
           dateRange: "Rango de fechas",
+          range: "Rango",
           cancel: "Cancelar",
           apply: "OK"
         },
@@ -126,6 +127,7 @@
           year: "Year",
           exactMinute: "Exact minute",
           dateRange: "Date range",
+          range: "Range",
           cancel: "Cancel",
           apply: "OK"
         },
@@ -136,6 +138,7 @@
           year: "Год",
           exactMinute: "Точная минута",
           dateRange: "Диапазон дат",
+          range: "Диапазон",
           cancel: "Отмена",
           apply: "OK"
         }
@@ -548,9 +551,9 @@
 
     function rangePairs() {
       return [
-        { id: "report", from: $("#reportDateFrom"), to: $("#reportDateTo") },
-        { id: "reminder", from: $("#reminderDateFrom"), to: $("#reminderDateTo") },
-        { id: "stats", from: $("#statsDateFrom"), to: $("#statsDateTo") }
+        { id: "report", from: $("#reportDateFrom"), to: $("#reportDateTo"), trigger: $('[data-report-period="custom"]') },
+        { id: "reminder", from: $("#reminderDateFrom"), to: $("#reminderDateTo"), trigger: $('[data-filter="range"]') },
+        { id: "stats", from: $("#statsDateFrom"), to: $("#statsDateTo"), trigger: $('[data-stats-period="custom"]') }
       ].filter((pair) => pair.from && pair.to);
     }
 
@@ -560,41 +563,54 @@
       return !fromHidden && !toHidden;
     }
 
+    function rangeTriggerIsActive(trigger, fromInput, toInput) {
+      return rangeIsVisible(fromInput, toInput) || trigger.classList.contains("report-period-chip--active") || trigger.classList.contains("reminder-chip--active");
+    }
+
     function syncRangeButton(button, fromInput, toInput) {
-      button.querySelector("[data-cf-range-label]").textContent = displayRange(fromInput.value, toInput.value);
-      button.classList.toggle("hidden", !rangeIsVisible(fromInput, toInput));
+      if (!button.dataset.cfRangeDefaultHtml) button.dataset.cfRangeDefaultHtml = button.innerHTML;
+      const active = rangeTriggerIsActive(button, fromInput, toInput);
+      const hasRange = Boolean(parseIsoDateParts(fromInput.value) || parseIsoDateParts(toInput.value));
+      button.classList.add("cf-date-range-trigger");
+      button.classList.toggle("cf-date-range-trigger--selected", active && hasRange);
+      if (active && hasRange) {
+        button.innerHTML = `
+          <span class="cf-date-range-caption">${escapeHtml(pickerText("dateRange"))}</span>
+          <strong data-cf-range-label>${escapeHtml(displayRange(fromInput.value, toInput.value))}</strong>
+        `;
+      } else {
+        button.innerHTML = button.dataset.cfRangeDefaultHtml || escapeHtml(pickerText("range"));
+      }
     }
 
     function enhanceRangeInputs() {
-      rangePairs().forEach(({ id, from, to }) => {
+      rangePairs().forEach(({ id, from, to, trigger }) => {
         const fromLabel = from.closest("label");
         const toLabel = to.closest("label");
-        if (!fromLabel || !toLabel) return;
+        if (!fromLabel || !toLabel || !trigger) return;
 
         fromLabel.classList.add("cf-range-native-field");
         toLabel.classList.add("cf-range-native-field");
 
-        let button = document.querySelector(`[data-cf-date-range-trigger="${id}"]`);
-        if (!button) {
-          button = document.createElement("button");
-          button.type = "button";
-          button.className = "cf-date-range-trigger cf-datetime-input";
-          button.dataset.cfDateRangeTrigger = id;
-          button.innerHTML = `
-            <span class="cf-date-range-caption">${escapeHtml(pickerText("dateRange"))}</span>
-            <strong data-cf-range-label></strong>
-          `;
-          fromLabel.parentNode.insertBefore(button, fromLabel);
-          button.addEventListener("click", () => openRange(from, to, button));
-          button.addEventListener("keydown", (event) => {
+        if (trigger.dataset.cfDateRangeTrigger !== id) {
+          trigger.dataset.cfDateRangeTrigger = id;
+          trigger.addEventListener("click", () => {
+            setTimeout(() => {
+              const pair = rangePairs().find((item) => item.id === id);
+              if (pair) openRange(pair.from, pair.to, pair.trigger);
+            }, 0);
+          });
+          trigger.addEventListener("keydown", (event) => {
             if (["Enter", " ", "ArrowDown"].includes(event.key)) {
-              event.preventDefault();
-              openRange(from, to, button);
+              setTimeout(() => {
+                const pair = rangePairs().find((item) => item.id === id);
+                if (pair) openRange(pair.from, pair.to, pair.trigger);
+              }, 0);
             }
             if (event.key === "Escape") close();
           });
         }
-        syncRangeButton(button, from, to);
+        syncRangeButton(trigger, from, to);
       });
     }
 
