@@ -4036,11 +4036,16 @@ code {
   background: linear-gradient(145deg, rgba(40, 45, 58, 0.98), rgba(17, 24, 39, 0.98));
 }
 
-.script-pin-button {
+.script-card-actions {
   position: absolute;
   z-index: 2;
   top: 8px;
   right: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.script-card-action {
   width: 26px;
   min-height: 26px;
   padding: 0;
@@ -4054,6 +4059,12 @@ code {
 .script-pin-button.active {
   color: #fbbf24;
   border-color: rgba(245, 158, 11, 0.34);
+}
+
+.script-delete-card-button:hover {
+  color: #fecaca;
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(127, 29, 29, 0.22);
 }
 
 .script-card:hover {
@@ -4110,10 +4121,15 @@ code {
 
 .script-card h3 {
   margin: 2px 0 7px;
-  padding-right: 28px;
+  padding-right: 58px;
+  overflow: hidden;
   color: var(--text);
   font-size: 15px;
   line-height: 1.3;
+  display: -webkit-box;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .script-card p {
@@ -4138,8 +4154,12 @@ code {
 }
 
 .script-card footer span {
+  min-width: 0;
+  overflow: hidden;
   color: var(--muted);
   font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .script-type-label {
@@ -4474,21 +4494,24 @@ code {
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
-  padding: 6px;
+  width: max-content;
+  max-width: 100%;
+  padding: 4px;
   background: #111827;
   border: 1px solid var(--border);
   border-radius: 8px 8px 0 0;
 }
 
 .script-plain-toolbar button {
-  width: 30px;
-  min-height: 30px;
-  padding: 4px;
+  width: 26px;
+  min-height: 26px;
+  padding: 2px;
   color: #cbd5e1;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 5px;
-  line-height: 20px;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .script-plain-toolbar button:hover,
@@ -4505,7 +4528,7 @@ code {
 
 .script-plain-toolbar .separator {
   width: 1px;
-  height: 22px;
+  height: 18px;
   margin: 4px 3px;
   background: var(--border);
 }
@@ -4558,14 +4581,17 @@ code {
   min-height: 480px;
   margin: 0 auto;
   overflow: hidden;
-  background: #07101f;
-  border: 1px solid var(--border);
+  background: #0b1220;
+  border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.85);
 }
 
 .script-pdf-reader embed {
+  display: block;
   width: 100%;
   height: 100%;
+  border: 0;
 }
 
 .script-pdf-error {

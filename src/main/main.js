@@ -390,6 +390,11 @@ ipcMain.handle("knowledge:import", ipcHandler(async () => {
   }
 
   const buffer = await fs.readFile(filePath);
+  if ((extension === "md" || extension === "txt") && buffer.includes(0)) {
+    const error = new Error("Imported text document is not valid plain text");
+    error.code = "INVALID_TEXT_DOCUMENT";
+    throw error;
+  }
   if (extension === "pdf" && buffer.subarray(0, 5).toString("ascii") !== "%PDF-") {
     const error = new Error("Invalid PDF document");
     error.code = "INVALID_PDF_DOCUMENT";

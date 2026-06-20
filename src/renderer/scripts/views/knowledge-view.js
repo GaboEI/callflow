@@ -56,6 +56,16 @@
       return plain.length > maxLength ? `${plain.slice(0, maxLength).trim()}…` : plain;
     }
 
+    function importErrorMessage(error) {
+      const messages = {
+        UNSUPPORTED_DOCUMENT_TYPE: "unsupportedDocumentType",
+        IMPORTED_DOCUMENT_TOO_LARGE: "importedDocumentTooLarge",
+        INVALID_TEXT_DOCUMENT: "invalidTextDocument",
+        INVALID_PDF_DOCUMENT: "invalidPdfDocument"
+      };
+      return t(messages[error?.code] || "actionFailed");
+    }
+
     function sanitizeHtml(html) {
       return window.DOMPurify.sanitize(html, {
         USE_PROFILES: { html: true },
@@ -278,14 +288,18 @@
           const dateType = note.updatedAt ? "scriptModified" : "scriptCreated";
           const meta = typeMeta(note);
           const summary = meta.type === "pdf" ? note.originalName || t("scriptPdfDocument") : summarize(note.content) || t("scriptDocument");
+          const title = note.title || note.originalName || t("scriptDocument");
           return `
             <article class="script-card${note.pinned ? " pinned" : ""}">
-              <button type="button" class="script-pin-button${note.pinned ? " active" : ""}" data-pin-note="${escapeHtml(note.id)}" title="${escapeHtml(t(note.pinned ? "scriptUnpin" : "scriptPin"))}" aria-label="${escapeHtml(t(note.pinned ? "scriptUnpin" : "scriptPin"))}">${note.pinned ? "★" : "☆"}</button>
+              <div class="script-card-actions">
+                <button type="button" class="script-card-action script-pin-button${note.pinned ? " active" : ""}" data-pin-note="${escapeHtml(note.id)}" title="${escapeHtml(t(note.pinned ? "scriptUnpin" : "scriptPin"))}" aria-label="${escapeHtml(t(note.pinned ? "scriptUnpin" : "scriptPin"))}">${note.pinned ? "★" : "☆"}</button>
+                <button type="button" class="script-card-action script-delete-card-button" data-delete-note="${escapeHtml(note.id)}" title="${escapeHtml(t("delete"))}" aria-label="${escapeHtml(t("delete"))}">×</button>
+              </div>
               <div class="script-card-main">
                 <span class="script-card-icon type-${meta.type}" aria-hidden="true"><b>${meta.glyph}</b><small>${meta.extension}</small></span>
                 <div>
-                  <h3>${escapeHtml(note.title)}</h3>
-                  <p>${escapeHtml(summary)}</p>
+                  <h3 title="${escapeHtml(title)}">${escapeHtml(title)}</h3>
+                  <p title="${escapeHtml(summary)}">${escapeHtml(summary)}</p>
                 </div>
               </div>
               <footer>
@@ -393,14 +407,21 @@
 
     async function deleteSelected() {
       const note = selectedScript();
+      return deleteNote(note);
+    }
+
+    async function deleteNote(note) {
       if (!note || !window.confirm(t("confirmDeleteScript"))) return;
       const nextKnowledgeBase = state.knowledgeBase.filter((item) => item.id !== note.id);
       await runAction(async () => {
         await window.CallFlowStorage.write("knowledgeBase", nextKnowledgeBase);
         state.knowledgeBase = nextKnowledgeBase;
-        state.selectedNoteId = null;
-        state.knowledgeMode = "library";
+        if (state.selectedNoteId === note.id) {
+          state.selectedNoteId = null;
+          state.knowledgeMode = "library";
+        }
         renderApp();
+        context.setStatusMessage(t("scriptDeleted"), "success");
       });
     }
 
@@ -437,7 +458,7 @@
         state.knowledgeBase = nextKnowledgeBase;
         renderApp();
         context.setStatusMessage(t("scriptImported"), "success");
-      });
+      }, { userMessage: importErrorMessage, logMessage: "Failed to import script document" });
     }
 
     async function togglePinned(id) {
@@ -481,10 +502,16 @@
       $("#knowledgeView").addEventListener("click", (event) => {
         const copyButton = event.target.closest("[data-copy-code]");
         const pinButton = event.target.closest("[data-pin-note]");
+        const deleteButton = event.target.closest("[data-delete-note]");
         if (copyButton) copyCodeBlock(copyButton);
         if (pinButton) {
           event.stopPropagation();
           togglePinned(pinButton.dataset.pinNote);
+        }
+        if (deleteButton) {
+          event.stopPropagation();
+          const note = state.knowledgeBase.find((item) => item.id === deleteButton.dataset.deleteNote);
+          deleteNote(note);
         }
       });
       $("#knowledgeView").addEventListener("change", (event) => {

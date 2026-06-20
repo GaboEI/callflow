@@ -593,6 +593,7 @@ Africa/Harare ZW
   }
 
   function setView(view) {
+    setStatusMessage("", "info");
     $$(".nav-link").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
     $$(".view").forEach((section) => section.classList.remove("active"));
     $(`#${view}View`).classList.add("active");
