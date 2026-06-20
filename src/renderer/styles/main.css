@@ -795,7 +795,7 @@ nav {
   grid-column: 1;
   grid-row: 2;
   display: grid;
-  grid-template-columns: minmax(120px, auto) minmax(190px, 280px) minmax(70px, 1fr);
+  grid-template-columns: max-content max-content minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   min-height: 28px;
@@ -1568,7 +1568,10 @@ code {
 
 .stats-shell {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
+  height: 100%;
+  min-height: 0;
 }
 
 .stats-hero-panel {
@@ -1635,6 +1638,10 @@ code {
     "activity hourly outcomes"
     "types detail insights";
   gap: 12px;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
 }
 
 .stats-panel-wide {
@@ -1869,6 +1876,45 @@ code {
   gap: 10px;
 }
 
+#reportsView.view.active,
+#remindersView.view.active,
+#statsView.view.active {
+  overflow: hidden;
+  padding-right: 0;
+}
+
+#reportsView > .panel {
+  display: grid;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+
+#reportBlocks {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
+}
+
+#remindersView .reminders-layout {
+  height: 100%;
+  min-height: 0;
+}
+
+.reminder-list-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+#reminderList {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
+}
+
 .block-list {
   grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
 }
@@ -2078,6 +2124,7 @@ code {
 .reminders-layout {
   display: grid;
   gap: 14px;
+  min-height: 0;
 }
 
 .panel-title-actions {
