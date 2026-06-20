@@ -36,6 +36,10 @@
       },
       selectedStatsDay: null,
       selectedStatsHour: null,
+      hoveredStatsDay: null,
+      hoveredStatsHour: null,
+      selectedStatsFacet: null,
+      hoveredStatsFacet: null,
       reportSearch: {
         query: "",
         matches: 0,

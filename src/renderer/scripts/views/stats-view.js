@@ -88,6 +88,46 @@
       return "00";
     }
 
+    function outcomeCategory(call) {
+      if (call.primaryOutcome && call.primaryOutcome.category) return call.primaryOutcome.category;
+      const description = String(call.description || "").toLowerCase();
+      if (state.settings.successLabel && description.includes(String(state.settings.successLabel).toLowerCase())) return "success";
+      if (state.settings.rejectionLabel && description.includes(String(state.settings.rejectionLabel).toLowerCase())) return "rejection";
+      return "neutral";
+    }
+
+    function isNoAnswerCall(call) {
+      const known = ["sin_respuesta", "no_answer", "нет_ответа"];
+      const configured = (state.settings.frequentStatuses || []).filter((status) =>
+        known.includes(String(status || "").toLowerCase())
+      );
+      const labels = configured.length ? configured : known;
+      const description = String(call.description || "").toLowerCase();
+      const raw = String(call.rawDescription || "").toLowerCase();
+      return labels.some((label) => description.includes(String(label).toLowerCase()) || raw === String(label).toLowerCase());
+    }
+
+    function summarizeCalls(calls) {
+      const total = calls.length;
+      const success = calls.filter((call) => outcomeCategory(call) === "success").length;
+      const rejections = calls.filter((call) => outcomeCategory(call) === "rejection").length;
+      const callback = calls.filter((call) => outcomeCategory(call) === "callback").length;
+      const successRate = total ? Math.round((success / total) * 1000) / 10 : 0;
+      return { total, success, rejections, callback, successRate };
+    }
+
+    function facetLabel(facet) {
+      if (!facet) return "";
+      if (facet.kind === "type") return facet.value;
+      const labels = {
+        success: t("statsPositiveResults"),
+        rejection: t("statsNegativeResults"),
+        callback: t("statsCallbacks"),
+        noAnswer: t("statsNoAnswer")
+      };
+      return labels[facet.value] || facet.value;
+    }
+
     function syncRangeInputs() {
       const range = statsRangeBounds();
       $("#statsDateFrom").value = range.from;
@@ -126,21 +166,20 @@
     function renderSummary(analysis) {
       const time = workTimeSummary();
       const cards = [
-        [t("statsTotalCalls"), analysis.total, ""],
-        [t("statsPositiveResults"), analysis.success, "success-metric"],
-        [t("statsNegativeResults"), analysis.rejections, "rejection-metric"],
-        [t("statsCallbacks"), analysis.callback, "callback-metric"],
-        [t("statsNoAnswer"), analysis.noAnswer, ""],
-        [t("statsSuccessRate"), `${analysis.rates.success}%`, "success-metric"],
-        [t("statsRejectionRate"), `${analysis.rates.rejection}%`, "rejection-metric"],
-        [t("statsAvgCallsHour"), analysis.averages.callsPerActiveHour || t("statsNoData"), ""],
-        [t("statsWorkTime"), time.work, ""],
-        [t("statsBreakTime"), time.breaks, ""]
+        [t("statsTotalCalls"), analysis.total, "", "primary"],
+        [t("statsPositiveResults"), analysis.success, "success-metric", "primary"],
+        [t("statsSuccessRate"), `${analysis.rates.success}%`, "success-metric", "primary"],
+        [t("statsNegativeResults"), analysis.rejections, "rejection-metric", "primary"],
+        [t("statsCallbacks"), analysis.callback, "callback-metric", ""],
+        [t("statsNoAnswer"), analysis.noAnswer, "", ""],
+        [t("statsAvgCallsHour"), analysis.averages.callsPerActiveHour || t("statsNoData"), "", ""],
+        [t("statsWorkTime"), time.work, "", "secondary"],
+        [t("statsBreakTime"), time.breaks, "", "secondary"]
       ];
       $("#statsSummaryCards").innerHTML = cards
         .map(
-          ([label, value, className]) => `
-            <article class="stats-summary-card ${className}">
+          ([label, value, className, priority]) => `
+            <article class="stats-summary-card ${className} ${priority ? `stats-kpi-${priority}` : ""}">
               <span class="muted">${escapeHtml(label)}</span>
               <strong>${escapeHtml(String(value))}</strong>
             </article>
@@ -174,16 +213,19 @@
       const rows = entries.slice(0, options.limit || 8);
       document.querySelector(containerId).innerHTML = rows.length
         ? rows
-            .map(([label, value]) => {
+            .map(([label, value, dataValue]) => {
               const width = total ? Math.max(4, Math.round((value / total) * 100)) : 0;
+              const facetValue = dataValue || label;
+              const dataAttribute = options.kind ? `data-stats-facet-kind="${escapeHtml(options.kind)}" data-stats-facet-value="${escapeHtml(facetValue)}"` : "";
+              const selected = state.selectedStatsFacet?.kind === options.kind && state.selectedStatsFacet?.value === facetValue;
               return `
-                <div class="stats-bar-row" title="${escapeHtml(`${label}: ${value}`)}">
+                <button type="button" class="stats-bar-row${selected ? " selected" : ""}" ${dataAttribute} title="${escapeHtml(`${label}: ${value}`)}">
                   <div>
                     <span>${escapeHtml(label)}</span>
                     <strong>${escapeHtml(String(value))}</strong>
                   </div>
                   <span class="stats-bar-track"><span style="width:${width}%"></span></span>
-                </div>
+                </button>
               `;
             })
             .join("")
@@ -194,28 +236,31 @@
       renderBars(
         "#statsOutcomeDistribution",
         [
-          [t("statsPositiveResults"), analysis.success],
-          [t("statsNegativeResults"), analysis.rejections],
-          [t("statsCallbacks"), analysis.callback],
-          [t("statsNoAnswer"), analysis.noAnswer]
+          [t("statsPositiveResults"), analysis.success, "success"],
+          [t("statsNegativeResults"), analysis.rejections, "rejection"],
+          [t("statsCallbacks"), analysis.callback, "callback"],
+          [t("statsNoAnswer"), analysis.noAnswer, "noAnswer"]
         ].filter(([, value]) => value > 0),
-        analysis.total
+        analysis.total,
+        { kind: "outcome" }
       );
     }
 
     function renderTypeDistribution(analysis) {
-      renderBars("#statsTypeDistribution", Object.entries(analysis.byType).sort((a, b) => b[1] - a[1]), analysis.total);
+      renderBars("#statsTypeDistribution", Object.entries(analysis.byType).sort((a, b) => b[1] - a[1]), analysis.total, { kind: "type", limit: 6 });
     }
 
     function renderHourlyPerformance(analysis) {
       const max = Math.max(1, ...Object.values(analysis.byHour));
+      const currentHour = String(new Date().getHours()).padStart(2, "0");
       $("#statsHourlyPerformance").innerHTML = Array.from({ length: 24 }, (_, hour) => {
         const key = String(hour).padStart(2, "0");
         const count = analysis.byHour[key] || 0;
-        const height = count ? Math.max(12, Math.round((count / max) * 100)) : 2;
+        const height = count ? Math.max(8, Math.round((count / max) * 100)) : 2;
         const selected = state.selectedStatsHour === key;
+        const current = key === currentHour && statsRangeBounds().to === isoDateOffset(0);
         return `
-          <button type="button" class="stats-hour-cell${selected ? " selected" : ""}" data-stats-hour="${key}" title="${key}:00 · ${count} llamadas">
+          <button type="button" class="stats-hour-cell${selected ? " selected" : ""}${count ? " has-data" : ""}${current ? " current-hour" : ""}" data-stats-hour="${key}" title="${key}:00 · ${count} llamadas">
             <span class="stats-hour-bar" style="height:${height}%"></span>
             <span>${key}</span>
           </button>
@@ -247,23 +292,50 @@
 
     function renderDetail(analysis) {
       const calls = callsForStatsRange();
-      const dayCalls = state.selectedStatsDay ? calls.filter((call) => callIsoDate(call) === state.selectedStatsDay) : [];
-      const hourCalls = state.selectedStatsHour
-        ? calls.filter((call) => callHourKey(call) === state.selectedStatsHour)
+      const activeDay = state.selectedStatsDay || state.hoveredStatsDay;
+      const activeHour = state.selectedStatsHour || state.hoveredStatsHour;
+      const activeFacet = state.selectedStatsFacet || state.hoveredStatsFacet;
+      const dayCalls = activeDay ? calls.filter((call) => callIsoDate(call) === activeDay) : [];
+      const hourCalls = activeHour ? calls.filter((call) => callHourKey(call) === activeHour) : [];
+      const facetCalls = activeFacet
+        ? calls.filter((call) => {
+            if (activeFacet.kind === "type") return String(call.callType || "").trim() === activeFacet.value;
+            if (activeFacet.kind === "outcome") {
+              if (activeFacet.value === "noAnswer") {
+                return isNoAnswerCall(call);
+              }
+              return outcomeCategory(call) === activeFacet.value;
+            }
+            return false;
+          })
         : [];
+      const detailCalls = activeDay ? dayCalls : activeHour ? hourCalls : activeFacet ? facetCalls : [];
+      const summary = summarizeCalls(detailCalls);
       const blocks = Object.entries(analysis.byHour)
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([hour, count]) => `${hour}:00 ${count}`)
         .join(" · ");
       $("#statsDetail").innerHTML = `
+        <div class="stats-detail-active">
+          <span class="muted">${escapeHtml(activeDay ? t("statsSelectedDay") : activeHour ? t("statsSelectedHour") : activeFacet ? t("statsSelectedMetric") : t("statsDetail"))}</span>
+          <strong>${escapeHtml(activeDay ? displayIsoDate(activeDay) : activeHour ? `${activeHour}:00` : activeFacet ? facetLabel(activeFacet) : t("statsNoData"))}</strong>
+        </div>
         <div class="stats-detail-grid">
           <article>
-            <span class="muted">${escapeHtml(t("statsSelectedDay"))}</span>
-            <strong>${escapeHtml(state.selectedStatsDay ? `${displayIsoDate(state.selectedStatsDay)} · ${dayCalls.length}` : t("statsNoData"))}</strong>
+            <span class="muted">${escapeHtml(t("statsTotalCalls"))}</span>
+            <strong>${escapeHtml(detailCalls.length ? String(summary.total) : t("statsNoData"))}</strong>
           </article>
           <article>
-            <span class="muted">${escapeHtml(t("statsSelectedHour"))}</span>
-            <strong>${escapeHtml(state.selectedStatsHour ? `${state.selectedStatsHour}:00 · ${hourCalls.length}` : t("statsNoData"))}</strong>
+            <span class="muted">${escapeHtml(t("statsPositiveResults"))}</span>
+            <strong>${escapeHtml(detailCalls.length ? String(summary.success) : t("statsNoData"))}</strong>
+          </article>
+          <article>
+            <span class="muted">${escapeHtml(t("statsNegativeResults"))}</span>
+            <strong>${escapeHtml(detailCalls.length ? String(summary.rejections) : t("statsNoData"))}</strong>
+          </article>
+          <article>
+            <span class="muted">${escapeHtml(t("statsSuccessRate"))}</span>
+            <strong>${escapeHtml(detailCalls.length ? `${summary.successRate}%` : t("statsNoData"))}</strong>
           </article>
         </div>
         <div class="stats-block-summary">
@@ -290,6 +362,7 @@
       state.statsRange.preset = period;
       state.selectedStatsDay = null;
       state.selectedStatsHour = null;
+      state.selectedStatsFacet = null;
       render();
     }
 
@@ -337,15 +410,39 @@
       const period = event.target.dataset.statsPeriod;
       const day = event.target.dataset.statsDay;
       const hour = event.target.dataset.statsHour;
+      const facetKind = event.target.dataset.statsFacetKind;
+      const facetValue = event.target.dataset.statsFacetValue;
       if (period) setPeriod(period);
       if (day) {
         state.selectedStatsDay = state.selectedStatsDay === day ? null : day;
+        state.selectedStatsHour = null;
+        state.selectedStatsFacet = null;
         render();
       }
       if (hour) {
         state.selectedStatsHour = state.selectedStatsHour === hour ? null : hour;
+        state.selectedStatsDay = null;
+        state.selectedStatsFacet = null;
         render();
       }
+      if (facetKind && facetValue) {
+        const current = state.selectedStatsFacet;
+        state.selectedStatsFacet = current?.kind === facetKind && current?.value === facetValue ? null : { kind: facetKind, value: facetValue };
+        state.selectedStatsDay = null;
+        state.selectedStatsHour = null;
+        render();
+      }
+    }
+
+    function handlePointer(event) {
+      const day = event.target.dataset.statsDay || null;
+      const hour = event.target.dataset.statsHour || null;
+      const facetKind = event.target.dataset.statsFacetKind || null;
+      const facetValue = event.target.dataset.statsFacetValue || null;
+      state.hoveredStatsDay = day;
+      state.hoveredStatsHour = hour;
+      state.hoveredStatsFacet = facetKind && facetValue ? { kind: facetKind, value: facetValue } : null;
+      if (!state.selectedStatsDay && !state.selectedStatsHour && !state.selectedStatsFacet) renderDetail(currentAnalysis());
     }
 
     function bindEvents() {
@@ -361,6 +458,13 @@
       });
       $("#exportStatsMd").addEventListener("click", () => exportStats("md"));
       $("#exportStatsTxt").addEventListener("click", () => exportStats("txt"));
+      $("#statsView").addEventListener("mouseover", handlePointer);
+      $("#statsView").addEventListener("mouseleave", () => {
+        state.hoveredStatsDay = null;
+        state.hoveredStatsHour = null;
+        state.hoveredStatsFacet = null;
+        if (!state.selectedStatsDay && !state.selectedStatsHour && !state.selectedStatsFacet) renderDetail(currentAnalysis());
+      });
     }
 
     return { bindEvents, handleDocumentClick, render };

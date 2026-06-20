@@ -537,43 +537,55 @@
             </div>
 
             <div class="stats-analytics-grid">
-              <section class="panel stats-panel-wide">
+              <section class="panel stats-panel-wide stats-activity-panel">
                 <div class="panel-header">
-                  <h3 data-i18n="statsActivityMap">Mapa de actividad</h3>
-                  <span class="muted" id="statsRangeLabel"></span>
+                  <div>
+                    <h3 data-i18n="statsActivityMap">Mapa de actividad</h3>
+                    <p class="muted stats-panel-note" data-i18n="statsActivityMapHelper">Intensidad por día según volumen de llamadas.</p>
+                  </div>
+                  <span class="muted stats-range-label" id="statsRangeLabel"></span>
                 </div>
                 <div id="statsActivityMap" class="stats-activity-map"></div>
+                <div class="stats-activity-legend">
+                  <span data-i18n="statsLessActivity">Menos</span>
+                  <span class="stats-day-cell level-0"></span>
+                  <span class="stats-day-cell level-1"></span>
+                  <span class="stats-day-cell level-2"></span>
+                  <span class="stats-day-cell level-3"></span>
+                  <span class="stats-day-cell level-4"></span>
+                  <span data-i18n="statsMoreActivity">Más</span>
+                </div>
               </section>
 
-              <section class="panel">
+              <section class="panel stats-outcome-panel">
                 <div class="panel-header">
                   <h3 data-i18n="statsOutcomeDistribution">Distribución de resultados</h3>
                 </div>
                 <div id="statsOutcomeDistribution" class="stats-bars"></div>
               </section>
 
-              <section class="panel stats-panel-wide">
+              <section class="panel stats-panel-wide stats-hour-panel">
                 <div class="panel-header">
                   <h3 data-i18n="statsHourlyPerformance">Rendimiento por hora</h3>
                 </div>
                 <div id="statsHourlyPerformance" class="stats-hour-grid"></div>
               </section>
 
-              <section class="panel">
+              <section class="panel stats-type-panel">
                 <div class="panel-header">
                   <h3 data-i18n="statsCallTypes">Llamadas por tipo</h3>
                 </div>
                 <div id="statsTypeDistribution" class="stats-bars"></div>
               </section>
 
-              <section class="panel">
+              <section class="panel stats-insights-panel">
                 <div class="panel-header">
                   <h3 data-i18n="statsInsights">Insights automáticos</h3>
                 </div>
                 <div id="statsInsights" class="stats-insights"></div>
               </section>
 
-              <section class="panel stats-panel-wide">
+              <section class="panel stats-panel-wide stats-detail-panel">
                 <div class="panel-header">
                   <h3 data-i18n="statsDetail">Detalle seleccionado</h3>
                 </div>
