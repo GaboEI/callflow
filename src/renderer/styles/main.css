@@ -1359,8 +1359,7 @@ nav {
   display: block;
   min-height: 0;
   overflow: auto;
-  padding-right: 4px;
-  scrollbar-gutter: stable;
+  padding-right: 0;
 }
 
 .settings-section {
