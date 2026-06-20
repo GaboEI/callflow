@@ -1286,16 +1286,18 @@ nav {
 .outcome-control {
   position: relative;
   display: grid;
-  grid-template-rows: auto minmax(38px, auto);
-  gap: 5px;
+  grid-template-rows: 32px minmax(38px, auto);
+  gap: 6px;
   min-width: 0;
 }
 
 .outcome-field-label {
   display: block;
-  color: #9ec5f7;
-  font-size: 12px;
-  line-height: 1.2;
+  align-self: end;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.25;
 }
 
 .outcome-button {
