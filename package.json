@@ -33,7 +33,6 @@
       "src/**/*",
       "build/icon.ico",
       "build/icon.png",
-      "node_modules/easymde/dist/easymde.min.css",
       "node_modules/easymde/dist/easymde.min.js",
       "node_modules/easymde/LICENSE",
       "node_modules/dompurify/dist/purify.min.js",

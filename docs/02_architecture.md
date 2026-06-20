@@ -65,7 +65,7 @@ Script library:
 
 - `knowledge_base.json` remains the internal persistence source so existing notes are retained without a destructive migration.
 - The renderer separates library, reader, and editor modes in `knowledge-view.js`.
-- EasyMDE provides the local/offline Markdown editor and formatting toolbar.
+- EasyMDE provides the local/offline Markdown parser; source editing uses a native textarea and a small formatting toolbar so Markdown remains literal until preview or reading mode.
 - EasyMDE's GFM rendering is passed through DOMPurify before insertion into the document.
 - Third-party runtime assets are installed as production dependencies and explicitly included in packaged builds; no CDN is required.
 

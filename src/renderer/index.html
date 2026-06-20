@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CallFlow</title>
-    <link rel="stylesheet" href="../../node_modules/easymde/dist/easymde.min.css" />
     <link rel="stylesheet" href="./styles/main.css" />
   </head>
   <body>
@@ -659,7 +658,24 @@
               </label>
               <label>
                 <span data-i18n="scriptBody">Contenido</span>
+                <div class="script-plain-toolbar" aria-label="Formato Markdown">
+                  <button type="button" data-script-format="heading2" title="Título">H2</button>
+                  <button type="button" data-script-format="heading3" title="Subtítulo">H3</button>
+                  <span class="separator" aria-hidden="true"></span>
+                  <button type="button" data-script-format="bold" title="Negrita"><strong>B</strong></button>
+                  <button type="button" data-script-format="italic" title="Cursiva"><em>I</em></button>
+                  <button type="button" data-script-format="link" title="Enlace">↗</button>
+                  <span class="separator" aria-hidden="true"></span>
+                  <button type="button" data-script-format="list" title="Lista">≡</button>
+                  <button type="button" data-script-format="quote" title="Cita">❝</button>
+                  <button type="button" data-script-format="table" title="Tabla">▦</button>
+                  <button type="button" data-script-format="rule" title="Separador">—</button>
+                  <button type="button" data-script-format="code" title="Bloque de código">&lt;/&gt;</button>
+                  <span class="separator" aria-hidden="true"></span>
+                  <button type="button" id="toggleScriptPreview" title="Vista previa">◉</button>
+                </div>
                 <textarea id="scriptContent" name="content" rows="14" data-i18n-placeholder="scriptBodyPlaceholder" placeholder="Escribe aquí tu script..." required></textarea>
+                <div id="scriptEditorPreview" class="script-markdown script-editor-preview hidden"></div>
               </label>
               <div class="button-row script-editor-actions">
                 <button class="primary" type="submit" data-i18n="saveNote">Guardar script</button>

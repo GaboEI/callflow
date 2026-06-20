@@ -1,7 +1,7 @@
 (function () {
   function createKnowledgeView(context) {
     const { $, state, validators: V, escapeHtml, runAction, renderApp } = context;
-    let editor = null;
+    let markdownRenderer = null;
 
     function language() {
       return state.settings?.language || "es";
@@ -44,8 +44,8 @@
     }
 
     function renderMarkdown(content) {
-      if (!editor) return `<p>${escapeHtml(content)}</p>`;
-      return editor.markdown(String(content || ""));
+      if (!markdownRenderer) return `<p>${escapeHtml(content)}</p>`;
+      return markdownRenderer.markdown(String(content || ""));
     }
 
     function markdownToPlainText(content) {
@@ -57,48 +57,89 @@
       return (container.textContent || "").replace(/\n{3,}/g, "\n\n").trim();
     }
 
-    function editorTool(name, action, className, title) {
-      return { name, action, className: `cf-mde-tool ${className}`, title };
-    }
-
-    function initializeEditor() {
-      if (editor) return;
-      editor = new window.EasyMDE({
-        element: $("#scriptContent"),
-        autoDownloadFontAwesome: false,
-        autofocus: false,
-        forceSync: true,
-        minHeight: "280px",
-        spellChecker: false,
-        status: false,
-        previewClass: ["editor-preview", "script-markdown"],
-        autoRefresh: { delay: 200 },
+    function initializeMarkdownRenderer() {
+      if (markdownRenderer) return;
+      markdownRenderer = Object.create(window.EasyMDE.prototype);
+      markdownRenderer.options = {
         renderingConfig: {
           singleLineBreaks: false,
           sanitizerFunction: sanitizeHtml
-        },
-        toolbar: [
-          editorTool("heading-2", window.EasyMDE.toggleHeading2, "cf-mde-heading", "Título"),
-          editorTool("heading-3", window.EasyMDE.toggleHeading3, "cf-mde-subheading", "Subtítulo"),
-          "|",
-          editorTool("bold", window.EasyMDE.toggleBold, "cf-mde-bold", "Negrita"),
-          editorTool("italic", window.EasyMDE.toggleItalic, "cf-mde-italic", "Cursiva"),
-          editorTool("link", window.EasyMDE.drawLink, "cf-mde-link", "Enlace"),
-          "|",
-          editorTool("unordered-list", window.EasyMDE.toggleUnorderedList, "cf-mde-list", "Lista"),
-          editorTool("quote", window.EasyMDE.toggleBlockquote, "cf-mde-quote", "Cita"),
-          editorTool("table", window.EasyMDE.drawTable, "cf-mde-table", "Tabla"),
-          editorTool("horizontal-rule", window.EasyMDE.drawHorizontalRule, "cf-mde-rule", "Separador"),
-          editorTool("code", window.EasyMDE.toggleCodeBlock, "cf-mde-code", "Bloque de código"),
-          "|",
-          editorTool("preview", window.EasyMDE.togglePreview, "cf-mde-preview", "Vista previa")
-        ]
-      });
+        }
+      };
+    }
 
-      // EasyMDE normally applies a live GFM mode and Markdown-aware Enter behavior.
-      // CallFlow keeps source editing literal; Markdown is interpreted only in preview/reader mode.
-      editor.codemirror.setOption("mode", null);
-      editor.codemirror.setOption("extraKeys", {});
+    function replaceSelection(before, after = "", placeholder = "") {
+      const input = $("#scriptContent");
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const selected = input.value.slice(start, end) || placeholder;
+      input.setRangeText(`${before}${selected}${after}`, start, end, "end");
+      input.focus();
+      input.setSelectionRange(start + before.length, start + before.length + selected.length);
+    }
+
+    function prefixSelection(prefix) {
+      const input = $("#scriptContent");
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      if (start === end) {
+        input.setRangeText(prefix, start, end, "end");
+        input.focus();
+        return;
+      }
+      const selected = input.value.slice(start, end);
+      const prefixed = selected.split("\n").map((line) => `${prefix}${line}`).join("\n");
+      input.setRangeText(prefixed, start, end, "select");
+      input.focus();
+    }
+
+    function applyFormat(format) {
+      const input = $("#scriptContent");
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const selected = input.value.slice(start, end);
+      if (format === "heading2") prefixSelection("## ");
+      if (format === "heading3") prefixSelection("### ");
+      if (format === "bold") replaceSelection("**", "**", "texto");
+      if (format === "italic") replaceSelection("*", "*", "texto");
+      if (format === "link") replaceSelection("[", "](https://)", "texto");
+      if (format === "list") prefixSelection("- ");
+      if (format === "quote") prefixSelection("> ");
+      if (format === "table") {
+        input.setRangeText("| Columna 1 | Columna 2 |\n| --- | --- |\n| Valor | Valor |", start, end, "end");
+        input.focus();
+      }
+      if (format === "rule") {
+        input.setRangeText("\n\n---\n\n", start, end, "end");
+        input.focus();
+      }
+      if (format === "code") {
+        input.setRangeText(`\`\`\`\n${selected || "código"}\n\`\`\``, start, end, "end");
+        input.focus();
+      }
+    }
+
+    function showSourceEditor() {
+      $("#scriptContent").classList.remove("hidden");
+      $("#scriptEditorPreview").classList.add("hidden");
+      $("#toggleScriptPreview").classList.remove("active");
+      document.querySelectorAll("[data-script-format]").forEach((button) => {
+        button.disabled = false;
+      });
+    }
+
+    function toggleEditorPreview() {
+      const input = $("#scriptContent");
+      const preview = $("#scriptEditorPreview");
+      const showPreview = preview.classList.contains("hidden");
+      preview.classList.toggle("hidden", !showPreview);
+      input.classList.toggle("hidden", showPreview);
+      $("#toggleScriptPreview").classList.toggle("active", showPreview);
+      document.querySelectorAll("[data-script-format]").forEach((button) => {
+        button.disabled = showPreview;
+      });
+      if (showPreview) preview.innerHTML = renderMarkdown(input.value);
+      else input.focus();
     }
 
     function renderLibrary() {
@@ -162,7 +203,6 @@
 
       if (mode === "library") renderLibrary();
       if (mode === "reader" && note) renderReader(note);
-      if (mode === "editor" && editor) setTimeout(() => editor.codemirror.refresh(), 0);
     }
 
     function openEditor(note = null) {
@@ -170,9 +210,9 @@
       state.knowledgeMode = "editor";
       render();
       $("#noteForm").title.value = note?.title || "";
-      editor.value(note?.content || "");
+      $("#scriptContent").value = note?.content || "";
+      showSourceEditor();
       setTimeout(() => {
-        editor.codemirror.refresh();
         $("#noteForm").title.focus();
       }, 0);
     }
@@ -185,7 +225,7 @@
     async function save(event) {
       event.preventDefault();
       const form = event.currentTarget;
-      const validation = V.validateNotePayload({ title: form.title.value, content: editor.value() });
+      const validation = V.validateNotePayload({ title: form.title.value, content: form.content.value });
       if (!validation.ok) {
         context.setStatusMessage(t(validation.messageKey), "error");
         return;
@@ -255,7 +295,7 @@
     }
 
     function bindEvents() {
-      initializeEditor();
+      initializeMarkdownRenderer();
       $("#noteForm").addEventListener("submit", save);
       $("#deleteNote").addEventListener("click", deleteSelected);
       $("#newNote").addEventListener("click", () => openEditor());
@@ -264,6 +304,10 @@
       $("#cancelNoteEdit").addEventListener("click", closeEditor);
       $("#cancelNoteEditBottom").addEventListener("click", closeEditor);
       $("#noteSearch").addEventListener("input", renderLibrary);
+      document.querySelectorAll("[data-script-format]").forEach((button) => {
+        button.addEventListener("click", () => applyFormat(button.dataset.scriptFormat));
+      });
+      $("#toggleScriptPreview").addEventListener("click", toggleEditorPreview);
       $("#exportMd").addEventListener("click", () => exportSelected("md"));
       $("#exportTxt").addEventListener("click", () => exportSelected("txt"));
     }

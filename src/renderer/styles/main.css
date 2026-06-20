@@ -3322,22 +3322,17 @@ code {
   backdrop-filter: blur(12px);
 }
 
-.script-editor-panel .EasyMDEContainer {
-  color: var(--text);
-}
-
-.script-editor-panel .editor-toolbar {
+.script-plain-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
   padding: 6px;
   background: #111827;
-  border-color: var(--border);
+  border: 1px solid var(--border);
   border-radius: 8px 8px 0 0;
-  opacity: 1;
 }
 
-.script-editor-panel .editor-toolbar button {
+.script-plain-toolbar button {
   width: 30px;
   min-height: 30px;
   padding: 4px;
@@ -3348,86 +3343,50 @@ code {
   line-height: 20px;
 }
 
-.script-editor-panel .editor-toolbar button:hover,
-.script-editor-panel .editor-toolbar button.active {
+.script-plain-toolbar button:hover,
+.script-plain-toolbar button.active {
   color: #fff;
   background: rgba(59, 130, 246, 0.18);
   border-color: rgba(59, 130, 246, 0.32);
 }
 
-.script-editor-panel .editor-toolbar i.separator {
+.script-plain-toolbar button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.script-plain-toolbar .separator {
+  width: 1px;
   height: 22px;
   margin: 4px 3px;
-  border-color: var(--border);
+  background: var(--border);
 }
 
-.script-editor-panel .CodeMirror {
-  min-height: 280px;
-  color: #e2e8f0;
-  background: #07101f;
-  border-color: var(--border);
-  border-radius: 0 0 8px 8px;
-  font: 14px/1.25 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-}
-
-.script-editor-panel .CodeMirror-cursor {
-  width: 0;
-  border-left: 1px solid #e2e8f0;
-  border-right: 0;
-}
-
-.script-editor-panel .CodeMirror-selected {
-  background: rgba(59, 130, 246, 0.28);
-}
-
-/* Keep Markdown source visually plain while editing. Formatting belongs to preview/reader mode. */
-.script-editor-panel .cm-s-easymde span {
-  color: inherit;
-  background: transparent;
-  font-family: inherit;
-  font-size: inherit;
-  font-style: normal;
-  font-weight: normal;
-  line-height: inherit;
-  text-decoration: none;
-}
-
-.script-editor-panel .cm-s-easymde .cm-header-1,
-.script-editor-panel .cm-s-easymde .cm-header-2,
-.script-editor-panel .cm-s-easymde .cm-header-3,
-.script-editor-panel .cm-s-easymde .cm-header-4,
-.script-editor-panel .cm-s-easymde .cm-header-5,
-.script-editor-panel .cm-s-easymde .cm-header-6 {
+.script-editor-form #scriptContent {
+  min-height: 360px;
   margin: 0;
-  font-size: inherit;
-  line-height: inherit;
-}
-
-.script-editor-panel .editor-preview,
-.script-editor-panel .editor-preview-side {
-  color: #dbe5f4;
+  resize: vertical;
+  color: #e2e8f0;
+  caret-color: #e2e8f0;
   background: #07101f;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  font: 14px/normal ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  tab-size: 2;
+  white-space: pre-wrap;
 }
 
-.cf-mde-tool::before {
-  display: inline-block;
-  min-width: 18px;
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  font-style: normal;
-  text-align: center;
+.script-editor-preview {
+  width: 100%;
+  min-height: 360px;
+  margin: 0;
+  padding: 14px;
+  background: #07101f;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
 }
-
-.cf-mde-heading::before { content: "H2"; font-size: 10px; font-weight: 800; }
-.cf-mde-subheading::before { content: "H3"; font-size: 10px; font-weight: 800; }
-.cf-mde-bold::before { content: "B"; font-weight: 800; }
-.cf-mde-italic::before { content: "I"; font-family: Georgia, serif; font-style: italic; }
-.cf-mde-link::before { content: "↗"; }
-.cf-mde-list::before { content: "≡"; font-weight: 800; }
-.cf-mde-quote::before { content: "❝"; }
-.cf-mde-table::before { content: "▦"; }
-.cf-mde-rule::before { content: "—"; }
-.cf-mde-code::before { content: "</>"; font-size: 9px; font-weight: 700; }
-.cf-mde-preview::before { content: "◉"; }
 
 @media (max-width: 620px) {
   .script-library-header,
