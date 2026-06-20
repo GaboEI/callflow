@@ -1277,8 +1277,10 @@ nav {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
   gap: 16px;
+  width: min(100%, 1180px);
   height: 100%;
   min-height: 0;
+  margin: 0 auto;
 }
 
 .settings-heading {
@@ -1338,13 +1340,17 @@ nav {
 .settings-section {
   display: grid;
   gap: 12px;
-  width: min(100%, 920px);
+  width: min(100%, 980px);
   min-width: 0;
   min-height: 0;
   padding: 16px;
   background: rgba(15, 23, 42, 0.46);
   border: 1px solid var(--border);
   border-radius: 8px;
+}
+
+.settings-tab-panel[data-settings-panel="lists"] {
+  width: min(100%, 1180px);
 }
 
 .settings-tab-panel.hidden,
@@ -4980,6 +4986,12 @@ code {
   }
 
   .settings-save-button {
+    width: 100%;
+  }
+
+  .settings-panel,
+  .settings-section,
+  .settings-tab-panel[data-settings-panel="lists"] {
     width: 100%;
   }
 
