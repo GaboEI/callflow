@@ -795,7 +795,7 @@ nav {
   grid-column: 1;
   grid-row: 2;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content max-content max-content;
+  grid-template-columns: minmax(0, 1fr) max-content max-content;
   align-items: center;
   gap: 10px;
   min-height: 28px;
@@ -832,12 +832,6 @@ nav {
   font-family: "Cascadia Mono", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
-}
-
-.statusbar-spacer {
-  grid-column: 4;
-  justify-content: flex-end;
-  color: var(--muted);
 }
 
 .panel {
