@@ -227,18 +227,9 @@
             <button class="sidebar-toggle" type="button" id="sidebarToggle" data-i18n-title="openSidebar" title="Abrir navegación">☰</button>
             <div>
               <h1 id="viewTitle">Dashboard</h1>
-              <p class="eyebrow block-label" id="currentBlockLabel">--:-- - --:--</p>
             </div>
           </div>
           <div class="topbar-actions">
-            <div class="shift-timer" id="shiftTimer">
-              <button class="shift-toggle" type="button" id="shiftTimerToggle" data-i18n-title="startWorkTimer" title="Iniciar jornada">▶</button>
-              <button class="shift-toggle total-pause-toggle" type="button" id="shiftTimerStop" data-i18n-title="pauseAllTimer" title="Pausa total">■</button>
-              <div>
-                <span id="shiftTimerLabel" data-i18n="workTimer">Trabajo</span>
-                <strong id="shiftTimerValue">00:00:00</strong>
-              </div>
-            </div>
             <div class="work-clock-shell" id="workClockShell">
               <div class="work-clock" id="workClock">--:--:--</div>
               <button class="clock-panel-toggle" type="button" id="clockPanelToggle" data-i18n-title="allClocks" title="Todos los relojes">⌄</button>
@@ -248,6 +239,7 @@
         </header>
         <div id="systemNotice" class="system-notice hidden" role="status"></div>
 
+        <div class="main-content">
         <section id="dashboardView" class="view active">
           <div class="panel">
             <div class="panel-header">
@@ -775,7 +767,26 @@
             </form>
           </div>
         </section>
+        </div>
       </main>
+
+      <footer class="statusbar" aria-label="Estado de CallFlow">
+        <div class="statusbar-item statusbar-block">
+          <span class="statusbar-label">Bloque</span>
+          <strong id="currentBlockLabel">--:-- - --:--</strong>
+        </div>
+        <div class="shift-timer statusbar-timer" id="shiftTimer">
+          <button class="shift-toggle" type="button" id="shiftTimerToggle" data-i18n-title="startWorkTimer" title="Iniciar jornada">▶</button>
+          <button class="shift-toggle total-pause-toggle" type="button" id="shiftTimerStop" data-i18n-title="pauseAllTimer" title="Pausa total">■</button>
+          <div>
+            <span id="shiftTimerLabel" data-i18n="workTimer">Trabajo</span>
+            <strong id="shiftTimerValue">00:00:00</strong>
+          </div>
+        </div>
+        <div class="statusbar-item statusbar-spacer">
+          <span>Local</span>
+        </div>
+      </footer>
     </div>
 
     <div id="dateTimePicker" class="cf-datetime-picker hidden" role="dialog" aria-live="polite"></div>

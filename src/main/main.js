@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Notification, ipcMain, clipboard, dialog, nativeImage } = require("electron");
+const { app, BrowserWindow, Notification, ipcMain, clipboard, dialog, nativeImage, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
 const time = require("../shared/validators");
@@ -220,6 +220,7 @@ function createWindow() {
     minHeight: 620,
     backgroundColor: "#0F172A",
     icon: windowIcon,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -228,6 +229,7 @@ function createWindow() {
     }
   });
   mainWindow.setIcon(windowIcon);
+  mainWindow.setMenu(null);
 
   mainWindow.on("close", (event) => {
     if (keepRunningInBackground && !app.isQuitting) {
@@ -240,6 +242,7 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  Menu.setApplicationMenu(null);
   await getLogger().info("app-started", {
     version: app.getVersion(),
     electron: process.versions.electron,
