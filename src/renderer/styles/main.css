@@ -795,7 +795,7 @@ nav {
   grid-column: 1;
   grid-row: 2;
   display: grid;
-  grid-template-columns: max-content max-content minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) max-content max-content max-content;
   align-items: center;
   gap: 10px;
   min-height: 28px;
@@ -816,6 +816,14 @@ nav {
   white-space: nowrap;
 }
 
+.statusbar-block {
+  grid-column: 2;
+}
+
+.statusbar-timer {
+  grid-column: 3;
+}
+
 .statusbar-label {
   color: var(--muted);
 }
@@ -827,6 +835,7 @@ nav {
 }
 
 .statusbar-spacer {
+  grid-column: 4;
   justify-content: flex-end;
   color: var(--muted);
 }
@@ -2979,7 +2988,7 @@ code {
   }
 
   .statusbar {
-    grid-template-columns: minmax(90px, auto) minmax(170px, 1fr);
+    grid-template-columns: minmax(0, 1fr) max-content max-content;
   }
 
   .statusbar-spacer {
@@ -3100,7 +3109,7 @@ code {
   }
 
   .statusbar {
-    grid-template-columns: minmax(84px, auto) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) max-content max-content;
     gap: 6px;
     padding-inline: 7px;
   }
