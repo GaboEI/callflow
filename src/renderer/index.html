@@ -634,6 +634,7 @@
                     <span class="muted">Resultado</span>
                     <strong id="quickCalcResult">0</strong>
                   </div>
+                  <div class="calculator-history" id="quickCalcHistory"></div>
                 </article>
                 <article class="calculator-box">
                   <h3>Finanzas / salario</h3>
@@ -877,13 +878,16 @@
       </main>
 
       <footer class="statusbar" aria-label="Estado de CallFlow">
-        <button type="button" class="statusbar-calculator-toggle" id="quickCalculatorToggle" title="Calculadora">⌗</button>
-        <div class="shift-timer statusbar-timer" id="shiftTimer">
-          <button class="shift-toggle" type="button" id="shiftTimerToggle" data-i18n-title="startWorkTimer" title="Iniciar jornada">▶</button>
-          <button class="shift-toggle total-pause-toggle" type="button" id="shiftTimerStop" data-i18n-title="pauseAllTimer" title="Pausa total">■</button>
-          <div>
-            <span id="shiftTimerLabel" data-i18n="workTodayTimer">Trabajo hoy</span>
-            <strong id="shiftTimerValue">00:00:00</strong>
+        <div class="statusbar-spacer" aria-hidden="true"></div>
+        <div class="statusbar-actions">
+          <button type="button" class="statusbar-calculator-toggle" id="quickCalculatorToggle" title="Calculadora">⌗</button>
+          <div class="shift-timer statusbar-timer" id="shiftTimer">
+            <button class="shift-toggle" type="button" id="shiftTimerToggle" data-i18n-title="startWorkTimer" title="Iniciar jornada">▶</button>
+            <button class="shift-toggle total-pause-toggle" type="button" id="shiftTimerStop" data-i18n-title="pauseAllTimer" title="Pausa total">■</button>
+            <div>
+              <span id="shiftTimerLabel" data-i18n="workTodayTimer">Trabajo hoy</span>
+              <strong id="shiftTimerValue">00:00:00</strong>
+            </div>
           </div>
         </div>
       </footer>
@@ -896,6 +900,7 @@
       </div>
       <input id="floatingCalcExpression" placeholder="0" autocomplete="off" />
       <div class="calculator-keypad compact" id="floatingCalcKeypad"></div>
+      <div class="calculator-history" id="floatingCalcHistory"></div>
       <div class="calculator-result compact">
         <span class="muted">Resultado</span>
         <strong id="floatingCalcResult">0</strong>

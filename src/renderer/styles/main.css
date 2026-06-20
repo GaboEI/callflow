@@ -890,7 +890,7 @@ nav {
   grid-column: 1;
   grid-row: 2;
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  grid-template-columns: minmax(0, 1fr) max-content;
   align-items: center;
   gap: 10px;
   min-height: 28px;
@@ -912,11 +912,23 @@ nav {
 }
 
 .statusbar-timer {
-  grid-column: 3;
+  grid-column: auto;
+}
+
+.statusbar-spacer {
+  min-width: 0;
+}
+
+.statusbar-actions {
+  display: inline-flex;
+  grid-column: 2;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
 }
 
 .statusbar-calculator-toggle {
-  grid-column: 1;
   width: 24px;
   min-width: 24px;
   min-height: 20px;
@@ -1870,13 +1882,25 @@ code {
 
 .calculator-keypad {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
 }
 
 .calculator-keypad button {
   min-height: 34px;
   padding: 6px 8px;
+}
+
+.calculator-key-utility {
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.32);
+}
+
+.calculator-key-equals {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.13);
+  color: var(--green);
+  font-weight: 700;
 }
 
 .calculator-result {
@@ -1901,6 +1925,15 @@ code {
   font-size: 18px;
 }
 
+.calculator-history {
+  min-height: 16px;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
 .calculator-finance-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1918,7 +1951,7 @@ code {
   z-index: 90;
   display: grid;
   gap: 8px;
-  width: min(318px, calc(100vw - 24px));
+  width: min(340px, calc(100vw - 24px));
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: 8px;

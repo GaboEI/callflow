@@ -2,7 +2,34 @@
   function createCalculatorView(context) {
     const { $, escapeHtml, normalizeSettings, runAction, setStatusMessage, state, storage, timers } = context;
 
-    const keypadItems = ["7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "%", "+", "(", ")", "C", "="];
+    const keypadItems = [
+      { label: "C", value: "clear", kind: "utility" },
+      { label: "⌫", value: "backspace", kind: "utility" },
+      { label: "(", value: "(" },
+      { label: ")", value: ")" },
+      { label: "%", value: "%" },
+      { label: "7", value: "7" },
+      { label: "8", value: "8" },
+      { label: "9", value: "9" },
+      { label: "/", value: "/" },
+      { label: "√", value: "sqrt(" },
+      { label: "4", value: "4" },
+      { label: "5", value: "5" },
+      { label: "6", value: "6" },
+      { label: "*", value: "*" },
+      { label: "x²", value: "**2" },
+      { label: "1", value: "1" },
+      { label: "2", value: "2" },
+      { label: "3", value: "3" },
+      { label: "-", value: "-" },
+      { label: "π", value: "π" },
+      { label: "0", value: "0" },
+      { label: ".", value: "." },
+      { label: "00", value: "00" },
+      { label: "+", value: "+" },
+      { label: "=", value: "equals", kind: "equals" }
+    ];
+    let lastOperation = "";
 
     function financeSettings() {
       return {
@@ -24,13 +51,31 @@
       return `${config.currency || "USD"} ${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
     }
 
-    function evaluateExpression(rawValue) {
-      const expression = String(rawValue || "")
+    function normalizeExpression(rawValue) {
+      return String(rawValue || "")
         .replace(/,/g, ".")
         .replace(/(\d+(?:\.\d+)?)%/g, "($1/100)")
+        .replace(/π/g, "Math.PI")
+        .replace(/\bpi\b/gi, "Math.PI")
+        .replace(/\bsqrt\(/gi, "Math.sqrt(")
         .trim();
+    }
+
+    function isPendingExpression(expression) {
+      if (!expression) return false;
+      const openParens = (expression.match(/\(/g) || []).length;
+      const closeParens = (expression.match(/\)/g) || []).length;
+      return /[+\-*/.(]$/.test(expression) || /\*\*$/.test(expression) || openParens > closeParens;
+    }
+
+    function evaluateExpression(rawValue) {
+      const expression = normalizeExpression(rawValue);
       if (!expression) return 0;
-      if (!/^[\d+\-*/().\s]+$/.test(expression)) throw new Error("Invalid expression");
+      if (isPendingExpression(expression)) return null;
+      const safeExpression = expression
+        .replace(/Math\.PI/g, "")
+        .replace(/Math\.sqrt/g, "");
+      if (!/^[\d+\-*/().\s]+$/.test(safeExpression)) throw new Error("Invalid expression");
       return Function(`"use strict"; return (${expression});`)();
     }
 
@@ -39,19 +84,41 @@
       if (!container || container.dataset.ready === "true") return;
       container.dataset.ready = "true";
       container.innerHTML = keypadItems
-        .map((item) => `<button type="button" data-calc-key="${escapeHtml(item)}">${escapeHtml(item)}</button>`)
+        .map((item) => {
+          const className = item.kind ? ` class="calculator-key-${escapeHtml(item.kind)}"` : "";
+          return `<button type="button"${className} data-calc-key="${escapeHtml(item.value)}">${escapeHtml(item.label)}</button>`;
+        })
         .join("");
     }
 
-    function calculate(inputId, resultId) {
+    function updateHistory(historyId) {
+      const history = $(historyId);
+      if (history) history.textContent = lastOperation ? `Última operación: ${lastOperation}` : "";
+    }
+
+    function calculate(inputId, resultId, historyId, final = false) {
       const input = $(inputId);
       const result = $(resultId);
       if (!input || !result) return;
       try {
         const value = evaluateExpression(input.value);
-        result.textContent = Number.isFinite(value) ? String(Math.round(value * 10000) / 10000) : "0";
+        if (value === null) {
+          result.textContent = final ? "Completa la operación" : "0";
+          updateHistory(historyId);
+          return;
+        }
+        const formatted = Number.isFinite(value) ? String(Math.round(value * 10000) / 10000) : "0";
+        result.textContent = formatted;
+        if (final && String(input.value || "").trim()) {
+          lastOperation = `${input.value.trim()} = ${formatted}`;
+          updateHistory("#quickCalcHistory");
+          updateHistory("#floatingCalcHistory");
+        } else {
+          updateHistory(historyId);
+        }
       } catch (_error) {
-        result.textContent = "Error";
+        result.textContent = final ? "Error" : "0";
+        updateHistory(historyId);
       }
     }
 
@@ -61,12 +128,26 @@
       const compact = event.currentTarget.classList.contains("compact");
       const input = compact ? $("#floatingCalcExpression") : $("#quickCalcExpression");
       const resultId = compact ? "#floatingCalcResult" : "#quickCalcResult";
+      const historyId = compact ? "#floatingCalcHistory" : "#quickCalcHistory";
       if (!input) return;
-      if (key === "C") input.value = "";
-      else if (key === "=") calculate(compact ? "#floatingCalcExpression" : "#quickCalcExpression", resultId);
+      if (key === "clear") input.value = "";
+      else if (key === "backspace") input.value = input.value.slice(0, -1);
+      else if (key === "equals") calculate(compact ? "#floatingCalcExpression" : "#quickCalcExpression", resultId, historyId, true);
       else input.value += key;
-      if (key !== "=") calculate(compact ? "#floatingCalcExpression" : "#quickCalcExpression", resultId);
+      if (key !== "equals") calculate(compact ? "#floatingCalcExpression" : "#quickCalcExpression", resultId, historyId);
       input.focus();
+    }
+
+    function handleExpressionKeydown(event) {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      const floating = event.currentTarget.id === "floatingCalcExpression";
+      calculate(
+        floating ? "#floatingCalcExpression" : "#quickCalcExpression",
+        floating ? "#floatingCalcResult" : "#quickCalcResult",
+        floating ? "#floatingCalcHistory" : "#quickCalcHistory",
+        true
+      );
     }
 
     function estimatedFinance(workMs = timers.currentWorkElapsed(state.workTimer)) {
@@ -122,18 +203,23 @@
       renderKeypad("#quickCalcKeypad");
       renderKeypad("#floatingCalcKeypad");
       renderFinanceForm();
-      calculate("#quickCalcExpression", "#quickCalcResult");
-      calculate("#floatingCalcExpression", "#floatingCalcResult");
+      calculate("#quickCalcExpression", "#quickCalcResult", "#quickCalcHistory");
+      calculate("#floatingCalcExpression", "#floatingCalcResult", "#floatingCalcHistory");
     }
 
     function bindEvents() {
       $("#quickCalcKeypad").addEventListener("click", handleKeypad);
       $("#floatingCalcKeypad").addEventListener("click", handleKeypad);
-      $("#quickCalcExpression").addEventListener("input", () => calculate("#quickCalcExpression", "#quickCalcResult"));
-      $("#floatingCalcExpression").addEventListener("input", () => calculate("#floatingCalcExpression", "#floatingCalcResult"));
+      $("#quickCalcExpression").addEventListener("input", () => calculate("#quickCalcExpression", "#quickCalcResult", "#quickCalcHistory"));
+      $("#floatingCalcExpression").addEventListener("input", () => calculate("#floatingCalcExpression", "#floatingCalcResult", "#floatingCalcHistory"));
+      $("#quickCalcExpression").addEventListener("keydown", handleExpressionKeydown);
+      $("#floatingCalcExpression").addEventListener("keydown", handleExpressionKeydown);
       $("#financeSettingsForm").addEventListener("submit", saveFinance);
       $("#quickCalculatorToggle").addEventListener("click", openFloating);
       $("#quickCalculatorClose").addEventListener("click", closeFloating);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeFloating();
+      });
     }
 
     return {
