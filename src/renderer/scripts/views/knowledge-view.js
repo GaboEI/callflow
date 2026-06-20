@@ -94,6 +94,11 @@
           editorTool("preview", window.EasyMDE.togglePreview, "cf-mde-preview", "Vista previa")
         ]
       });
+
+      // EasyMDE normally applies a live GFM mode and Markdown-aware Enter behavior.
+      // CallFlow keeps source editing literal; Markdown is interpreted only in preview/reader mode.
+      editor.codemirror.setOption("mode", null);
+      editor.codemirror.setOption("extraKeys", {});
     }
 
     function renderLibrary() {
