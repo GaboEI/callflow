@@ -1978,9 +1978,13 @@ code {
 
 #reportsView > .panel {
   display: grid;
-  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   height: 100%;
   min-height: 0;
+}
+
+#reportsView .panel-header {
+  margin-bottom: 8px;
 }
 
 #reportBlocks {
@@ -2579,11 +2583,12 @@ code {
 }
 
 .report-toolbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.9fr) auto auto;
   flex-wrap: wrap;
   align-items: end;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin: -2px 0 10px;
 }
 
 .report-main-actions,
@@ -2593,7 +2598,7 @@ code {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
 }
 
 .report-main-actions {
@@ -2629,7 +2634,8 @@ code {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.5);
-  padding: 4px;
+  padding: 3px;
+  white-space: nowrap;
 }
 
 .report-export-actions span {
@@ -2641,12 +2647,12 @@ code {
 .report-export-actions button,
 .report-bulk-actions button,
 .report-period-chip {
-  min-height: 32px;
-  padding: 6px 10px;
+  min-height: 30px;
+  padding: 5px 9px;
 }
 
 .report-bulk-actions {
-  margin: -4px 0 14px;
+  margin: 0;
   align-items: center;
 }
 
@@ -2657,9 +2663,9 @@ code {
 }
 
 .report-bulk-actions .report-copy-action {
-  width: 36px;
-  min-width: 36px;
-  padding: 6px;
+  width: 32px;
+  min-width: 32px;
+  padding: 5px;
 }
 
 .report-bulk-actions .report-copy-action span {
@@ -2782,30 +2788,35 @@ code {
 
 .report-searchbar {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  gap: 6px;
   align-items: end;
-  margin: 0 0 14px;
+  margin: 0;
+  min-width: 0;
 }
 
 .report-searchbar label {
   display: grid;
-  gap: 6px;
+  gap: 3px;
+  min-width: 0;
 }
 
 .report-searchbar label span {
   margin-bottom: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.1;
 }
 
 .report-search-actions {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
 }
 
 .report-search-actions button {
-  min-height: 34px;
-  padding: 6px 10px;
+  min-height: 30px;
+  padding: 5px 8px;
 }
 
 .report-search-actions button:disabled {
@@ -3713,6 +3724,16 @@ code {
 }
 
 @media (max-width: 979px) {
+  .report-toolbar {
+    grid-template-columns: 1fr;
+    gap: 7px;
+    margin-bottom: 8px;
+  }
+
+  .report-searchbar {
+    grid-template-columns: minmax(220px, 1fr) auto;
+  }
+
   #dashboardView .button-row {
     gap: 8px;
   }
@@ -3749,6 +3770,10 @@ code {
 }
 
 @media (max-width: 620px) {
+  .report-searchbar {
+    grid-template-columns: 1fr;
+  }
+
   .call-type-shell .status-manager .input-row {
     grid-template-columns: 1fr;
   }
@@ -3916,12 +3941,12 @@ code {
   }
 
   .report-toolbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(420px, 1.2fr) minmax(360px, 0.9fr) auto auto;
     align-items: end;
   }
 
   .report-searchbar {
-    grid-template-columns: minmax(280px, 520px) auto;
+    grid-template-columns: minmax(220px, 1fr) auto;
   }
 }
 .settings-maintenance {
