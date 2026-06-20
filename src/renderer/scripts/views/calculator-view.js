@@ -448,7 +448,17 @@
     }
 
     function closeFinanceMovements() {
+      $("#financeTypesModal").classList.add("hidden");
       $("#financeMovementsModal").classList.add("hidden");
+    }
+
+    function openFinanceTypes() {
+      $("#financeTypesModal").classList.remove("hidden");
+      $("#financeMovementTypeForm").querySelector("input[name='label']").focus();
+    }
+
+    function closeFinanceTypes() {
+      $("#financeTypesModal").classList.add("hidden");
     }
 
     function shiftFinancePeriod(direction) {
@@ -511,8 +521,13 @@
       });
       $("#openFinanceMovements").addEventListener("click", openFinanceMovements);
       $("#closeFinanceMovements").addEventListener("click", closeFinanceMovements);
+      $("#openFinanceTypeEditor").addEventListener("click", openFinanceTypes);
+      $("#closeFinanceTypes").addEventListener("click", closeFinanceTypes);
       $("#financeMovementsModal").addEventListener("click", (event) => {
         if (event.target.id === "financeMovementsModal") closeFinanceMovements();
+      });
+      $("#financeTypesModal").addEventListener("click", (event) => {
+        if (event.target.id === "financeTypesModal") closeFinanceTypes();
       });
       $("#monthlyFinanceChart").addEventListener("click", (event) => showChartPoint(event.target));
       $("#monthlyFinanceChart").addEventListener("keydown", (event) => {
@@ -542,7 +557,8 @@
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
           closeFloating();
-          closeFinanceMovements();
+          if (!$("#financeTypesModal").classList.contains("hidden")) closeFinanceTypes();
+          else closeFinanceMovements();
         }
       });
     }

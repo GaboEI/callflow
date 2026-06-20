@@ -10,6 +10,7 @@
       dailyWorkStartedAt: null,
       dailyWorkHistory: {},
       timeAdjustments: [],
+      manualWorkSchedules: [],
       currentBreakStartedAt: null,
       breaks: []
     };
@@ -26,6 +27,7 @@
           ? { ...timer.dailyWorkHistory }
           : {},
       timeAdjustments: Array.isArray(timer && timer.timeAdjustments) ? [...timer.timeAdjustments] : [],
+      manualWorkSchedules: Array.isArray(timer && timer.manualWorkSchedules) ? [...timer.manualWorkSchedules] : [],
       breaks: Array.isArray(timer && timer.breaks) ? timer.breaks : []
     };
   }
@@ -70,7 +72,7 @@
     return normalized.dailyWorkElapsedMs + Math.max(0, now - new Date(normalized.dailyWorkStartedAt).getTime());
   }
 
-  function dailyWorkEntries(timer, now = Date.now()) {
+  function trackedDailyWorkEntries(timer, now = Date.now()) {
     const normalized = normalizeWorkTimer(timer);
     const entries = { ...normalized.dailyWorkHistory };
     if (normalized.dailyWorkDate) entries[normalized.dailyWorkDate] = currentDailyWorkElapsed(normalized, now);
@@ -81,6 +83,19 @@
     });
     Object.entries(adjustmentsByDate).forEach(([date, adjustmentMs]) => {
       entries[date] = Math.max(0, (Number(entries[date]) || 0) + adjustmentMs);
+    });
+    return entries;
+  }
+
+  function dailyWorkEntries(timer, now = Date.now()) {
+    const normalized = normalizeWorkTimer(timer);
+    const entries = trackedDailyWorkEntries(normalized, now);
+    normalized.manualWorkSchedules.forEach((schedule) => {
+      if (!schedule.date) return;
+      const targetMs = (Number(schedule.targetMinutes) || 0) * 60000;
+      const trackedAtSaveMs = Number(schedule.trackedAtSaveMs) || 0;
+      const trackedSinceSaveMs = Math.max(0, (Number(entries[schedule.date]) || 0) - trackedAtSaveMs);
+      entries[schedule.date] = targetMs + trackedSinceSaveMs;
     });
     return entries;
   }
@@ -154,6 +169,7 @@
     formatDuration,
     freezeWorkTimer,
     normalizeWorkTimer,
+    trackedDailyWorkEntries,
     toggleShiftTimer
   };
 

@@ -378,6 +378,20 @@
             }))
             .filter((item) => item.date && item.minutes)
         : [],
+      manualWorkSchedules: Array.isArray(source.manualWorkSchedules)
+        ? source.manualWorkSchedules
+            .filter(isPlainObject)
+            .map((item) => ({
+              date: validIsoDate(item.date) ? item.date : null,
+              hours: [...new Set(Array.isArray(item.hours) ? item.hours.map(Number) : [])]
+                .filter((hour) => Number.isInteger(hour) && hour >= 0 && hour <= 23)
+                .sort((a, b) => a - b),
+              targetMinutes: Math.max(0, Math.min(1440, Number(item.targetMinutes) || 0)),
+              trackedAtSaveMs: Math.max(0, Number(item.trackedAtSaveMs) || 0),
+              updatedAt: validIsoDateTime(item.updatedAt) ? item.updatedAt : new Date().toISOString()
+            }))
+            .filter((item) => item.date)
+        : [],
       currentBreakStartedAt: validIsoDateTime(source.currentBreakStartedAt) ? source.currentBreakStartedAt : null,
       breaks: Array.isArray(source.breaks)
         ? source.breaks

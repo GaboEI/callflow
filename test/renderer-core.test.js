@@ -170,3 +170,18 @@ test("manual time adjustments are aggregated by day and never produce negative w
   });
   assert.equal(validators.normalizeWorkTimer(timer).timeAdjustments.length, 3);
 });
+
+test("manual schedules override a day and preserve work tracked after saving", () => {
+  const timer = {
+    dailyWorkHistory: { "2026-06-19": 4 * 3600000 },
+    manualWorkSchedules: [{
+      date: "2026-06-19",
+      hours: [7, 8, 9, 10, 11, 12],
+      targetMinutes: 360,
+      trackedAtSaveMs: 3 * 3600000
+    }]
+  };
+
+  assert.equal(timers.dailyWorkEntries(timer)["2026-06-19"], 7 * 3600000);
+  assert.deepEqual(validators.normalizeWorkTimer(timer).manualWorkSchedules[0].hours, [7, 8, 9, 10, 11, 12]);
+});

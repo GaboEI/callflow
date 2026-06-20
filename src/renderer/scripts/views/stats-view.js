@@ -17,6 +17,10 @@
       timers,
       validators: V
     } = context;
+    let scheduleDate = null;
+    let scheduleEditing = false;
+    let selectedScheduleHours = new Set();
+    let timesheetAnchor = null;
 
     function language() {
       return state.settings.language || "es";
@@ -270,75 +274,123 @@
         : `<p class="muted">${escapeHtml(t("statsNoData"))}</p>`;
     }
 
-    function openTimeAdjustment() {
-      const form = $("#timeAdjustmentForm");
-      form.date.value = isoDateInStatsTimezone();
-      form.date.max = form.date.value;
-      form.hours.value = "0";
-      form.minutes.value = "0";
-      form.note.value = "";
-      renderTimeAdjustments();
+    function scheduleForDate(date) {
+      return (state.workTimer?.manualWorkSchedules || []).find((item) => item.date === date) || null;
+    }
+
+    function loadScheduleDate(date) {
+      const today = isoDateInStatsTimezone();
+      scheduleDate = compareIsoDate(date, today) > 0 ? today : date;
+      selectedScheduleHours = new Set(scheduleForDate(scheduleDate)?.hours || []);
+      scheduleEditing = false;
+      renderScheduleEditor();
+    }
+
+    function openTimeAdjustment(date = isoDateInStatsTimezone()) {
+      loadScheduleDate(date);
       $("#timeAdjustmentModal").classList.remove("hidden");
-      form.hours.focus();
     }
 
     function closeTimeAdjustment() {
       $("#timeAdjustmentModal").classList.add("hidden");
+      scheduleEditing = false;
     }
 
-    function renderTimeAdjustments() {
-      const adjustments = (state.workTimer?.timeAdjustments || [])
-        .sort((a, b) => b.date.localeCompare(a.date));
-      $("#timeAdjustmentList").innerHTML = adjustments.length
-        ? adjustments.map((item) => `
-            <div class="time-adjustment-item">
-              <span><strong>${item.minutes > 0 ? "+" : "−"}${escapeHtml(timers.formatDuration(Math.abs(item.minutes) * 60000).slice(0, 5))}</strong><small>${escapeHtml(displayIsoDate(item.date))}${item.note ? ` · ${escapeHtml(item.note)}` : ""}</small></span>
-              <button type="button" data-delete-time-adjustment="${escapeHtml(item.id)}" aria-label="${escapeHtml(t("delete"))}">×</button>
-            </div>`).join("")
-        : `<p class="muted">${escapeHtml(t("statsNoTimeAdjustments"))}</p>`;
+    function schedulePeriodCards() {
+      const periods = [
+        ["statsEarlyMorning", 0, 6],
+        ["statsMorning", 6, 8],
+        ["statsDaytime", 8, 13],
+        ["statsAfternoon", 13, 17],
+        ["statsEvening", 17, 24]
+      ];
+      const cards = [["statsTotal", 0, 24], ...periods];
+      return cards.map(([key, from, to], index) => {
+        const count = [...selectedScheduleHours].filter((hour) => hour >= from && hour < to).length;
+        return `<article class="schedule-period-card period-${index}"><span>${escapeHtml(t(key))}</span><strong>${count}h</strong><small>${String(from).padStart(2, "0")}:00–${String(to).padStart(2, "0")}:00</small></article>`;
+      }).join("");
     }
 
-    async function saveTimeAdjustment(event) {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const totalMinutes = (Number(form.hours.value) || 0) * 60 + (Number(form.minutes.value) || 0);
-      if (!form.date.value || totalMinutes <= 0) {
-        setStatusMessage(t("statsAdjustmentRequired"), "warning");
-        return;
-      }
-      const direction = form.action.value === "subtract" ? -1 : 1;
-      const adjustment = {
-        id: crypto.randomUUID ? crypto.randomUUID() : `time-${Date.now()}`,
-        date: form.date.value,
-        minutes: totalMinutes * direction,
-        note: String(form.note.value || "").trim(),
-        createdAt: new Date().toISOString()
+    function renderScheduleEditor() {
+      if (!scheduleDate) return;
+      const trackedMs = Number(timers.trackedDailyWorkEntries(state.workTimer)[scheduleDate]) || 0;
+      $("#scheduleDate").value = scheduleDate;
+      $("#scheduleDate").max = isoDateInStatsTimezone();
+      $("#scheduleNextDay").disabled = scheduleDate >= isoDateInStatsTimezone();
+      $("#schedulePeriodSummary").innerHTML = schedulePeriodCards();
+      $("#scheduleSelectedTotal").textContent = timers.formatDuration(selectedScheduleHours.size * 3600000).slice(0, 5);
+      $("#scheduleRecordedHint").textContent = `${t("statsClockRecorded")}: ${timers.formatDuration(trackedMs).slice(0, 5)}`;
+      const editButton = $("#scheduleEditToggle");
+      editButton.textContent = scheduleEditing ? "🔓" : "🔒";
+      editButton.title = t(scheduleEditing ? "statsLockSchedule" : "statsUnlockSchedule");
+      $("#saveSchedule").disabled = !scheduleEditing;
+      $("#scheduleHourGrid").classList.toggle("is-locked", !scheduleEditing);
+      $("#scheduleHourGrid").innerHTML = Array.from({ length: 24 }, (_item, hour) => {
+        const selected = selectedScheduleHours.has(hour);
+        const period = hour < 6 ? 1 : hour < 8 ? 2 : hour < 13 ? 3 : hour < 17 ? 4 : 5;
+        return `<button type="button" class="schedule-hour period-${period}${selected ? " selected" : ""}" data-schedule-hour="${hour}" ${scheduleEditing ? "" : "disabled"}><span>${String(hour).padStart(2, "0")}:00</span><small>${selected ? "✓" : ""}</small></button>`;
+      }).join("");
+    }
+
+    function toggleScheduleHour(hour) {
+      if (!scheduleEditing) return;
+      if (selectedScheduleHours.has(hour)) selectedScheduleHours.delete(hour);
+      else selectedScheduleHours.add(hour);
+      renderScheduleEditor();
+    }
+
+    async function saveSchedule() {
+      if (!scheduleEditing || !scheduleDate) return;
+      const trackedAtSaveMs = Number(timers.trackedDailyWorkEntries(state.workTimer)[scheduleDate]) || 0;
+      const schedule = {
+        date: scheduleDate,
+        hours: [...selectedScheduleHours].sort((a, b) => a - b),
+        targetMinutes: selectedScheduleHours.size * 60,
+        trackedAtSaveMs,
+        updatedAt: new Date().toISOString()
       };
-      state.workTimer = V.normalizeWorkTimer({
-        ...state.workTimer,
-        timeAdjustments: [...(state.workTimer?.timeAdjustments || []), adjustment]
-      });
+      const schedules = (state.workTimer?.manualWorkSchedules || []).filter((item) => item.date !== scheduleDate);
+      state.workTimer = V.normalizeWorkTimer({ ...state.workTimer, manualWorkSchedules: [...schedules, schedule] });
       await runAction(async () => {
         await storage.write("workTimer", state.workTimer);
+        scheduleEditing = false;
         render();
-        renderTimeAdjustments();
-        form.hours.value = "0";
-        form.minutes.value = "0";
-        form.note.value = "";
-        setStatusMessage(t("statsAdjustmentSaved"), "success");
+        renderScheduleEditor();
+        setStatusMessage(t("statsScheduleSaved"), "success");
       });
     }
 
-    async function deleteTimeAdjustment(id) {
-      state.workTimer = V.normalizeWorkTimer({
-        ...state.workTimer,
-        timeAdjustments: (state.workTimer?.timeAdjustments || []).filter((item) => item.id !== id)
-      });
-      await runAction(async () => {
-        await storage.write("workTimer", state.workTimer);
-        render();
-        renderTimeAdjustments();
-      });
+    function currentTimesheetAnchor() {
+      const [year, month] = isoDateInStatsTimezone().split("-").map(Number);
+      return new Date(year, month - 1, 1);
+    }
+
+    function renderTimesheet() {
+      const anchor = timesheetAnchor || currentTimesheetAnchor();
+      const year = anchor.getFullYear();
+      const month = anchor.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const today = isoDateInStatsTimezone();
+      const entries = timers.dailyWorkEntries(state.workTimer);
+      const monthInput = $("#timesheetMonth");
+      monthInput.value = `${year}-${String(month + 1).padStart(2, "0")}`;
+      monthInput.max = today.slice(0, 7);
+      $("#timesheetNextMonth").disabled = monthInput.value >= monthInput.max;
+      $("#statsTimesheet").innerHTML = Array.from({ length: daysInMonth }, (_item, index) => {
+        const day = index + 1;
+        const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const hours = (Number(entries[date]) || 0) / 3600000;
+        const future = compareIsoDate(date, today) > 0;
+        const adjusted = Boolean(scheduleForDate(date));
+        return `<button type="button" class="timesheet-day${hours ? " has-time" : ""}${adjusted ? " adjusted" : ""}" data-timesheet-date="${date}" ${future ? "disabled" : ""}><span>${day}</span><small>${new Date(year, month, day).toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2)}</small><strong>${hours ? `${Math.round(hours * 10) / 10}h` : "–"}</strong></button>`;
+      }).join("");
+    }
+
+    function shiftTimesheetMonth(direction) {
+      const anchor = timesheetAnchor || currentTimesheetAnchor();
+      timesheetAnchor = new Date(anchor.getFullYear(), anchor.getMonth() + direction, 1);
+      if (timesheetAnchor > currentTimesheetAnchor()) timesheetAnchor = currentTimesheetAnchor();
+      renderTimesheet();
     }
 
     function renderBars(containerId, entries, total, options = {}) {
@@ -489,6 +541,7 @@
       renderTypeDistribution(analysis);
       renderInsights(analysis);
       renderDetail(analysis);
+      renderTimesheet();
     }
 
     function setPeriod(period) {
@@ -591,14 +644,36 @@
       });
       $("#exportStatsMd").addEventListener("click", () => exportStats("md"));
       $("#exportStatsTxt").addEventListener("click", () => exportStats("txt"));
-      $("#openTimeAdjustment").addEventListener("click", openTimeAdjustment);
+      $("#openTimeAdjustment").addEventListener("click", () => openTimeAdjustment());
       $("#closeTimeAdjustment").addEventListener("click", closeTimeAdjustment);
       $("#timeAdjustmentModal").addEventListener("click", (event) => {
         if (event.target.id === "timeAdjustmentModal") closeTimeAdjustment();
-        const button = event.target.closest("[data-delete-time-adjustment]");
-        if (button) deleteTimeAdjustment(button.dataset.deleteTimeAdjustment);
       });
-      $("#timeAdjustmentForm").addEventListener("submit", saveTimeAdjustment);
+      $("#schedulePreviousDay").addEventListener("click", () => loadScheduleDate(addDays(scheduleDate, -1)));
+      $("#scheduleNextDay").addEventListener("click", () => loadScheduleDate(addDays(scheduleDate, 1)));
+      $("#scheduleDate").addEventListener("change", (event) => loadScheduleDate(event.target.value));
+      $("#scheduleEditToggle").addEventListener("click", () => {
+        scheduleEditing = !scheduleEditing;
+        if (!scheduleEditing) selectedScheduleHours = new Set(scheduleForDate(scheduleDate)?.hours || []);
+        renderScheduleEditor();
+      });
+      $("#scheduleHourGrid").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-schedule-hour]");
+        if (button) toggleScheduleHour(Number(button.dataset.scheduleHour));
+      });
+      $("#saveSchedule").addEventListener("click", saveSchedule);
+      $("#timesheetPreviousMonth").addEventListener("click", () => shiftTimesheetMonth(-1));
+      $("#timesheetNextMonth").addEventListener("click", () => shiftTimesheetMonth(1));
+      $("#timesheetMonth").addEventListener("change", (event) => {
+        const [year, month] = event.target.value.split("-").map(Number);
+        if (year && month) timesheetAnchor = new Date(year, month - 1, 1);
+        if (timesheetAnchor > currentTimesheetAnchor()) timesheetAnchor = currentTimesheetAnchor();
+        renderTimesheet();
+      });
+      $("#statsTimesheet").addEventListener("click", (event) => {
+        const day = event.target.closest("[data-timesheet-date]");
+        if (day) openTimeAdjustment(day.dataset.timesheetDate);
+      });
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") closeTimeAdjustment();
       });

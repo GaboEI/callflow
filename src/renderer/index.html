@@ -569,6 +569,21 @@
             </div>
 
             <div class="stats-analytics-grid">
+              <section class="panel stats-timesheet-panel">
+                <div class="panel-header">
+                  <div>
+                    <h3 data-i18n="statsTimesheet">Registro mensual</h3>
+                    <p class="muted stats-panel-note" data-i18n="statsTimesheetHelp">Horas registradas por día. Selecciona un día para editarlo.</p>
+                  </div>
+                  <div class="timesheet-navigation">
+                    <button type="button" id="timesheetPreviousMonth" aria-label="Mes anterior">‹</button>
+                    <input id="timesheetMonth" type="month" aria-label="Mes del registro" />
+                    <button type="button" id="timesheetNextMonth" aria-label="Mes siguiente">›</button>
+                  </div>
+                </div>
+                <div id="statsTimesheet" class="stats-timesheet"></div>
+              </section>
+
               <section class="panel stats-panel-wide stats-activity-panel">
                 <div class="panel-header">
                   <div>
@@ -628,18 +643,25 @@
           <div id="timeAdjustmentModal" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="timeAdjustmentTitle">
             <section class="app-modal-card stats-time-modal">
               <div class="app-modal-header">
-                <div><h3 id="timeAdjustmentTitle" data-i18n="statsAdjustTime">Ajustar horas</h3><p class="muted" data-i18n="statsAdjustTimeHelp">Agrega o resta tiempo de una fecha olvidada.</p></div>
+                <div><h3 id="timeAdjustmentTitle" data-i18n="statsDailySchedule">Horario diario</h3><p class="muted" data-i18n="statsDailyScheduleHelp">Desbloquea el horario, selecciona las horas trabajadas y guarda.</p></div>
                 <button type="button" class="icon-button" id="closeTimeAdjustment" aria-label="Cerrar">×</button>
               </div>
-              <form id="timeAdjustmentForm" class="time-adjustment-form">
-                <label><span data-i18n="statsAdjustmentDate">Fecha</span><input name="date" type="date" required /></label>
-                <label><span data-i18n="statsAdjustmentAction">Acción</span><select name="action"><option value="add" data-i18n="statsAddTime">Agregar tiempo</option><option value="subtract" data-i18n="statsSubtractTime">Restar tiempo</option></select></label>
-                <label><span data-i18n="statsHours">Horas</span><input name="hours" type="number" min="0" max="24" value="0" /></label>
-                <label><span data-i18n="statsMinutes">Minutos</span><input name="minutes" type="number" min="0" max="59" value="0" /></label>
-                <label class="span-2"><span data-i18n="note">Nota</span><input name="note" maxlength="240" /></label>
-                <button type="submit" class="primary span-2" data-i18n="statsSaveAdjustment">Guardar ajuste</button>
-              </form>
-              <div id="timeAdjustmentList" class="time-adjustment-list"></div>
+              <div class="schedule-date-navigation">
+                <button type="button" id="schedulePreviousDay" aria-label="Día anterior">‹</button>
+                <input id="scheduleDate" type="date" aria-label="Fecha del horario" />
+                <button type="button" id="scheduleNextDay" aria-label="Día siguiente">›</button>
+                <button type="button" id="scheduleEditToggle" class="schedule-lock-button" data-i18n-title="statsUnlockSchedule" title="Editar horario">🔒</button>
+              </div>
+              <div id="schedulePeriodSummary" class="schedule-period-summary"></div>
+              <div class="schedule-grid-header">
+                <span data-i18n="statsSelectWorkedHours">Horas trabajadas</span>
+                <strong id="scheduleSelectedTotal">00:00</strong>
+              </div>
+              <div id="scheduleHourGrid" class="schedule-hour-grid"></div>
+              <div class="schedule-actions">
+                <span class="muted" id="scheduleRecordedHint"></span>
+                <button type="button" class="primary" id="saveSchedule" data-i18n="statsSaveSchedule">Guardar horario</button>
+              </div>
             </section>
           </div>
         </section>
@@ -711,18 +733,28 @@
                 <section class="app-modal-card finance-movements-modal-card">
                   <div class="app-modal-header">
                     <div><h3 id="financeMovementsTitle" data-i18n="financeDetailedMovements">Movimientos detallados</h3><p class="muted" id="financeMovementsRange"></p></div>
-                    <button type="button" class="icon-button" id="closeFinanceMovements" aria-label="Cerrar">×</button>
+                    <div class="app-modal-header-actions">
+                      <button type="button" class="icon-button" id="openFinanceTypeEditor" data-i18n-title="financeEditTypes" title="Editar tipos">✎</button>
+                      <button type="button" class="icon-button" id="closeFinanceMovements" aria-label="Cerrar">×</button>
+                    </div>
+                  </div>
+                  <div class="finance-transaction-list finance-transaction-list-modal" id="financeTransactionList"></div>
+                </section>
+              </div>
+              <div id="financeTypesModal" class="app-modal nested-modal hidden" role="dialog" aria-modal="true" aria-labelledby="financeTypesTitle">
+                <section class="app-modal-card finance-types-modal-card">
+                  <div class="app-modal-header">
+                    <div><h3 id="financeTypesTitle" data-i18n="financeEditTypes">Editar tipos de movimiento</h3><p class="muted" data-i18n="financeImpactHelp">Define si cada tipo representa dinero que entra o dinero que sale.</p></div>
+                    <button type="button" class="icon-button" id="closeFinanceTypes" aria-label="Cerrar">×</button>
                   </div>
                   <div class="finance-type-manager">
-                    <h4 data-i18n="financeMovementTypes">Tipos de movimiento</h4>
                     <form id="financeMovementTypeForm">
                       <input name="label" maxlength="120" data-i18n-placeholder="financeMovementExample" placeholder="Ejemplo: comisión" required />
-                      <select name="direction"><option value="income" data-i18n="financeAddsIncome">Suma al ingreso</option><option value="expense" data-i18n="financeSubtractsIncome">Resta del ingreso</option></select>
-                      <button type="submit" data-i18n="financeAddType">Agregar tipo</button>
+                      <label><span data-i18n="financeImpact">Impacto financiero</span><select name="direction"><option value="income" data-i18n="financeIncome">Ingreso (+)</option><option value="expense" data-i18n="financeExpense">Egreso (−)</option></select></label>
+                      <button type="submit" class="icon-button finance-add-type-button" data-i18n-title="financeAddType" title="Agregar tipo">✎</button>
                     </form>
                     <div id="financeMovementTypeList" class="finance-movement-type-list"></div>
                   </div>
-                  <div class="finance-transaction-list finance-transaction-list-modal" id="financeTransactionList"></div>
                 </section>
               </div>
             </section>

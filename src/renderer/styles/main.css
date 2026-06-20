@@ -2015,6 +2015,10 @@ code {
   width: min(760px, 100%);
 }
 
+.finance-types-modal-card {
+  width: min(680px, 100%);
+}
+
 .finance-type-manager {
   margin-bottom: 16px;
   padding: 12px;
@@ -2030,7 +2034,15 @@ code {
 .finance-type-manager form {
   display: grid;
   grid-template-columns: minmax(150px, 1fr) minmax(150px, 0.8fr) auto;
+  align-items: end;
   gap: 8px;
+}
+
+.finance-add-type-button {
+  width: 42px;
+  min-width: 42px;
+  color: #bfdbfe;
+  font-size: 16px;
 }
 
 .finance-movement-type-list {
@@ -2277,6 +2289,7 @@ code {
   display: grid;
   grid-template-columns: minmax(300px, 1fr) minmax(380px, 1.35fr) minmax(260px, 0.85fr);
   grid-template-areas:
+    "timesheet timesheet timesheet"
     "activity hourly outcomes"
     "types detail insights";
   gap: 12px;
@@ -2387,42 +2400,158 @@ code {
   margin-top: 4px;
 }
 
-.time-adjustment-form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+.app-modal-header-actions {
+  display: flex;
+  gap: 6px;
 }
 
-.time-adjustment-form .span-2 {
-  grid-column: 1 / -1;
+.nested-modal {
+  z-index: 130;
+  background: rgba(2, 6, 23, 0.86);
 }
 
-.time-adjustment-list {
-  display: grid;
-  gap: 7px;
-  margin-top: 16px;
+.stats-time-modal {
+  width: min(780px, 100%);
 }
 
-.time-adjustment-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 32px;
+.schedule-date-navigation,
+.timesheet-navigation {
+  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 6px;
+}
+
+.schedule-date-navigation {
+  margin-bottom: 12px;
+}
+
+.schedule-date-navigation input {
+  flex: 1;
+}
+
+.schedule-lock-button {
+  width: 42px;
+  border-color: rgba(96, 165, 250, 0.42);
+}
+
+.schedule-period-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.schedule-period-card {
+  min-width: 0;
+  padding: 9px;
   border: 1px solid var(--border);
   border-radius: 8px;
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.08), transparent), #07101f;
+}
+
+.schedule-period-card:nth-child(3n + 2) { background-color: rgba(8, 145, 178, 0.09); }
+.schedule-period-card:nth-child(3n) { background-color: rgba(245, 158, 11, 0.07); }
+
+.schedule-period-card span,
+.schedule-period-card small,
+.schedule-period-card strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-period-card span,
+.schedule-period-card small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.schedule-period-card strong {
+  margin: 4px 0;
+  font-size: 18px;
+}
+
+.schedule-grid-header,
+.schedule-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.schedule-grid-header {
+  margin-bottom: 8px;
+}
+
+.schedule-hour-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.schedule-hour {
+  min-width: 0;
+  min-height: 44px;
+  padding: 5px 3px;
+  border-color: rgba(96, 165, 250, 0.18);
+  background: rgba(15, 23, 42, 0.82);
+}
+
+.schedule-hour span,
+.schedule-hour small {
+  display: block;
+  font-size: 10px;
+}
+
+.schedule-hour.selected {
+  border-color: rgba(34, 211, 238, 0.72);
+  background: rgba(8, 145, 178, 0.3);
+  color: #cffafe;
+}
+
+.schedule-hour-grid.is-locked .schedule-hour {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.schedule-actions {
+  margin-top: 14px;
+}
+
+.stats-timesheet-panel {
+  grid-area: timesheet;
+  min-width: 0;
+}
+
+.timesheet-navigation input {
+  width: 145px;
+}
+
+.stats-timesheet {
+  display: grid;
+  grid-auto-columns: 46px;
+  grid-auto-flow: column;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+}
+
+.timesheet-day {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  min-height: 66px;
+  padding: 5px 3px;
+  border-color: rgba(96, 165, 250, 0.16);
   background: #07101f;
 }
 
-.time-adjustment-item span,
-.time-adjustment-item small {
-  display: block;
-}
-
-.time-adjustment-item small {
-  margin-top: 2px;
-  color: var(--muted);
-}
+.timesheet-day span { font-weight: 700; }
+.timesheet-day small { color: var(--muted); font-size: 9px; text-transform: uppercase; }
+.timesheet-day strong { font-size: 11px; }
+.timesheet-day.has-time { border-color: rgba(34, 211, 238, 0.48); background: rgba(8, 145, 178, 0.15); }
+.timesheet-day.adjusted { box-shadow: inset 0 -2px #f59e0b; }
 
 .stats-day-cell {
   aspect-ratio: 1;
@@ -4229,18 +4358,21 @@ code {
 }
 
 @media (max-width: 620px) {
-  .finance-type-manager form,
-  .time-adjustment-form {
+  .finance-type-manager form {
     grid-template-columns: 1fr;
-  }
-
-  .time-adjustment-form .span-2 {
-    grid-column: auto;
   }
 
   .stats-header-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .schedule-period-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schedule-hour-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   .script-library-header,
@@ -4428,6 +4560,7 @@ code {
   .stats-analytics-grid {
     grid-template-columns: 1fr;
     grid-template-areas:
+      "timesheet"
       "activity"
       "hourly"
       "outcomes"
