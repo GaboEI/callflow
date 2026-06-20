@@ -17,7 +17,9 @@ const IS_DEVELOPMENT = !app.isPackaged;
 const IPC_LIMITS = {
   clipboardText: 50000,
   exportContent: 200000,
-  fileName: 120
+  fileName: 120,
+  importedText: 500000,
+  importedPdf: 15 * 1024 * 1024
 };
 
 if (process.platform === "linux") {
@@ -358,6 +360,51 @@ ipcMain.handle("export:note", ipcHandler(async (_event, payload = {}) => {
   await fs.writeFile(result.filePath, safeContent, "utf8");
   return { canceled: false, filePath: result.filePath };
 }, "EXPORT_NOTE_FAILED"));
+
+ipcMain.handle("knowledge:import", ipcHandler(async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Import document",
+    properties: ["openFile"],
+    filters: [
+      { name: "Supported documents", extensions: ["md", "txt", "pdf"] },
+      { name: "Markdown", extensions: ["md"] },
+      { name: "Text", extensions: ["txt"] },
+      { name: "PDF", extensions: ["pdf"] }
+    ]
+  });
+  if (result.canceled || !result.filePaths[0]) return { canceled: true };
+
+  const filePath = result.filePaths[0];
+  const extension = path.extname(filePath).toLowerCase().slice(1);
+  if (!["md", "txt", "pdf"].includes(extension)) {
+    const error = new Error("Unsupported document type");
+    error.code = "UNSUPPORTED_DOCUMENT_TYPE";
+    throw error;
+  }
+  const stats = await fs.stat(filePath);
+  const maxSize = extension === "pdf" ? IPC_LIMITS.importedPdf : IPC_LIMITS.importedText;
+  if (stats.size > maxSize) {
+    const error = new Error("Imported document is too large");
+    error.code = "IMPORTED_DOCUMENT_TOO_LARGE";
+    throw error;
+  }
+
+  const buffer = await fs.readFile(filePath);
+  if (extension === "pdf" && buffer.subarray(0, 5).toString("ascii") !== "%PDF-") {
+    const error = new Error("Invalid PDF document");
+    error.code = "INVALID_PDF_DOCUMENT";
+    throw error;
+  }
+  return {
+    canceled: false,
+    fileName: path.basename(filePath),
+    title: path.basename(filePath, path.extname(filePath)),
+    type: extension === "pdf" ? "pdf" : extension === "txt" ? "txt" : "markdown",
+    content: extension === "pdf" ? "" : buffer.toString("utf8"),
+    pdfData: extension === "pdf" ? buffer.toString("base64") : "",
+    mimeType: extension === "pdf" ? "application/pdf" : "text/plain"
+  };
+}, "IMPORT_DOCUMENT_FAILED"));
 
 ipcMain.handle("backup:export", ipcHandler(async () => {
   const defaultPath = `${sanitizeFileName(`callflow-backup-${new Date().toISOString().slice(0, 10)}`)}.callflow-backup.json`;

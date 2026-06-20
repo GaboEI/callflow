@@ -782,7 +782,10 @@
                 <h2 data-i18n="knowledge">Scripts</h2>
                 <p class="muted" data-i18n="scriptLibraryIntro">Guiones, respuestas y documentos de apoyo disponibles durante tus llamadas.</p>
               </div>
-              <button id="newNote" class="primary script-create-button" data-i18n="newNote">Nuevo script</button>
+              <div class="script-library-actions">
+                <button type="button" id="importScript" data-i18n="scriptImport">Importar</button>
+                <button id="newNote" class="primary script-create-button" data-i18n="newNote">Nuevo script</button>
+              </div>
             </div>
             <label class="script-search">
               <span aria-hidden="true">⌕</span>
@@ -802,11 +805,12 @@
               </div>
             </div>
             <header class="script-document-header">
-              <span class="eyebrow" data-i18n="scriptDocument">Documento</span>
+              <span class="eyebrow" id="scriptReaderType" data-i18n="scriptDocument">Documento</span>
               <h2 id="scriptReaderTitle"></h2>
               <p class="muted" id="scriptReaderMeta"></p>
             </header>
             <div class="script-markdown" id="notePreview"></div>
+            <div class="script-pdf-reader hidden" id="scriptPdfReader"></div>
           </article>
 
           <section class="script-editor-panel hidden" id="scriptEditorPanel">
@@ -815,7 +819,7 @@
               <span class="muted" data-i18n="scriptEditorHint">Escribe texto normal o usa Markdown y la barra de formato.</span>
             </div>
             <form id="noteForm" class="script-editor-form">
-              <label>
+              <label class="script-content-field">
                 <span data-i18n="scriptTitle">Título</span>
                 <input name="title" data-i18n-placeholder="scriptTitlePlaceholder" placeholder="Ejemplo: Guion de venta" required />
               </label>
@@ -830,7 +834,10 @@
                   <button type="button" data-script-format="link" title="Enlace">↗</button>
                   <span class="separator" aria-hidden="true"></span>
                   <button type="button" data-script-format="list" title="Lista">≡</button>
+                  <button type="button" data-script-format="task" data-i18n-title="scriptToolTask" title="Lista de tareas">☑</button>
                   <button type="button" data-script-format="quote" title="Cita">❝</button>
+                  <button type="button" data-script-format="strikethrough" data-i18n-title="scriptToolStrike" title="Tachado"><s>S</s></button>
+                  <button type="button" data-script-format="callout" data-i18n-title="scriptToolCallout" title="Nota destacada">!</button>
                   <button type="button" data-script-format="table" title="Tabla">▦</button>
                   <button type="button" data-script-format="rule" title="Separador">—</button>
                   <button type="button" data-script-format="code" title="Bloque de código">&lt;/&gt;</button>

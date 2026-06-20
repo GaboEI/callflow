@@ -6,7 +6,8 @@
     shortText: 120,
     mediumText: 240,
     noteTitle: 160,
-    noteContent: 20000,
+    noteContent: 500000,
+    pdfData: 20 * 1024 * 1024,
     reportHeader: 300
   };
   const MAX_ACTIVE_TIMEZONES = 10;
@@ -337,14 +338,30 @@
     if (!isPlainObject(note)) return null;
     const title = text(note.title, LIMITS.noteTitle);
     const content = multilineText(note.content, LIMITS.noteContent);
+    const inferredType = hasMarkdownSyntax(content)
+      ? "markdown"
+      : "txt";
+    const documentType = ["markdown", "txt", "pdf"].includes(note.documentType) ? note.documentType : inferredType;
+    const pdfData = documentType === "pdf"
+      ? String(note.pdfData || "").replace(/\s/g, "").replace(/[^a-zA-Z0-9+/=]/g, "").slice(0, LIMITS.pdfData)
+      : "";
     return {
       ...note,
       id: text(note.id, LIMITS.shortText) || randomId("note"),
       title,
       content,
+      documentType,
+      pinned: Boolean(note.pinned),
+      originalName: text(note.originalName, LIMITS.noteTitle),
+      mimeType: documentType === "pdf" ? "application/pdf" : "text/plain",
+      pdfData,
       createdAt: validIsoDateTime(note.createdAt) ? note.createdAt : new Date().toISOString(),
       updatedAt: validIsoDateTime(note.updatedAt) ? note.updatedAt : undefined
     };
+  }
+
+  function hasMarkdownSyntax(content) {
+    return /(^|\n)\s*(#{1,6}\s|[-*+]\s|\d+\.\s|>\s|```|\|.+\|)|\*\*[^*]+\*\*|(^|[^*])\*[^*\n]+\*|_[^_\n]+_|`[^`\n]+`|\[[^\]]+\]\([^)]+\)|~~[^~]+~~/m.test(String(content || ""));
   }
 
   function normalizeWorkTimer(timer) {
@@ -467,6 +484,7 @@
     normalizeCall,
     normalizeReminder,
     normalizeNote,
+    hasMarkdownSyntax,
     normalizeWorkTimer,
     normalizeCollection,
     validateCallForm,

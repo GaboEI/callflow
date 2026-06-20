@@ -323,7 +323,7 @@ function createStorageService({ dataDir, defaultConfigPath, backupLimit = CALL_B
 
   async function importBackup(filePath) {
     const stats = await fs.stat(filePath);
-    if (stats.size > 10 * 1024 * 1024) {
+    if (stats.size > 50 * 1024 * 1024) {
       const error = new Error("Backup file is too large");
       error.code = "BACKUP_TOO_LARGE";
       throw error;

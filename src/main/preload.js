@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld("callflow", {
   exportBackup: () => invoke("backup:export"),
   importBackup: () => invoke("backup:import"),
   exportNote: (payload) => invoke("export:note", payload),
+  importKnowledgeDocument: () => invoke("knowledge:import"),
   getDiagnostics: () => invoke("diagnostics:get"),
   onReminderSound: (callback) => {
     ipcRenderer.on("reminder:sound", (_event, sound) => callback(sound));

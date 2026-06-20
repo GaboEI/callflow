@@ -86,6 +86,14 @@ test("exports and imports a full backup bundle", async () => {
 
   await service.write("settings", { language: "en", operatorName: "Agent" });
   await service.write("calls", [{ id: "call-1", callId: "A1", date: "06.18", time: "09:00" }]);
+  await service.write("knowledgeBase", [{
+    id: "pdf-1",
+    title: "Policy",
+    documentType: "pdf",
+    originalName: "policy.pdf",
+    pdfData: "JVBERi0=",
+    pinned: true
+  }]);
   await service.exportBackup(backupPath);
   await service.write("calls", []);
 
@@ -93,5 +101,7 @@ test("exports and imports a full backup bundle", async () => {
 
   assert.equal(imported.settings.language, "en");
   assert.equal(imported.calls[0].callId, "A1");
+  assert.equal(imported.knowledgeBase[0].documentType, "pdf");
+  assert.equal(imported.knowledgeBase[0].pdfData, "JVBERi0=");
   assert.equal((await service.read("calls"))[0].callId, "A1");
 });

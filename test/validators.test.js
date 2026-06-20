@@ -1,5 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const { Buffer } = require("node:buffer");
 
 const validators = require("../src/shared/validators");
 
@@ -186,7 +187,26 @@ test("preserves existing Markdown documents when normalizing the Script library"
   assert.equal(note.id, "script-1");
   assert.equal(note.title, "Guion de venta");
   assert.match(note.content, /\*\*Oferta\*\*/);
+  assert.equal(note.documentType, "markdown");
   assert.equal(note.updatedAt, "2026-06-20T14:30:00.000Z");
+});
+
+test("normalizes plain text and embedded PDF documents without losing their type", () => {
+  const plain = validators.normalizeNote({ title: "Plain", content: "Call the customer tomorrow." });
+  const pdf = validators.normalizeNote({
+    title: "Policy",
+    documentType: "pdf",
+    pdfData: Buffer.from("%PDF-test").toString("base64"),
+    pinned: true,
+    originalName: "policy.pdf"
+  });
+
+  assert.equal(plain.documentType, "txt");
+  assert.equal(validators.normalizeNote({ title: "Italic", content: "Call *tomorrow*." }).documentType, "markdown");
+  assert.equal(validators.normalizeNote({ title: "Code", content: "Use `CTRL+C`." }).documentType, "markdown");
+  assert.equal(pdf.documentType, "pdf");
+  assert.equal(pdf.pinned, true);
+  assert.equal(Buffer.from(pdf.pdfData, "base64").toString(), "%PDF-test");
 });
 
 test("preserves full-pause timer state without active start timestamps", () => {

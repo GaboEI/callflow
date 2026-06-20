@@ -15,6 +15,27 @@
       return state.knowledgeBase.find((note) => note.id === state.selectedNoteId) || null;
     }
 
+    function hasMarkdownSyntax(content) {
+      return V.hasMarkdownSyntax(content);
+    }
+
+    function documentType(note) {
+      if (note?.documentType === "pdf") return "pdf";
+      if (note?.documentType === "txt") return "txt";
+      if (note?.documentType === "markdown") return "markdown";
+      return hasMarkdownSyntax(note?.content) ? "markdown" : "txt";
+    }
+
+    function typeMeta(note) {
+      const type = documentType(note);
+      return {
+        type,
+        label: t(type === "pdf" ? "scriptTypePdf" : type === "markdown" ? "scriptTypeMarkdown" : "scriptTypeText"),
+        extension: type === "pdf" ? "PDF" : type === "markdown" ? ".md" : "TXT",
+        glyph: type === "pdf" ? "▰" : type === "markdown" ? "▤" : "▥"
+      };
+    }
+
     function formatDate(value) {
       if (!value) return "";
       const date = new Date(value);
@@ -77,6 +98,12 @@
         pre.replaceWith(wrapper);
         wrapper.append(copyButton, pre);
       });
+      template.content.querySelectorAll("blockquote").forEach((quote) => {
+        const first = quote.firstElementChild;
+        if (!first || !/^\[!NOTE\]/i.test(first.textContent || "")) return;
+        quote.classList.add("script-callout");
+        first.textContent = first.textContent.replace(/^\[!NOTE\]\s*/i, "");
+      });
       return template.innerHTML;
     }
 
@@ -137,7 +164,10 @@
       if (format === "italic") replaceSelection("*", "*", "texto");
       if (format === "link") replaceSelection("[", "](https://)", "texto");
       if (format === "list") prefixSelection("- ");
+      if (format === "task") prefixSelection("- [ ] ");
       if (format === "quote") prefixSelection("> ");
+      if (format === "strikethrough") replaceSelection("~~", "~~", "texto");
+      if (format === "callout") prefixSelection("> [!NOTE] ");
       if (format === "table") {
         input.setRangeText("| Columna 1 | Columna 2 |\n| --- | --- |\n| Valor | Valor |", start, end, "end");
         input.focus();
@@ -228,8 +258,8 @@
     function renderLibrary() {
       const query = $("#noteSearch").value.trim().toLowerCase();
       const scripts = [...state.knowledgeBase]
-        .filter((note) => `${note.title} ${note.content}`.toLowerCase().includes(query))
-        .sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)));
+        .filter((note) => `${note.title} ${note.content} ${note.originalName || ""}`.toLowerCase().includes(query))
+        .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)));
 
       if (!scripts.length) {
         const hasScripts = state.knowledgeBase.length > 0;
@@ -246,18 +276,20 @@
       $("#notesList").innerHTML = scripts
         .map((note) => {
           const dateType = note.updatedAt ? "scriptModified" : "scriptCreated";
-          const summary = summarize(note.content) || t("scriptDocument");
+          const meta = typeMeta(note);
+          const summary = meta.type === "pdf" ? note.originalName || t("scriptPdfDocument") : summarize(note.content) || t("scriptDocument");
           return `
-            <article class="script-card">
+            <article class="script-card${note.pinned ? " pinned" : ""}">
+              <button type="button" class="script-pin-button${note.pinned ? " active" : ""}" data-pin-note="${escapeHtml(note.id)}" title="${escapeHtml(t(note.pinned ? "scriptUnpin" : "scriptPin"))}" aria-label="${escapeHtml(t(note.pinned ? "scriptUnpin" : "scriptPin"))}">${note.pinned ? "★" : "☆"}</button>
               <div class="script-card-main">
-                <span class="script-card-icon" aria-hidden="true">#</span>
+                <span class="script-card-icon type-${meta.type}" aria-hidden="true"><b>${meta.glyph}</b><small>${meta.extension}</small></span>
                 <div>
                   <h3>${escapeHtml(note.title)}</h3>
                   <p>${escapeHtml(summary)}</p>
                 </div>
               </div>
               <footer>
-                <span>${escapeHtml(t(dateType))}: ${escapeHtml(formatDate(note.updatedAt || note.createdAt))}</span>
+                <span><b class="script-type-label">${escapeHtml(meta.label)}</b> · ${escapeHtml(t(dateType))}: ${escapeHtml(formatDate(note.updatedAt || note.createdAt))}</span>
                 <button type="button" data-select-note="${escapeHtml(note.id)}">${escapeHtml(t("scriptOpen"))} →</button>
               </footer>
             </article>
@@ -267,10 +299,26 @@
     }
 
     function renderReader(note) {
+      const meta = typeMeta(note);
       $("#scriptReaderTitle").textContent = note.title;
+      $("#scriptReaderType").textContent = meta.label;
       const dateType = note.updatedAt ? "scriptModified" : "scriptCreated";
       $("#scriptReaderMeta").textContent = `${t(dateType)}: ${formatDate(note.updatedAt || note.createdAt)}`;
-      $("#notePreview").innerHTML = renderMarkdown(note.content);
+      $("#editNote").classList.toggle("hidden", meta.type === "pdf");
+      $("#exportMd").classList.toggle("hidden", meta.type === "pdf");
+      $("#exportTxt").classList.toggle("hidden", meta.type === "pdf");
+      $("#notePreview").classList.toggle("hidden", meta.type === "pdf");
+      $("#scriptPdfReader").classList.toggle("hidden", meta.type !== "pdf");
+      if (meta.type === "pdf") {
+        $("#scriptPdfReader").innerHTML = note.pdfData
+          ? `<embed src="data:application/pdf;base64,${note.pdfData}" type="application/pdf" title="${escapeHtml(note.title)}" />`
+          : `<p class="script-pdf-error">${escapeHtml(t("scriptPdfUnavailable"))}</p>`;
+      } else {
+        $("#scriptPdfReader").innerHTML = "";
+        $("#notePreview").innerHTML = meta.type === "txt"
+          ? `<pre class="script-plain-text">${escapeHtml(note.content)}</pre>`
+          : renderMarkdown(note.content);
+      }
     }
 
     function render() {
@@ -316,12 +364,17 @@
 
       const existing = selectedScript();
       const now = new Date().toISOString();
+      const nextDocumentType = existing?.originalName?.toLowerCase().endsWith(".md")
+        ? "markdown"
+        : hasMarkdownSyntax(validation.value.content) ? "markdown" : "txt";
       const note = existing
-        ? { ...existing, title: validation.value.title, content: validation.value.content, updatedAt: now }
+        ? { ...existing, title: validation.value.title, content: validation.value.content, documentType: nextDocumentType, updatedAt: now }
         : {
             id: crypto.randomUUID(),
             title: validation.value.title,
             content: validation.value.content,
+            documentType: nextDocumentType,
+            pinned: false,
             createdAt: now
           };
       const nextKnowledgeBase = existing
@@ -363,6 +416,39 @@
       );
     }
 
+    async function importDocument() {
+      await runAction(async () => {
+        const imported = await window.callflow.importKnowledgeDocument();
+        if (!imported || imported.canceled) return;
+        const now = new Date().toISOString();
+        const note = V.normalizeNote({
+          id: crypto.randomUUID(),
+          title: imported.title,
+          content: imported.content,
+          documentType: imported.type,
+          originalName: imported.fileName,
+          mimeType: imported.mimeType,
+          pdfData: imported.pdfData,
+          pinned: false,
+          createdAt: now
+        });
+        const nextKnowledgeBase = [...state.knowledgeBase, note];
+        await window.CallFlowStorage.write("knowledgeBase", nextKnowledgeBase);
+        state.knowledgeBase = nextKnowledgeBase;
+        renderApp();
+        context.setStatusMessage(t("scriptImported"), "success");
+      });
+    }
+
+    async function togglePinned(id) {
+      const nextKnowledgeBase = state.knowledgeBase.map((note) => note.id === id ? { ...note, pinned: !note.pinned } : note);
+      await runAction(async () => {
+        await window.CallFlowStorage.write("knowledgeBase", nextKnowledgeBase);
+        state.knowledgeBase = nextKnowledgeBase;
+        renderLibrary();
+      });
+    }
+
     function selectNote(id) {
       const note = state.knowledgeBase.find((item) => item.id === id);
       if (!note) return;
@@ -382,6 +468,7 @@
       $("#noteForm").addEventListener("submit", save);
       $("#deleteNote").addEventListener("click", deleteSelected);
       $("#newNote").addEventListener("click", () => openEditor());
+      $("#importScript").addEventListener("click", importDocument);
       $("#editNote").addEventListener("click", () => openEditor(selectedScript()));
       $("#backToScripts").addEventListener("click", showLibrary);
       $("#cancelNoteEdit").addEventListener("click", closeEditor);
@@ -393,7 +480,12 @@
       $("#toggleScriptPreview").addEventListener("click", toggleEditorPreview);
       $("#knowledgeView").addEventListener("click", (event) => {
         const copyButton = event.target.closest("[data-copy-code]");
+        const pinButton = event.target.closest("[data-pin-note]");
         if (copyButton) copyCodeBlock(copyButton);
+        if (pinButton) {
+          event.stopPropagation();
+          togglePinned(pinButton.dataset.pinNote);
+        }
       });
       $("#knowledgeView").addEventListener("change", (event) => {
         const taskCheckbox = event.target.closest("[data-script-task-index]");
