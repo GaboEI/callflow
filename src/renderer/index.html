@@ -865,8 +865,16 @@
               </div>
               <button class="primary settings-save-button" type="submit" form="settingsForm" data-i18n="saveSettings">Guardar configuración</button>
             </div>
+            <div class="settings-tabs" role="tablist" aria-label="Categorías de configuración">
+              <button type="button" class="settings-tab active" data-settings-tab="general" data-i18n="settingsGeneral">General</button>
+              <button type="button" class="settings-tab" data-settings-tab="timezones" data-i18n="settingsTimeClocks">Zonas horarias</button>
+              <button type="button" class="settings-tab" data-settings-tab="reports" data-i18n="settingsReportsStats">Reportes y estadísticas</button>
+              <button type="button" class="settings-tab" data-settings-tab="reminders" data-i18n="reminderAutomation">Recordatorios</button>
+              <button type="button" class="settings-tab" data-settings-tab="lists" data-i18n="settingsCallSetup">Tipos y estados</button>
+              <button type="button" class="settings-tab" data-settings-tab="maintenance" data-i18n="maintenanceDiagnostics">Mantenimiento</button>
+            </div>
             <form id="settingsForm" class="settings-layout" novalidate>
-              <section class="settings-section settings-section-general">
+              <section class="settings-section settings-tab-panel active" data-settings-panel="general">
                 <div class="settings-section-header">
                   <h3 data-i18n="settingsGeneral">General</h3>
                   <p class="muted" data-i18n="settingsGeneralHelp">Idioma, apariencia y datos visibles en reportes.</p>
@@ -878,7 +886,7 @@
                 </div>
               </section>
 
-              <section class="settings-section settings-section-time">
+              <section class="settings-section settings-tab-panel hidden" data-settings-panel="timezones">
                 <div class="settings-section-header">
                   <h3 data-i18n="settingsTimeClocks">Zonas horarias y relojes</h3>
                   <p class="muted" data-i18n="settingsTimeClocksHelp">Define la zona de trabajo y los relojes visibles durante el turno.</p>
@@ -907,7 +915,7 @@
                 </div>
               </section>
 
-              <section class="settings-section settings-section-reports">
+              <section class="settings-section settings-tab-panel hidden" data-settings-panel="reports">
                 <div class="settings-section-header">
                   <h3 data-i18n="settingsReportsStats">Reportes y estadísticas</h3>
                   <p class="muted" data-i18n="settingsReportsStatsHelp">Ajusta cómo se copian reportes y cómo se agrupan las métricas.</p>
@@ -938,7 +946,7 @@
                 </div>
               </section>
 
-              <section class="settings-section settings-section-reminders">
+              <section class="settings-section settings-tab-panel hidden" data-settings-panel="reminders">
                 <div class="settings-section-header">
                   <h3 data-i18n="reminderAutomation">Automatización de recordatorios</h3>
                   <p class="muted" data-i18n="settingsRemindersHelp">Controla avisos, sonido y comportamiento de la app al cerrar.</p>
@@ -986,57 +994,70 @@
                 </div>
               </section>
 
-              <section class="settings-section settings-section-lists">
+              <section class="settings-section settings-tab-panel hidden" data-settings-panel="lists">
                 <div class="settings-section-header">
                   <h3 data-i18n="settingsCallSetup">Tipos de llamada y estados</h3>
                   <p class="muted" data-i18n="settingsCallSetupHelp">Personaliza los valores rápidos del Dashboard sin cambiar llamadas existentes.</p>
                 </div>
-                <div class="settings-list-grid">
-                  <div class="list-editor" data-list-editor="settingsCallTypes">
-                    <span class="field-label" data-i18n="callTypes">Tipos de llamada</span>
-                    <div class="inline-add">
-                      <input data-list-input="settingsCallTypes" data-i18n-placeholder="newCallTypePlaceholder" placeholder="Escribe un tipo de llamada..." />
-                      <button type="button" data-add-list-item="settingsCallTypes" data-i18n="add">Agregar</button>
-                    </div>
-                    <div class="chip-list settings-value-list" data-list-output="settingsCallTypes"></div>
+                <div class="settings-list-workspace">
+                  <div class="settings-list-tabs" role="tablist" aria-label="Listas configurables">
+                    <button type="button" class="settings-list-tab active" data-settings-list-tab="settingsCallTypes" data-i18n="callTypes">Tipos de llamada</button>
+                    <button type="button" class="settings-list-tab" data-settings-list-tab="settingsFrequentStatuses" data-i18n="frequentStatuses">Estados frecuentes</button>
+                    <button type="button" class="settings-list-tab" data-settings-list-tab="settingsSuccessOutcomes" data-i18n="successOutcomes">Resultados exitosos</button>
+                    <button type="button" class="settings-list-tab" data-settings-list-tab="settingsRejectionOutcomes" data-i18n="rejectionOutcomes">Resultados de rechazo</button>
+                    <button type="button" class="settings-list-tab" data-settings-list-tab="settingsCallbackOutcomes" data-i18n="callbackOutcomes">Resultados de rellamada</button>
                   </div>
-                  <div class="list-editor" data-list-editor="settingsFrequentStatuses">
-                    <span class="field-label" data-i18n="frequentStatuses">Estados frecuentes</span>
-                    <div class="inline-add">
-                      <input data-list-input="settingsFrequentStatuses" data-i18n-placeholder="newFrequentStatusPlaceholder" placeholder="Nuevo estado frecuente" />
-                      <button type="button" data-add-list-item="settingsFrequentStatuses" data-i18n="add">Agregar</button>
+                  <div class="settings-list-editor-shell">
+                    <div class="list-editor settings-list-panel active" data-list-editor="settingsCallTypes" data-settings-list-panel="settingsCallTypes">
+                      <span class="field-label" data-i18n="callTypes">Tipos de llamada</span>
+                      <small class="helper" data-i18n="callTypesHelper">Agrega las clasificaciones que usas para tus llamadas. Ejemplo: ventas, soporte, VIP, callback, retención.</small>
+                      <div class="inline-add">
+                        <input data-list-input="settingsCallTypes" data-i18n-placeholder="newCallTypePlaceholder" placeholder="Escribe un tipo de llamada..." />
+                        <button type="button" data-add-list-item="settingsCallTypes" data-i18n="add">Agregar</button>
+                      </div>
+                      <div class="chip-list settings-value-list" data-list-output="settingsCallTypes"></div>
                     </div>
-                    <div class="chip-list settings-value-list" data-list-output="settingsFrequentStatuses"></div>
-                  </div>
-                  <div class="list-editor" data-list-editor="settingsSuccessOutcomes">
-                    <span class="field-label" data-i18n="successOutcomes">Resultados exitosos</span>
-                    <small class="helper" data-i18n="outcomePresetsHelper">El primer resultado de cada lista se usa como etiqueta principal.</small>
-                    <div class="inline-add">
-                      <input data-list-input="settingsSuccessOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
-                      <button type="button" data-add-list-item="settingsSuccessOutcomes" data-i18n="add">Agregar</button>
+                    <div class="list-editor settings-list-panel hidden" data-list-editor="settingsFrequentStatuses" data-settings-list-panel="settingsFrequentStatuses">
+                      <span class="field-label" data-i18n="frequentStatuses">Estados frecuentes</span>
+                      <small class="helper" data-i18n="frequentStatusesHelper">Usa estados rápidos para registrar llamadas repetitivas.</small>
+                      <div class="inline-add">
+                        <input data-list-input="settingsFrequentStatuses" data-i18n-placeholder="newFrequentStatusPlaceholder" placeholder="Nuevo estado frecuente" />
+                        <button type="button" data-add-list-item="settingsFrequentStatuses" data-i18n="add">Agregar</button>
+                      </div>
+                      <div class="chip-list settings-value-list" data-list-output="settingsFrequentStatuses"></div>
                     </div>
-                    <div class="chip-list settings-value-list" data-list-output="settingsSuccessOutcomes"></div>
-                  </div>
-                  <div class="list-editor" data-list-editor="settingsRejectionOutcomes">
-                    <span class="field-label" data-i18n="rejectionOutcomes">Resultados de rechazo</span>
-                    <div class="inline-add">
-                      <input data-list-input="settingsRejectionOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
-                      <button type="button" data-add-list-item="settingsRejectionOutcomes" data-i18n="add">Agregar</button>
+                    <div class="list-editor settings-list-panel hidden" data-list-editor="settingsSuccessOutcomes" data-settings-list-panel="settingsSuccessOutcomes">
+                      <span class="field-label" data-i18n="successOutcomes">Resultados exitosos</span>
+                      <small class="helper" data-i18n="outcomePresetsHelper">El primer resultado de cada lista se usa como etiqueta principal.</small>
+                      <div class="inline-add">
+                        <input data-list-input="settingsSuccessOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+                        <button type="button" data-add-list-item="settingsSuccessOutcomes" data-i18n="add">Agregar</button>
+                      </div>
+                      <div class="chip-list settings-value-list" data-list-output="settingsSuccessOutcomes"></div>
                     </div>
-                    <div class="chip-list settings-value-list" data-list-output="settingsRejectionOutcomes"></div>
-                  </div>
-                  <div class="list-editor" data-list-editor="settingsCallbackOutcomes">
-                    <span class="field-label" data-i18n="callbackOutcomes">Resultados de rellamada</span>
-                    <div class="inline-add">
-                      <input data-list-input="settingsCallbackOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
-                      <button type="button" data-add-list-item="settingsCallbackOutcomes" data-i18n="add">Agregar</button>
+                    <div class="list-editor settings-list-panel hidden" data-list-editor="settingsRejectionOutcomes" data-settings-list-panel="settingsRejectionOutcomes">
+                      <span class="field-label" data-i18n="rejectionOutcomes">Resultados de rechazo</span>
+                      <small class="helper" data-i18n="outcomePresetsHelper">El primer resultado de cada lista se usa como etiqueta principal.</small>
+                      <div class="inline-add">
+                        <input data-list-input="settingsRejectionOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+                        <button type="button" data-add-list-item="settingsRejectionOutcomes" data-i18n="add">Agregar</button>
+                      </div>
+                      <div class="chip-list settings-value-list" data-list-output="settingsRejectionOutcomes"></div>
                     </div>
-                    <div class="chip-list settings-value-list" data-list-output="settingsCallbackOutcomes"></div>
+                    <div class="list-editor settings-list-panel hidden" data-list-editor="settingsCallbackOutcomes" data-settings-list-panel="settingsCallbackOutcomes">
+                      <span class="field-label" data-i18n="callbackOutcomes">Resultados de rellamada</span>
+                      <small class="helper" data-i18n="outcomePresetsHelper">El primer resultado de cada lista se usa como etiqueta principal.</small>
+                      <div class="inline-add">
+                        <input data-list-input="settingsCallbackOutcomes" data-i18n-placeholder="newOutcome" placeholder="Nuevo resultado" />
+                        <button type="button" data-add-list-item="settingsCallbackOutcomes" data-i18n="add">Agregar</button>
+                      </div>
+                      <div class="chip-list settings-value-list" data-list-output="settingsCallbackOutcomes"></div>
+                    </div>
                   </div>
                 </div>
               </section>
 
-              <section class="settings-section settings-maintenance">
+              <section class="settings-section settings-maintenance settings-tab-panel hidden" data-settings-panel="maintenance">
                 <div class="settings-section-header">
                   <h3 data-i18n="maintenanceDiagnostics">Mantenimiento y diagnóstico</h3>
                   <p class="muted" data-i18n="maintenanceDiagnosticsHelper">Backups completos, importación y datos útiles para soporte.</p>
@@ -1047,7 +1068,11 @@
                   <button type="button" id="importBackup" data-i18n="importBackup">Importar backup</button>
                   <button type="button" id="refreshDiagnostics" data-i18n="diagnostics">Diagnóstico</button>
                 </div>
-                <pre id="diagnosticsOutput" class="diagnostics-output" aria-live="polite"></pre>
+                <p id="diagnosticsSummary" class="diagnostics-summary" aria-live="polite"></p>
+                <details class="settings-details">
+                  <summary data-i18n="diagnosticsTechnicalDetails">Detalles técnicos para soporte</summary>
+                  <pre id="diagnosticsOutput" class="diagnostics-output"></pre>
+                </details>
               </section>
             </form>
           </div>

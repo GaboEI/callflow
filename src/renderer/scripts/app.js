@@ -605,6 +605,7 @@ Africa/Harare ZW
     }
     render();
     if (view === "reminders") remindersView.prepareFormDefaults();
+    if (view === "settings") settingsView.setSettingsTab("general");
   }
 
   function applySettingsToForms() {
@@ -1332,8 +1333,15 @@ Africa/Harare ZW
       event.preventDefault();
       const form = event.currentTarget;
       form.classList.add("settings-validation-tried");
-      if (!form.reportValidity()) {
+      const invalidField = form.querySelector(":invalid");
+      if (invalidField) {
+        const invalidPanel = invalidField.closest("[data-settings-panel]");
+        if (invalidPanel) settingsView.setSettingsTab(invalidPanel.dataset.settingsPanel);
         setStatusMessage(CallFlowI18n.t("settingsValidationError", activeFormLanguage()), "error");
+        setTimeout(() => {
+          invalidField.focus();
+          invalidField.reportValidity();
+        }, 0);
         return;
       }
       await runAction(async () => {

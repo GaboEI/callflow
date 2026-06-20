@@ -21,6 +21,36 @@
       timezoneFlag,
       uniqueItems
     } = context;
+    let activeSettingsTab = "general";
+    let activeSettingsList = "settingsCallTypes";
+
+    function setSettingsTab(tabId = "general") {
+      activeSettingsTab = tabId;
+      document.querySelectorAll("[data-settings-tab]").forEach((button) => {
+        const active = button.dataset.settingsTab === activeSettingsTab;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", String(active));
+      });
+      document.querySelectorAll("[data-settings-panel]").forEach((panel) => {
+        const active = panel.dataset.settingsPanel === activeSettingsTab;
+        panel.classList.toggle("active", active);
+        panel.classList.toggle("hidden", !active);
+      });
+    }
+
+    function setSettingsList(listId = "settingsCallTypes") {
+      activeSettingsList = listId;
+      document.querySelectorAll("[data-settings-list-tab]").forEach((button) => {
+        const active = button.dataset.settingsListTab === activeSettingsList;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", String(active));
+      });
+      document.querySelectorAll("[data-settings-list-panel]").forEach((panel) => {
+        const active = panel.dataset.settingsListPanel === activeSettingsList;
+        panel.classList.toggle("active", active);
+        panel.classList.toggle("hidden", !active);
+      });
+    }
 
     function renderActiveTimezoneEditors() {
       ["onboarding", "settings"].forEach((pickerId) => {
@@ -93,6 +123,7 @@
 
     function renderDiagnostics(diagnostics) {
       const output = document.querySelector("#diagnosticsOutput");
+      const summary = document.querySelector("#diagnosticsSummary");
       if (!output || !diagnostics) return;
       const activeLanguage = state.settings?.language || "es";
       const text = (key) => i18n.t(key, activeLanguage);
@@ -101,6 +132,7 @@
       const healthSummary = healthCount || recentErrors
         ? text("diagnosticsNeedsReview")
         : text("diagnosticsOk");
+      if (summary) summary.textContent = healthSummary;
       output.textContent = [
         `${text("diagnosticsStatus")}: ${healthSummary}`,
         `${text("diagnosticsDataFolder")}: ${diagnostics.dataDir || text("notAvailable")}`,
@@ -149,11 +181,19 @@
     }
 
     function render() {
+      setSettingsTab(activeSettingsTab);
+      setSettingsList(activeSettingsList);
       renderActiveTimezoneEditors();
       renderListEditors();
     }
 
     function bindEvents() {
+      document.querySelectorAll("[data-settings-tab]").forEach((button) => {
+        button.addEventListener("click", () => setSettingsTab(button.dataset.settingsTab));
+      });
+      document.querySelectorAll("[data-settings-list-tab]").forEach((button) => {
+        button.addEventListener("click", () => setSettingsList(button.dataset.settingsListTab));
+      });
       document.querySelector("#exportBackup").addEventListener("click", exportBackup);
       document.querySelector("#importBackup").addEventListener("click", importBackup);
       document.querySelector("#refreshDiagnostics").addEventListener("click", refreshDiagnostics);
@@ -167,7 +207,8 @@
       removeListItem,
       render,
       renderActiveTimezoneEditors,
-      renderListEditors
+      renderListEditors,
+      setSettingsTab
     };
   }
 
