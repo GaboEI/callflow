@@ -802,7 +802,7 @@ nav {
   border-top: 1px solid rgba(37, 99, 235, 0.32);
   background: #08111f;
   color: #cbd5e1;
-  padding: 3px 10px;
+  padding: 3px 0 3px 10px;
   font-size: 11px;
   line-height: 1;
 }
@@ -3105,7 +3105,7 @@ code {
   .statusbar {
     grid-template-columns: minmax(0, 1fr) max-content max-content;
     gap: 6px;
-    padding-inline: 7px;
+    padding: 3px 0 3px 7px;
   }
 
   .statusbar-label {
