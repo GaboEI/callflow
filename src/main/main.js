@@ -12,6 +12,8 @@ const notificationThrottle = new Map();
 let storage;
 let logger;
 
+const IS_DEVELOPMENT = !app.isPackaged;
+
 const IPC_LIMITS = {
   clipboardText: 50000,
   exportContent: 200000,
@@ -211,6 +213,36 @@ function getWindowIcon() {
   return icon.isEmpty() ? iconPath : icon;
 }
 
+function configureDevelopmentTools(window) {
+  if (!IS_DEVELOPMENT) return;
+
+  window.webContents.on("before-input-event", (event, input) => {
+    if (input.type !== "keyDown") return;
+    const key = String(input.key || "").toLowerCase();
+    const isDevToolsShortcut =
+      key === "f12" ||
+      (input.control && input.shift && (key === "i" || key === "j"));
+
+    if (!isDevToolsShortcut) return;
+    event.preventDefault();
+
+    if (window.webContents.isDevToolsOpened()) {
+      window.webContents.closeDevTools();
+    } else {
+      window.webContents.openDevTools({ mode: "right" });
+    }
+  });
+
+  window.webContents.on("context-menu", (_event, params) => {
+    Menu.buildFromTemplate([
+      {
+        label: "Inspect element",
+        click: () => window.webContents.inspectElement(params.x, params.y)
+      }
+    ]).popup({ window });
+  });
+}
+
 function createWindow() {
   const windowIcon = getWindowIcon();
   mainWindow = new BrowserWindow({
@@ -225,11 +257,13 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
+      devTools: IS_DEVELOPMENT,
       sandbox: app.isPackaged || process.platform !== "linux"
     }
   });
   mainWindow.setIcon(windowIcon);
   mainWindow.setMenu(null);
+  configureDevelopmentTools(mainWindow);
 
   mainWindow.on("close", (event) => {
     if (keepRunningInBackground && !app.isQuitting) {
