@@ -21,6 +21,29 @@
       return { hour, minute };
     }
 
+    function isoFromParts(year, month, day) {
+      return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+
+    function isoTime(value) {
+      const parts = parseIsoDateParts(value);
+      return parts ? Date.UTC(parts.year, parts.month, parts.day) : null;
+    }
+
+    function compareIso(a, b) {
+      const aTime = isoTime(a);
+      const bTime = isoTime(b);
+      if (aTime === null || bTime === null) return 0;
+      return aTime - bTime;
+    }
+
+    function orderedRange(from, to) {
+      if (!from && !to) return { from: "", to: "" };
+      const start = from || to;
+      const end = to || from;
+      return compareIso(start, end) <= 0 ? { from: start, to: end } : { from: end, to: start };
+    }
+
     function inputTimezone(input) {
       const form = input?.form;
       if (!form) return state.settings || "local";
@@ -73,6 +96,16 @@
       return parts && parts.year === year && parts.month === month && parts.day === day;
     }
 
+    function sameIsoValue(value, year, month, day) {
+      const parts = parseIsoDateParts(value);
+      return sameIsoDay(parts, year, month, day);
+    }
+
+    function isInRange(value, from, to) {
+      if (!value || !from || !to) return false;
+      return compareIso(value, from) >= 0 && compareIso(value, to) <= 0;
+    }
+
     function pickerText(key) {
       const language = state.settings?.language || "es";
       const labels = {
@@ -82,6 +115,8 @@
           month: "Mes",
           year: "Año",
           exactMinute: "Minuto exacto",
+          dateRange: "Rango de fechas",
+          cancel: "Cancelar",
           apply: "OK"
         },
         en: {
@@ -90,6 +125,8 @@
           month: "Month",
           year: "Year",
           exactMinute: "Exact minute",
+          dateRange: "Date range",
+          cancel: "Cancel",
           apply: "OK"
         },
         ru: {
@@ -98,10 +135,30 @@
           month: "Месяц",
           year: "Год",
           exactMinute: "Точная минута",
+          dateRange: "Диапазон дат",
+          cancel: "Отмена",
           apply: "OK"
         }
       };
       return (labels[language] || labels.es)[key] || key;
+    }
+
+    function displayDate(value) {
+      const parts = parseIsoDateParts(value);
+      if (!parts) return "";
+      const language = state.settings?.language || "es";
+      return new Intl.DateTimeFormat(localeForLanguage(language), {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }).format(new Date(Date.UTC(parts.year, parts.month, parts.day)));
+    }
+
+    function displayRange(from, to) {
+      const range = orderedRange(from, to);
+      if (!range.from && !range.to) return pickerText("dateRange");
+      if (range.from === range.to) return displayDate(range.from);
+      return `${displayDate(range.from)} - ${displayDate(range.to)}`;
     }
 
     function datePickerDays(year, month) {
@@ -146,7 +203,8 @@
       const picker = $("#dateTimePicker");
       if (!input || !picker || picker.classList.contains("hidden")) return;
 
-      const rect = input.getBoundingClientRect();
+      const anchor = state.dateTimePicker.anchor || input;
+      const rect = anchor.getBoundingClientRect();
       const width = Math.min(368, Math.max(292, Math.floor(window.innerWidth - 24)));
       picker.style.width = `${width}px`;
       const pickerHeight = picker.offsetHeight || 360;
@@ -159,6 +217,15 @@
       picker.style.left = `${left}px`;
     }
 
+    function rangeState() {
+      const pickerState = state.dateTimePicker;
+      const fromInput = pickerState.rangeFromInput;
+      const toInput = pickerState.rangeToInput;
+      const start = pickerState.rangeStart || fromInput?.value || "";
+      const end = pickerState.rangeEnd || toInput?.value || start;
+      return orderedRange(start, end);
+    }
+
     function render() {
       const picker = $("#dateTimePicker");
       const pickerState = state.dateTimePicker;
@@ -168,20 +235,24 @@
       picker.classList.remove("hidden");
       picker.dataset.mode = pickerState.mode;
 
-      if (pickerState.mode === "date") {
+      if (pickerState.mode === "date" || pickerState.mode === "range") {
         const selected = parseIsoDateParts(input.value);
         const today = parseIsoDateParts(V.isoDateInTimezone(new Date(), inputTimezone(input)));
+        const selectedRange = pickerState.mode === "range" ? rangeState() : null;
         const weekdays = weekdayLabels().map((day) => `<span>${escapeHtml(day)}</span>`).join("");
         const monthOptions = Array.from({ length: 12 }, (_item, month) =>
           `<option value="${month}" ${pickerState.month === month ? "selected" : ""}>${escapeHtml(monthName(month))}</option>`
         ).join("");
         const days = datePickerDays(pickerState.year, pickerState.month)
           .map((cell) => {
-            const dateValue = `${cell.year}-${String(cell.month + 1).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`;
+            const dateValue = isoFromParts(cell.year, cell.month, cell.day);
             const classes = [
               "cf-picker-day",
               cell.muted ? "is-muted" : "",
-              sameIsoDay(selected, cell.year, cell.month, cell.day) ? "is-selected" : "",
+              pickerState.mode === "range" && isInRange(dateValue, selectedRange.from, selectedRange.to) ? "is-range" : "",
+              pickerState.mode === "range" && sameIsoValue(selectedRange.from, cell.year, cell.month, cell.day) ? "is-range-start is-selected" : "",
+              pickerState.mode === "range" && sameIsoValue(selectedRange.to, cell.year, cell.month, cell.day) ? "is-range-end is-selected" : "",
+              pickerState.mode !== "range" && sameIsoDay(selected, cell.year, cell.month, cell.day) ? "is-selected" : "",
               sameIsoDay(today, cell.year, cell.month, cell.day) ? "is-today" : ""
             ].filter(Boolean).join(" ");
             return `<button type="button" class="${classes}" data-cf-picker-date="${dateValue}">${cell.day}</button>`;
@@ -199,6 +270,15 @@
           </div>
           <div class="cf-picker-weekdays">${weekdays}</div>
           <div class="cf-picker-calendar">${days}</div>
+          ${pickerState.mode === "range" ? `
+            <div class="cf-picker-range-footer">
+              <strong>${escapeHtml(displayRange(selectedRange.from, selectedRange.to))}</strong>
+              <div class="cf-picker-range-actions">
+                <button type="button" class="cf-picker-cancel" data-cf-picker-cancel-range aria-label="${escapeHtml(pickerText("cancel"))}">×</button>
+                <button type="button" class="cf-picker-apply" data-cf-picker-apply-range aria-label="${escapeHtml(pickerText("apply"))}">✓</button>
+              </div>
+            </div>
+          ` : ""}
         `;
       } else {
         const hourButtons = Array.from({ length: 24 }, (_item, hour) => {
@@ -248,7 +328,13 @@
       const picker = $("#dateTimePicker");
       if (picker) picker.classList.add("hidden");
       state.dateTimePicker.input = null;
+      state.dateTimePicker.anchor = null;
       state.dateTimePicker.mode = null;
+      state.dateTimePicker.rangeFromInput = null;
+      state.dateTimePicker.rangeToInput = null;
+      state.dateTimePicker.rangeStart = "";
+      state.dateTimePicker.rangeEnd = "";
+      state.dateTimePicker.rangeSelectingEnd = false;
     }
 
     function open(input) {
@@ -272,6 +358,25 @@
       render();
     }
 
+    function openRange(fromInput, toInput, anchor = null) {
+      if (!fromInput || !toInput) return;
+      enhanceInputs();
+      const range = orderedRange(fromInput.value, toInput.value);
+      const parts = parseIsoDateParts(range.from || range.to) || currentPickerDateParts(fromInput);
+      state.dateTimePicker.input = fromInput;
+      state.dateTimePicker.anchor = anchor || fromInput;
+      state.dateTimePicker.mode = "range";
+      state.dateTimePicker.step = "date";
+      state.dateTimePicker.year = parts.year;
+      state.dateTimePicker.month = parts.month;
+      state.dateTimePicker.rangeFromInput = fromInput;
+      state.dateTimePicker.rangeToInput = toInput;
+      state.dateTimePicker.rangeStart = range.from || isoFromParts(parts.year, parts.month, parts.day);
+      state.dateTimePicker.rangeEnd = range.to || state.dateTimePicker.rangeStart;
+      state.dateTimePicker.rangeSelectingEnd = false;
+      render();
+    }
+
     function commitDate(value) {
       const input = state.dateTimePicker.input;
       if (!input) return;
@@ -284,6 +389,38 @@
           open(associatedTimeInput);
         }, 0);
       }
+    }
+
+    function selectRangeDate(value) {
+      const pickerState = state.dateTimePicker;
+      if (!pickerState.rangeSelectingEnd) {
+        pickerState.rangeStart = value;
+        pickerState.rangeEnd = value;
+        pickerState.rangeSelectingEnd = true;
+      } else {
+        const range = orderedRange(pickerState.rangeStart, value);
+        pickerState.rangeStart = range.from;
+        pickerState.rangeEnd = range.to;
+        pickerState.rangeSelectingEnd = false;
+      }
+      const parts = parseIsoDateParts(value);
+      if (parts) {
+        pickerState.year = parts.year;
+        pickerState.month = parts.month;
+      }
+      render();
+    }
+
+    function commitRange() {
+      const pickerState = state.dateTimePicker;
+      const fromInput = pickerState.rangeFromInput;
+      const toInput = pickerState.rangeToInput;
+      if (!fromInput || !toInput) return;
+      const range = orderedRange(pickerState.rangeStart, pickerState.rangeEnd || pickerState.rangeStart);
+      setPickerInputValue(fromInput, range.from);
+      setPickerInputValue(toInput, range.to);
+      close();
+      enhanceInputs();
     }
 
     function commitTime(minute) {
@@ -341,9 +478,14 @@
       const minuteButton = event.target.closest("[data-cf-picker-minute]");
       const minuteStepButton = event.target.closest("[data-cf-picker-minute-step]");
       const applyMinute = event.target.closest("[data-cf-picker-apply-minute]");
+      const applyRange = event.target.closest("[data-cf-picker-apply-range]");
+      const cancelRange = event.target.closest("[data-cf-picker-cancel-range]");
 
       if (monthButton) shiftMonth(Number(monthButton.dataset.cfPickerMonth));
-      if (dateButton) commitDate(dateButton.dataset.cfPickerDate);
+      if (dateButton) {
+        if (state.dateTimePicker.mode === "range") selectRangeDate(dateButton.dataset.cfPickerDate);
+        else commitDate(dateButton.dataset.cfPickerDate);
+      }
       if (stepButton) {
         state.dateTimePicker.step = stepButton.dataset.cfPickerStep;
         render();
@@ -356,6 +498,8 @@
       if (minuteButton) commitTime(Number(minuteButton.dataset.cfPickerMinute));
       if (minuteStepButton) nudgeExactMinute(Number(minuteStepButton.dataset.cfPickerMinuteStep));
       if (applyMinute) commitTime($("#exactMinuteInput")?.value);
+      if (applyRange) commitRange();
+      if (cancelRange) close();
     }
 
     function handleChange(event) {
@@ -398,6 +542,59 @@
           }
           if (event.key === "Escape") close();
         });
+      });
+      enhanceRangeInputs();
+    }
+
+    function rangePairs() {
+      return [
+        { id: "report", from: $("#reportDateFrom"), to: $("#reportDateTo") },
+        { id: "reminder", from: $("#reminderDateFrom"), to: $("#reminderDateTo") },
+        { id: "stats", from: $("#statsDateFrom"), to: $("#statsDateTo") }
+      ].filter((pair) => pair.from && pair.to);
+    }
+
+    function rangeIsVisible(fromInput, toInput) {
+      const fromHidden = fromInput.closest("label")?.classList.contains("hidden") || fromInput.closest(".reminder-range-fields")?.classList.contains("hidden");
+      const toHidden = toInput.closest("label")?.classList.contains("hidden") || toInput.closest(".reminder-range-fields")?.classList.contains("hidden");
+      return !fromHidden && !toHidden;
+    }
+
+    function syncRangeButton(button, fromInput, toInput) {
+      button.querySelector("[data-cf-range-label]").textContent = displayRange(fromInput.value, toInput.value);
+      button.classList.toggle("hidden", !rangeIsVisible(fromInput, toInput));
+    }
+
+    function enhanceRangeInputs() {
+      rangePairs().forEach(({ id, from, to }) => {
+        const fromLabel = from.closest("label");
+        const toLabel = to.closest("label");
+        if (!fromLabel || !toLabel) return;
+
+        fromLabel.classList.add("cf-range-native-field");
+        toLabel.classList.add("cf-range-native-field");
+
+        let button = document.querySelector(`[data-cf-date-range-trigger="${id}"]`);
+        if (!button) {
+          button = document.createElement("button");
+          button.type = "button";
+          button.className = "cf-date-range-trigger cf-datetime-input";
+          button.dataset.cfDateRangeTrigger = id;
+          button.innerHTML = `
+            <span class="cf-date-range-caption">${escapeHtml(pickerText("dateRange"))}</span>
+            <strong data-cf-range-label></strong>
+          `;
+          fromLabel.parentNode.insertBefore(button, fromLabel);
+          button.addEventListener("click", () => openRange(from, to, button));
+          button.addEventListener("keydown", (event) => {
+            if (["Enter", " ", "ArrowDown"].includes(event.key)) {
+              event.preventDefault();
+              openRange(from, to, button);
+            }
+            if (event.key === "Escape") close();
+          });
+        }
+        syncRangeButton(button, from, to);
       });
     }
 

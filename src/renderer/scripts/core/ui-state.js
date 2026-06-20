@@ -87,12 +87,18 @@
       },
       dateTimePicker: {
         input: null,
+        anchor: null,
         mode: null,
         step: "date",
         year: null,
         month: null,
         hour: 0,
-        minute: 0
+        minute: 0,
+        rangeFromInput: null,
+        rangeToInput: null,
+        rangeStart: "",
+        rangeEnd: "",
+        rangeSelectingEnd: false
       }
     };
   }
