@@ -31,7 +31,14 @@ The current foundation does not require an internet connection to use CallFlow. 
 
 If a future automatic update or telemetry feature is added, this policy should be updated before release.
 
+## Future AI chat
+
+CallFlow is preparing a future AI chat section intended to work with local user data such as reports, statistics, scripts, reminders, and relevant settings.
+
+The intended privacy baseline is that AI features should use local context whenever possible and should not send user data to external services without explicit user consent and updated privacy text.
+
+AI responses can be incomplete or incorrect. Users should review AI output before relying on it, especially when it involves customer information, internal company procedures, reports, calculations, or sensitive data.
+
 ## Local data folder
 
 The exact local data folder is shown inside the application diagnostics/about area. Users should treat this folder as containing application data and should back it up before reinstalling, deleting files, or moving data manually.
-

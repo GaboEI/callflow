@@ -30,6 +30,14 @@ CallFlow is provided as a productivity tool without a guarantee that every calcu
 
 The user should verify important work, deadlines, reports, and sensitive information before relying on them.
 
+## Future AI functionality
+
+CallFlow may include AI-assisted features in a future version. The intended scope is to help users reason over information stored locally inside the application, such as reports, statistics, scripts, reminders, and relevant settings.
+
+AI responses may contain errors, omissions, or incorrect interpretations. The user remains responsible for reviewing AI output, following company and legal requirements, and avoiding prohibited or sensitive data handling.
+
+CallFlow should not send local user data to external AI services without clear user consent and updated terms/privacy information.
+
 ## Limitation of liability
 
 To the maximum extent permitted by applicable law, the author and project are not responsible for indirect damages, loss of work, loss of data, business interruptions, compliance failures, misuse of sensitive information, or decisions made based on the application's output.
@@ -41,4 +49,3 @@ The repository license has not been selected yet. Until a final license is appli
 ## Changes to these terms
 
 Future versions of CallFlow may update these terms. If the terms version changes, the application is prepared to request acceptance again.
-

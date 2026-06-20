@@ -580,6 +580,13 @@ Africa/Harare ZW
     validators: V
   });
 
+  const aiView = window.CallFlowAiView.createAiView({
+    $,
+    i18n: CallFlowI18n,
+    setStatusMessage,
+    state
+  });
+
   function getViewTitle(view) {
     const titles = {
       dashboard: "Dashboard",
@@ -588,6 +595,7 @@ Africa/Harare ZW
       stats: "Estadísticas",
       calculator: "Calculadora",
       knowledge: "Scripts",
+      ai: "Chat IA",
       settings: "Configuración"
     };
     return titles[view] || "CallFlow";
@@ -1217,6 +1225,7 @@ Africa/Harare ZW
     settingsView.render();
     remindersView.render();
     knowledgeView.render();
+    aiView.render();
     statsView.render();
     calculatorView.render();
     clockView.render();
@@ -1382,6 +1391,7 @@ Africa/Harare ZW
     dashboardView.bindEvents();
     clockView.bindEvents();
     calculatorView.bindEvents();
+    aiView.bindEvents();
     $("#sidebarToggle").addEventListener("click", () => {
       const app = $("#app");
       app.classList.toggle("sidebar-open");

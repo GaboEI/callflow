@@ -4503,6 +4503,211 @@ code {
   box-shadow: none;
 }
 
+/* AI chat foundation */
+#aiView.view.active {
+  min-height: 0;
+  overflow: hidden;
+  padding-right: 0;
+}
+
+.ai-shell {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: 14px;
+  height: 100%;
+  min-height: 0;
+}
+
+.ai-context-panel,
+.ai-chat-panel {
+  min-height: 0;
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.07), transparent 220px),
+    rgba(7, 16, 31, 0.58);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.ai-context-panel {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 16px;
+}
+
+.ai-context-panel h2,
+.ai-chat-header h2 {
+  margin: 2px 0 4px;
+}
+
+.ai-source-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ai-source-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 9px 10px;
+  background: rgba(15, 23, 42, 0.62);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+}
+
+.ai-source-card span,
+.ai-privacy-note p {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ai-source-card strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.ai-privacy-note {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 8px;
+}
+
+.ai-privacy-note p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.ai-chat-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  overflow: hidden;
+}
+
+.ai-chat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ai-chat-header p {
+  max-width: 720px;
+  margin: 0;
+}
+
+.ai-state-pill {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.16);
+  border: 1px solid rgba(59, 130, 246, 0.32);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ai-message-list {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
+  padding: 18px;
+  overflow: auto;
+}
+
+.ai-message {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  max-width: 860px;
+}
+
+.ai-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: #dbeafe;
+  background: rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ai-bubble {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.62);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 10px;
+}
+
+.ai-bubble p {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.ai-reference-row,
+.ai-suggestion-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.ai-reference-row span,
+.ai-suggestion-row button {
+  min-height: 28px;
+  padding: 5px 9px;
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.ai-suggestion-row {
+  padding: 0 18px 12px;
+}
+
+.ai-suggestion-row button:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.ai-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--border);
+  background: rgba(7, 16, 31, 0.78);
+}
+
+.ai-composer textarea {
+  min-height: 48px;
+  max-height: 120px;
+  resize: vertical;
+}
+
+.ai-composer button {
+  align-self: end;
+  min-height: 40px;
+}
+
+.ai-composer .helper {
+  grid-column: 1 / -1;
+  min-height: 16px;
+}
+
 .script-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -5339,6 +5544,15 @@ code {
 }
 
 @media (max-width: 979px) {
+  .ai-shell {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  .ai-source-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .schedule-period-summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -5403,6 +5617,19 @@ code {
 }
 
 @media (max-width: 620px) {
+  .ai-chat-header {
+    flex-direction: column;
+  }
+
+  .ai-source-list,
+  .ai-composer {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-composer button {
+    width: 100%;
+  }
+
   .schedule-period-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

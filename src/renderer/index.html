@@ -236,6 +236,7 @@
           <button class="nav-link" data-view="stats" data-i18n="stats">Estadísticas</button>
           <button class="nav-link" data-view="calculator" data-i18n="calculator">Calculadora</button>
           <button class="nav-link" data-view="knowledge" data-i18n="knowledge">Scripts</button>
+          <button class="nav-link" data-view="ai" data-i18n="aiChat">Chat IA</button>
           <button class="nav-link" data-view="settings" data-i18n="settings">Configuración</button>
         </nav>
       </aside>
@@ -863,6 +864,77 @@
           </section>
         </section>
 
+        <section id="aiView" class="view">
+          <div class="ai-shell">
+            <aside class="ai-context-panel">
+              <div>
+                <span class="eyebrow" data-i18n="aiLocalContext">Contexto local</span>
+                <h2 data-i18n="aiKnowledgeScope">Fuentes preparadas</h2>
+                <p class="muted" data-i18n="aiKnowledgeScopeHelp">El asistente se conectará solo a información guardada dentro de CallFlow.</p>
+              </div>
+              <div class="ai-source-list">
+                <div class="ai-source-card">
+                  <span data-i18n="reports">Reportes</span>
+                  <strong id="aiReportsCount">0</strong>
+                </div>
+                <div class="ai-source-card">
+                  <span data-i18n="stats">Estadísticas</span>
+                  <strong id="aiStatsCount">0</strong>
+                </div>
+                <div class="ai-source-card">
+                  <span data-i18n="knowledge">Scripts</span>
+                  <strong id="aiScriptsCount">0</strong>
+                </div>
+                <div class="ai-source-card">
+                  <span data-i18n="reminders">Recordatorios</span>
+                  <strong id="aiRemindersCount">0</strong>
+                </div>
+              </div>
+              <div class="ai-privacy-note">
+                <strong data-i18n="aiPrivacyLocalTitle">Privacidad local por diseño</strong>
+                <p data-i18n="aiPrivacyLocalText">La base está preparada para trabajar con datos locales. No se conecta a servicios externos ni envía información fuera de la app.</p>
+              </div>
+            </aside>
+
+            <section class="ai-chat-panel">
+              <div class="ai-chat-header">
+                <div>
+                  <span class="eyebrow" data-i18n="aiAssistantLabel">Asistente CallFlow</span>
+                  <h2 data-i18n="aiChat">Chat IA</h2>
+                  <p class="muted" data-i18n="aiChatIntro">Diseñado para consultar reportes, estadísticas y documentos internos cuando el motor local esté habilitado.</p>
+                </div>
+                <div class="ai-state-pill" data-ai-state="prepared" data-i18n="aiStatePrepared">Base preparada</div>
+              </div>
+
+              <div class="ai-message-list" id="aiMessageList" aria-live="polite">
+                <article class="ai-message assistant">
+                  <div class="ai-avatar">IA</div>
+                  <div class="ai-bubble">
+                    <p data-i18n="aiWelcomeMessage">Puedo ayudarte a razonar sobre tus reportes, estadísticas, scripts y recordatorios guardados en CallFlow cuando conectes el motor IA local.</p>
+                    <div class="ai-reference-row">
+                      <span data-i18n="aiReferenceReports">Reportes</span>
+                      <span data-i18n="aiReferenceStats">Estadísticas</span>
+                      <span data-i18n="aiReferenceScripts">Scripts</span>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="ai-suggestion-row" aria-label="Sugerencias">
+                <button type="button" data-ai-suggestion data-i18n="aiSuggestionSummary">Resume mi día</button>
+                <button type="button" data-ai-suggestion data-i18n="aiSuggestionPatterns">Detecta patrones</button>
+                <button type="button" data-ai-suggestion data-i18n="aiSuggestionScript">Busca en scripts</button>
+              </div>
+
+              <form id="aiComposer" class="ai-composer">
+                <textarea id="aiPrompt" rows="2" data-i18n-placeholder="aiPromptPlaceholder" placeholder="Pregunta sobre tus reportes, estadísticas o scripts..." autocomplete="off"></textarea>
+                <button type="submit" class="primary" data-i18n="send">Enviar</button>
+                <small id="aiComposerStatus" class="helper"></small>
+              </form>
+            </section>
+          </div>
+        </section>
+
         <section id="settingsView" class="view">
           <div class="panel settings-panel">
             <div class="settings-heading">
@@ -1221,6 +1293,7 @@
     <script src="./scripts/views/reminders-view.js"></script>
     <script src="./scripts/views/settings-view.js"></script>
     <script src="./scripts/views/knowledge-view.js"></script>
+    <script src="./scripts/views/ai-view.js"></script>
     <script src="./scripts/views/clock-view.js"></script>
     <script src="./scripts/views/stats-view.js"></script>
     <script src="./scripts/views/calculator-view.js"></script>
