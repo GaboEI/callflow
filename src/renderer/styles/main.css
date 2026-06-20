@@ -178,7 +178,7 @@ input[type="time"].cf-datetime-input:focus {
 
 .cf-datetime-picker {
   position: fixed;
-  z-index: 80;
+  z-index: 160;
   border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 8px;
   background: #0b1220;
@@ -2411,7 +2411,26 @@ code {
 }
 
 .stats-time-modal {
-  width: min(780px, 100%);
+  width: min(650px, 100%);
+  max-height: min(820px, calc(100vh - 28px));
+}
+
+.schedule-overview {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.82fr) minmax(330px, 1.35fr);
+  align-items: stretch;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.schedule-date-panel {
+  display: grid;
+  align-content: space-between;
+  gap: 10px;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #07101f;
 }
 
 .schedule-date-navigation,
@@ -2422,28 +2441,38 @@ code {
 }
 
 .schedule-date-navigation {
-  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: 34px 34px minmax(92px, 1fr) 34px 34px;
+  gap: 5px;
 }
 
 .schedule-date-navigation input {
-  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding-inline: 7px;
+}
+
+.schedule-lock-button,
+.schedule-calendar-button,
+.schedule-date-navigation > button {
+  width: 34px;
+  min-width: 34px;
+  padding-inline: 4px;
 }
 
 .schedule-lock-button {
-  width: 42px;
   border-color: rgba(96, 165, 250, 0.42);
 }
 
 .schedule-period-summary {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 7px;
-  margin-bottom: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .schedule-period-card {
   min-width: 0;
-  padding: 9px;
+  padding: 7px 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: linear-gradient(180deg, rgba(34, 211, 238, 0.08), transparent), #07101f;
@@ -2468,8 +2497,8 @@ code {
 }
 
 .schedule-period-card strong {
-  margin: 4px 0;
-  font-size: 18px;
+  margin: 2px 0;
+  font-size: 16px;
 }
 
 .schedule-grid-header,
@@ -2517,6 +2546,7 @@ code {
 
 .schedule-actions {
   margin-top: 14px;
+  justify-content: flex-end;
 }
 
 .stats-timesheet-panel {
@@ -4369,6 +4399,10 @@ code {
 
   .schedule-period-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schedule-overview {
+    grid-template-columns: 1fr;
   }
 
   .schedule-hour-grid {

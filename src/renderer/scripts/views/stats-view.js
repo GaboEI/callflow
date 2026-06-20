@@ -651,6 +651,11 @@
       });
       $("#schedulePreviousDay").addEventListener("click", () => loadScheduleDate(addDays(scheduleDate, -1)));
       $("#scheduleNextDay").addEventListener("click", () => loadScheduleDate(addDays(scheduleDate, 1)));
+      $("#scheduleCalendarButton").addEventListener("click", (event) => {
+        event.stopPropagation();
+        $("#scheduleDate").focus();
+        $("#scheduleDate").click();
+      });
       $("#scheduleDate").addEventListener("change", (event) => loadScheduleDate(event.target.value));
       $("#scheduleEditToggle").addEventListener("click", () => {
         scheduleEditing = !scheduleEditing;

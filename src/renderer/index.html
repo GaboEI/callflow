@@ -646,20 +646,25 @@
                 <div><h3 id="timeAdjustmentTitle" data-i18n="statsDailySchedule">Horario diario</h3><p class="muted" data-i18n="statsDailyScheduleHelp">Desbloquea el horario, selecciona las horas trabajadas y guarda.</p></div>
                 <button type="button" class="icon-button" id="closeTimeAdjustment" aria-label="Cerrar">×</button>
               </div>
-              <div class="schedule-date-navigation">
-                <button type="button" id="schedulePreviousDay" aria-label="Día anterior">‹</button>
-                <input id="scheduleDate" type="date" aria-label="Fecha del horario" />
-                <button type="button" id="scheduleNextDay" aria-label="Día siguiente">›</button>
-                <button type="button" id="scheduleEditToggle" class="schedule-lock-button" data-i18n-title="statsUnlockSchedule" title="Editar horario">🔒</button>
+              <div class="schedule-overview">
+                <div class="schedule-date-panel">
+                  <div class="schedule-date-navigation">
+                    <button type="button" id="scheduleEditToggle" class="schedule-lock-button" data-i18n-title="statsUnlockSchedule" title="Editar horario">🔒</button>
+                    <button type="button" id="schedulePreviousDay" aria-label="Día anterior">‹</button>
+                    <input id="scheduleDate" type="date" aria-label="Fecha del horario" />
+                    <button type="button" id="scheduleCalendarButton" class="schedule-calendar-button" data-i18n-title="statsOpenCalendar" title="Abrir calendario">▣</button>
+                    <button type="button" id="scheduleNextDay" aria-label="Día siguiente">›</button>
+                  </div>
+                  <span class="muted" id="scheduleRecordedHint"></span>
+                </div>
+                <div id="schedulePeriodSummary" class="schedule-period-summary"></div>
               </div>
-              <div id="schedulePeriodSummary" class="schedule-period-summary"></div>
               <div class="schedule-grid-header">
                 <span data-i18n="statsSelectWorkedHours">Horas trabajadas</span>
                 <strong id="scheduleSelectedTotal">00:00</strong>
               </div>
               <div id="scheduleHourGrid" class="schedule-hour-grid"></div>
               <div class="schedule-actions">
-                <span class="muted" id="scheduleRecordedHint"></span>
                 <button type="button" class="primary" id="saveSchedule" data-i18n="statsSaveSchedule">Guardar horario</button>
               </div>
             </section>
