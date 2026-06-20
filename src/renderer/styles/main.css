@@ -1295,12 +1295,13 @@ nav {
 }
 
 .settings-tab {
-  min-height: 32px;
-  padding: 6px 10px;
+  min-height: 36px;
+  padding: 7px 12px;
   color: var(--muted);
   background: transparent;
   border-color: transparent;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .settings-tab:hover,
