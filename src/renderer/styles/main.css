@@ -2584,11 +2584,26 @@ code {
 
 .report-toolbar {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.9fr) auto auto;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 8px;
-  margin: -2px 0 10px;
+  grid-template-columns: minmax(420px, 1fr) minmax(360px, 0.72fr);
+  align-items: start;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+
+.report-toolbar-left,
+.report-toolbar-right {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.report-toolbar-left .panel-header {
+  margin-bottom: 0;
+}
+
+.report-toolbar-right {
+  justify-items: end;
 }
 
 .report-main-actions,
@@ -2598,7 +2613,7 @@ code {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 6px;
+  gap: 5px;
 }
 
 .report-main-actions {
@@ -2631,6 +2646,7 @@ code {
 }
 
 .report-export-actions {
+  justify-content: flex-end;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.5);
@@ -2793,6 +2809,7 @@ code {
   align-items: end;
   margin: 0;
   min-width: 0;
+  width: min(100%, 620px);
 }
 
 .report-searchbar label {
@@ -3730,8 +3747,13 @@ code {
     margin-bottom: 8px;
   }
 
+  .report-toolbar-right {
+    justify-items: start;
+  }
+
   .report-searchbar {
     grid-template-columns: minmax(220px, 1fr) auto;
+    width: 100%;
   }
 
   #dashboardView .button-row {
@@ -3938,11 +3960,6 @@ code {
   .cards.compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
-  }
-
-  .report-toolbar {
-    grid-template-columns: minmax(420px, 1.2fr) minmax(360px, 0.9fr) auto auto;
-    align-items: end;
   }
 
   .report-searchbar {

@@ -383,46 +383,50 @@
 
         <section id="reportsView" class="view">
           <div class="panel">
-            <div class="panel-header">
-              <h2 data-i18n="hourlyReports">Reportes horarios</h2>
-            </div>
             <div class="report-toolbar">
-              <div class="report-period-bar" role="group" aria-label="Periodo">
-                <button type="button" class="report-period-chip" data-report-period="today" data-i18n="reportToday">Hoy</button>
-                <button type="button" class="report-period-chip" data-report-period="yesterday" data-i18n="reportYesterday">Ayer</button>
-                <button type="button" class="report-period-chip" data-report-period="last7" data-i18n="reportLast7">Últimos 7 días</button>
-                <button type="button" class="report-period-chip" data-report-period="last30" data-i18n="reportLast30">Últimos 30 días</button>
-                <button type="button" class="report-period-chip" data-report-period="custom" data-i18n="reportCustomRange">Rango</button>
-                <label class="report-range-field">
-                  <span data-i18n="reportDateFrom">Desde</span>
-                  <input id="reportDateFrom" type="date" />
-                </label>
-                <label class="report-range-field">
-                  <span data-i18n="reportDateTo">Hasta</span>
-                  <input id="reportDateTo" type="date" />
-                </label>
-                <button type="button" class="report-period-chip report-trash-chip" data-report-period="trash">Basura</button>
-              </div>
-              <div class="report-searchbar">
-                <label>
-                  <span data-i18n="reportSearch">Buscar en reportes</span>
-                  <input id="reportSearchInput" data-i18n-placeholder="reportSearchPlaceholder" placeholder="Buscar palabra o frase..." autocomplete="off" />
-                </label>
-                <div class="report-search-actions">
-                  <span class="search-counter" id="reportSearchCounter">0/0</span>
-                  <button type="button" id="reportSearchPrev" data-i18n-title="previousMatch" title="Coincidencia anterior">‹</button>
-                  <button type="button" id="reportSearchNext" data-i18n-title="nextMatch" title="Siguiente coincidencia">›</button>
-                  <button type="button" id="reportSearchClear" data-i18n="clearSearch">Limpiar</button>
+              <div class="report-toolbar-left">
+                <div class="panel-header">
+                  <h2 data-i18n="hourlyReports">Reportes horarios</h2>
+                </div>
+                <div class="report-period-bar" role="group" aria-label="Periodo">
+                  <button type="button" class="report-period-chip" data-report-period="today" data-i18n="reportToday">Hoy</button>
+                  <button type="button" class="report-period-chip" data-report-period="yesterday" data-i18n="reportYesterday">Ayer</button>
+                  <button type="button" class="report-period-chip" data-report-period="last7" data-i18n="reportLast7">Últimos 7 días</button>
+                  <button type="button" class="report-period-chip" data-report-period="last30" data-i18n="reportLast30">Últimos 30 días</button>
+                  <button type="button" class="report-period-chip" data-report-period="custom" data-i18n="reportCustomRange">Rango</button>
+                  <label class="report-range-field">
+                    <span data-i18n="reportDateFrom">Desde</span>
+                    <input id="reportDateFrom" type="date" />
+                  </label>
+                  <label class="report-range-field">
+                    <span data-i18n="reportDateTo">Hasta</span>
+                    <input id="reportDateTo" type="date" />
+                  </label>
+                  <button type="button" class="report-period-chip report-trash-chip" data-report-period="trash">Basura</button>
+                </div>
+                <div class="report-bulk-actions">
+                  <button type="button" id="copySelectedBlocks" class="report-copy-action"><span aria-hidden="true">⧉</span></button>
+                  <button type="button" id="toggleReportSelection"><span aria-hidden="true">☑</span><span data-report-selection-label>Seleccionar todo</span></button>
                 </div>
               </div>
-              <div class="report-bulk-actions">
-                <button type="button" id="copySelectedBlocks" class="report-copy-action"><span aria-hidden="true">⧉</span></button>
-                <button type="button" id="toggleReportSelection"><span aria-hidden="true">☑</span><span data-report-selection-label>Seleccionar todo</span></button>
-              </div>
-              <div class="report-export-actions">
-                <span>Exportar como</span>
-                <button type="button" id="exportSelectedMd">.md</button>
-                <button type="button" id="exportSelectedTxt">.txt</button>
+              <div class="report-toolbar-right">
+                <div class="report-export-actions">
+                  <span>Exportar como</span>
+                  <button type="button" id="exportSelectedMd">.md</button>
+                  <button type="button" id="exportSelectedTxt">.txt</button>
+                </div>
+                <div class="report-searchbar">
+                  <label>
+                    <span data-i18n="reportSearch">Buscar en reportes</span>
+                    <input id="reportSearchInput" data-i18n-placeholder="reportSearchPlaceholder" placeholder="Buscar palabra o frase..." autocomplete="off" />
+                  </label>
+                  <div class="report-search-actions">
+                    <span class="search-counter" id="reportSearchCounter">0/0</span>
+                    <button type="button" id="reportSearchPrev" data-i18n-title="previousMatch" title="Coincidencia anterior">‹</button>
+                    <button type="button" id="reportSearchNext" data-i18n-title="nextMatch" title="Siguiente coincidencia">›</button>
+                    <button type="button" id="reportSearchClear" data-i18n="clearSearch">Limpiar</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div id="reportBlocks" class="report-list"></div>
