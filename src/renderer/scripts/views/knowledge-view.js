@@ -45,12 +45,28 @@
 
     function renderMarkdown(content) {
       if (!markdownRenderer) return `<p>${escapeHtml(content)}</p>`;
-      return markdownRenderer.markdown(String(content || ""));
+      const template = document.createElement("template");
+      template.innerHTML = markdownRenderer.markdown(String(content || ""));
+      template.content.querySelectorAll("pre").forEach((pre) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "script-code-block";
+        const copyButton = document.createElement("button");
+        copyButton.type = "button";
+        copyButton.className = "script-copy-code";
+        copyButton.dataset.copyCode = "";
+        copyButton.title = t("copyCode");
+        copyButton.setAttribute("aria-label", t("copyCode"));
+        copyButton.textContent = "⧉";
+        pre.replaceWith(wrapper);
+        wrapper.append(copyButton, pre);
+      });
+      return template.innerHTML;
     }
 
     function markdownToPlainText(content) {
       const container = document.createElement("div");
       container.innerHTML = renderMarkdown(content);
+      container.querySelectorAll("[data-copy-code]").forEach((button) => button.remove());
       container.querySelectorAll("br, p, div, li, h1, h2, h3, h4, h5, h6, blockquote, pre, tr").forEach((element) => {
         element.append(document.createTextNode("\n"));
       });
@@ -140,6 +156,21 @@
       });
       if (showPreview) preview.innerHTML = renderMarkdown(input.value);
       else input.focus();
+    }
+
+    async function copyCodeBlock(button) {
+      const code = button.closest(".script-code-block")?.querySelector("code");
+      if (!code) return;
+      await runAction(async () => {
+        await window.callflow.copyText(code.textContent || "");
+        button.textContent = "✓";
+        button.classList.add("copied");
+        context.setStatusMessage(t("copied"), "success");
+        setTimeout(() => {
+          button.textContent = "⧉";
+          button.classList.remove("copied");
+        }, 1200);
+      });
     }
 
     function renderLibrary() {
@@ -308,6 +339,10 @@
         button.addEventListener("click", () => applyFormat(button.dataset.scriptFormat));
       });
       $("#toggleScriptPreview").addEventListener("click", toggleEditorPreview);
+      $("#knowledgeView").addEventListener("click", (event) => {
+        const copyButton = event.target.closest("[data-copy-code]");
+        if (copyButton) copyCodeBlock(copyButton);
+      });
       $("#exportMd").addEventListener("click", () => exportSelected("md"));
       $("#exportTxt").addEventListener("click", () => exportSelected("txt"));
     }
