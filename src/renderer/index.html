@@ -266,20 +266,20 @@
                 <span class="field-heading">
                   <span data-i18n="callType">Tipo / proveedor</span>
                 </span>
-                <div class="input-action-shell select-action-shell">
+                <div class="input-action-shell select-action-shell call-type-shell">
                   <select name="callType"></select>
                   <span class="inline-icon-actions input-actions">
                     <button class="icon-button" type="button" id="toggleCallTypeManager" data-i18n-title="manageCallTypes" title="Gestionar tipos">⋯</button>
                   </span>
+                  <div class="status-manager hidden" id="dashboardCallTypeManager">
+                    <div class="input-row">
+                      <input id="newDashboardCallType" data-i18n-placeholder="newCallTypePlaceholder" placeholder="Escribe un tipo de llamada..." autocomplete="off" />
+                      <button type="button" id="saveDashboardCallType" data-i18n="saveCallType">Guardar tipo</button>
+                    </div>
+                    <div class="chip-list" id="dashboardCallTypeList"></div>
+                  </div>
                 </div>
               </label>
-              <div class="status-manager span-2 hidden" id="dashboardCallTypeManager">
-                <div class="input-row">
-                  <input id="newDashboardCallType" data-i18n-placeholder="newCallTypePlaceholder" placeholder="Escribe un tipo de llamada..." autocomplete="off" />
-                  <button type="button" id="saveDashboardCallType" data-i18n="saveCallType">Guardar tipo</button>
-                </div>
-                <div class="chip-list" id="dashboardCallTypeList"></div>
-              </div>
               <div class="status-outcome-row span-2">
                 <label class="status-field">
                   <span class="field-heading">

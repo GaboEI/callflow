@@ -689,6 +689,7 @@
       if (customCommentOption) selectCustomCommentOption(customCommentOption.dataset.customCommentOption);
       if (!event.target.closest(".status-combobox")) renderStatusOptions(false);
       if (!event.target.closest(".custom-comment-combobox")) renderCustomCommentOptions(false);
+      if (!event.target.closest(".call-type-shell")) $("#dashboardCallTypeManager").classList.add("hidden");
       if (!event.target.closest(".outcome-control")) {
         state.openOutcomeMenu = null;
         renderOutcomeControls();

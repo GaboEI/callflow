@@ -1243,13 +1243,26 @@ nav {
   color: var(--green);
 }
 
+.call-type-shell {
+  position: relative;
+}
+
 .status-manager {
   display: grid;
   gap: 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: rgba(15, 23, 42, 0.45);
+  background: #07101f;
   padding: 10px;
+}
+
+.call-type-shell .status-manager {
+  position: absolute;
+  z-index: 18;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(520px, 88vw);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.32);
 }
 
 .input-row {
@@ -3736,6 +3749,10 @@ code {
 }
 
 @media (max-width: 620px) {
+  .call-type-shell .status-manager .input-row {
+    grid-template-columns: 1fr;
+  }
+
   h1 {
     font-size: 22px;
   }
