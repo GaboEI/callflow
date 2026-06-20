@@ -120,15 +120,34 @@
     }
 
     function setReminderFilter(filterValue) {
+      if (filterValue === "range" && !state.reminderRange.from && !state.reminderRange.to) {
+        const timezone = V.resolveTimezone(state.settings);
+        const today = currentDateInputValue(timezone);
+        state.reminderRange = { from: today, to: today };
+      }
       document.querySelectorAll(".reminder-chip").forEach((btn) => {
         btn.classList.toggle("reminder-chip--active", btn.dataset.filter === filterValue);
       });
       renderApp();
     }
 
+    function renderReminderRangeFields(filter) {
+      const fields = $("#reminderRangeFields");
+      const fromInput = $("#reminderDateFrom");
+      const toInput = $("#reminderDateTo");
+      if (!fields || !fromInput || !toInput) return;
+      const range = state.reminderRange || { from: "", to: "" };
+      fields.classList.toggle("hidden", filter !== "range");
+      fromInput.value = range.from || "";
+      toInput.value = range.to || "";
+    }
+
     function renderReminders() {
       const filter = getActiveReminderFilter();
-      const reminders = sortedReminders(window.CallFlowReminders.filterReminders(state.reminders, filter, state.settings));
+      renderReminderRangeFields(filter);
+      const reminders = sortedReminders(window.CallFlowReminders.filterReminders(state.reminders, filter, state.settings, {
+        range: state.reminderRange
+      }));
       $("#reminderList").innerHTML = reminders.length
         ? reminders
           .map((reminder) => `
@@ -555,6 +574,14 @@
       document.querySelector(".reminder-chips").addEventListener("click", (event) => {
         const chip = event.target.closest(".reminder-chip");
         if (chip) setReminderFilter(chip.dataset.filter);
+      });
+      $("#reminderDateFrom").addEventListener("change", (event) => {
+        state.reminderRange.from = event.target.value;
+        setReminderFilter("range");
+      });
+      $("#reminderDateTo").addEventListener("change", (event) => {
+        state.reminderRange.to = event.target.value;
+        setReminderFilter("range");
       });
     }
 

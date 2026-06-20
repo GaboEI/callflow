@@ -795,7 +795,7 @@ nav {
   grid-column: 1;
   grid-row: 2;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content max-content;
+  grid-template-columns: minmax(0, 1fr) max-content;
   align-items: center;
   gap: 10px;
   min-height: 28px;
@@ -816,12 +816,8 @@ nav {
   white-space: nowrap;
 }
 
-.statusbar-block {
-  grid-column: 2;
-}
-
 .statusbar-timer {
-  grid-column: 3;
+  grid-column: 2;
 }
 
 .statusbar-label {
@@ -1289,7 +1285,17 @@ nav {
 
 .outcome-control {
   position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(38px, auto);
+  gap: 5px;
   min-width: 0;
+}
+
+.outcome-field-label {
+  display: block;
+  color: #9ec5f7;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .outcome-button {
@@ -2138,6 +2144,7 @@ code {
 .reminder-filter-bar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 14px;
   min-width: 0;
@@ -2149,6 +2156,29 @@ code {
   gap: 5px;
   min-width: 0;
   flex: 1;
+}
+
+.reminder-range-fields {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.reminder-range-fields label {
+  display: grid;
+  gap: 3px;
+  min-width: 128px;
+}
+
+.reminder-range-fields span {
+  color: #9ec5f7;
+  font-size: 11px;
+}
+
+.reminder-range-fields input {
+  min-height: 32px;
+  padding: 6px 8px;
 }
 
 /* ── Base filter button ──────────────────────────────────────
@@ -2982,7 +3012,7 @@ code {
   }
 
   .statusbar {
-    grid-template-columns: minmax(0, 1fr) max-content max-content;
+    grid-template-columns: minmax(0, 1fr) max-content;
   }
 
   .statusbar-spacer {
@@ -2996,6 +3026,14 @@ code {
   .topbar-actions {
     flex: 1 1 100%;
     justify-content: flex-start;
+  }
+
+  .reminder-range-fields {
+    flex: 1 1 100%;
+  }
+
+  .reminder-range-fields label {
+    flex: 1 1 128px;
   }
 
   .panel {
@@ -3103,7 +3141,7 @@ code {
   }
 
   .statusbar {
-    grid-template-columns: minmax(0, 1fr) max-content max-content;
+    grid-template-columns: minmax(0, 1fr) max-content;
     gap: 6px;
     padding: 3px 0 3px 7px;
   }
@@ -3204,7 +3242,6 @@ code {
 
   .primary-outcomes {
     grid-template-columns: repeat(3, minmax(108px, 1fr));
-    padding-top: 38px;
   }
 
   .callback-fields {

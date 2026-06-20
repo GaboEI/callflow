@@ -113,3 +113,21 @@ test("filters and excludes deleted reminders correctly", () => {
     global.Date = originalNow;
   }
 });
+
+test("filters reminders by custom date range using stored reminder dates", () => {
+  const items = [
+    { id: "madrid", date: "2026-06-19", time: "09:00", timezone: "Europe/Madrid", status: "pending" },
+    { id: "bogota", date: "2026-06-21", time: "16:00", timezone: "America/Bogota", status: "pending" },
+    { id: "outside", date: "2026-06-25", time: "10:00", timezone: "America/Denver", status: "pending" },
+    { id: "done", date: "2026-06-20", time: "10:00", timezone: "Europe/Madrid", status: "completed" }
+  ];
+
+  assert.deepEqual(
+    reminders.filterReminders(items, "range", {}, { range: { from: "2026-06-19", to: "2026-06-21" } }).map((item) => item.id),
+    ["madrid", "bogota"]
+  );
+  assert.deepEqual(
+    reminders.filterReminders(items, "range", {}, { range: { from: "2026-06-21", to: "" } }).map((item) => item.id),
+    ["bogota"]
+  );
+});

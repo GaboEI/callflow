@@ -305,6 +305,9 @@
       previousStatus,
       workElapsedMs: Math.max(0, Number(source.workElapsedMs) || 0),
       workStartedAt: validIsoDateTime(source.workStartedAt) ? source.workStartedAt : null,
+      dailyWorkDate: validIsoDate(source.dailyWorkDate) ? source.dailyWorkDate : null,
+      dailyWorkElapsedMs: Math.max(0, Number(source.dailyWorkElapsedMs) || 0),
+      dailyWorkStartedAt: validIsoDateTime(source.dailyWorkStartedAt) ? source.dailyWorkStartedAt : null,
       currentBreakStartedAt: validIsoDateTime(source.currentBreakStartedAt) ? source.currentBreakStartedAt : null,
       breaks: Array.isArray(source.breaks)
         ? source.breaks

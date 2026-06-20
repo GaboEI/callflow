@@ -515,6 +515,7 @@ Africa/Harare ZW
         status: "stopped",
         previousStatus: "working",
         workStartedAt: null,
+        dailyWorkStartedAt: null,
         currentBreakStartedAt: null
       };
       return;
@@ -525,6 +526,7 @@ Africa/Harare ZW
         status: "stopped",
         previousStatus: "paused",
         workStartedAt: null,
+        dailyWorkStartedAt: null,
         currentBreakStartedAt: null
       };
     }
@@ -1125,7 +1127,8 @@ Africa/Harare ZW
 
   function renderHeader() {
     const now = CallFlowReports.formatCallTimestamp(new Date(), state.settings);
-    $("#currentBlockLabel").textContent = CallFlowReports.blockFromHour(now.hour);
+    const currentBlockLabel = $("#currentBlockLabel");
+    if (currentBlockLabel) currentBlockLabel.textContent = CallFlowReports.blockFromHour(now.hour);
     $("#operatorLabel").textContent = state.settings.operatorName || "Sin operador";
     clockView.renderWorkClock();
   }

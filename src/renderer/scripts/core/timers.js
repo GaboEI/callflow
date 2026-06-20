@@ -5,6 +5,9 @@
       previousStatus: null,
       workElapsedMs: 0,
       workStartedAt: null,
+      dailyWorkDate: null,
+      dailyWorkElapsedMs: 0,
+      dailyWorkStartedAt: null,
       currentBreakStartedAt: null,
       breaks: []
     };
@@ -15,6 +18,7 @@
       ...defaultWorkTimer(),
       ...(timer || {}),
       workElapsedMs: Number(timer && timer.workElapsedMs) || 0,
+      dailyWorkElapsedMs: Number(timer && timer.dailyWorkElapsedMs) || 0,
       breaks: Array.isArray(timer && timer.breaks) ? timer.breaks : []
     };
   }
@@ -33,17 +37,37 @@
     return normalized.workElapsedMs + Math.max(0, now - new Date(normalized.workStartedAt).getTime());
   }
 
+  function ensureDailyWorkTimer(timer, dayKey, now = new Date()) {
+    const normalized = normalizeWorkTimer(timer);
+    if (!dayKey) return normalized;
+    if (normalized.dailyWorkDate === dayKey) return normalized;
+    return {
+      ...normalized,
+      dailyWorkDate: dayKey,
+      dailyWorkElapsedMs: 0,
+      dailyWorkStartedAt: normalized.status === "working" ? now.toISOString() : null
+    };
+  }
+
+  function currentDailyWorkElapsed(timer, now = Date.now()) {
+    const normalized = normalizeWorkTimer(timer);
+    if (normalized.status !== "working" || !normalized.dailyWorkStartedAt) return normalized.dailyWorkElapsedMs;
+    return normalized.dailyWorkElapsedMs + Math.max(0, now - new Date(normalized.dailyWorkStartedAt).getTime());
+  }
+
   function currentBreakElapsed(timer, now = Date.now()) {
     const normalized = normalizeWorkTimer(timer);
     if (normalized.status !== "paused" || !normalized.currentBreakStartedAt) return 0;
     return Math.max(0, now - new Date(normalized.currentBreakStartedAt).getTime());
   }
 
-  function freezeWorkTimer(timer, now = new Date()) {
-    const normalized = normalizeWorkTimer(timer);
+  function freezeWorkTimer(timer, now = new Date(), dayKey = null) {
+    const normalized = ensureDailyWorkTimer(timer, dayKey, now);
     if (normalized.status === "working" && normalized.workStartedAt) {
       normalized.workElapsedMs = currentWorkElapsed(normalized, now.getTime());
       normalized.workStartedAt = null;
+      normalized.dailyWorkElapsedMs = currentDailyWorkElapsed(normalized, now.getTime());
+      normalized.dailyWorkStartedAt = null;
       normalized.previousStatus = "working";
     } else if (normalized.status === "paused" && normalized.currentBreakStartedAt) {
       const startedAt = normalized.currentBreakStartedAt;
@@ -58,12 +82,14 @@
     return normalized;
   }
 
-  function toggleShiftTimer(timer, now = new Date()) {
-    const next = normalizeWorkTimer(timer);
+  function toggleShiftTimer(timer, now = new Date(), dayKey = null) {
+    const next = ensureDailyWorkTimer(timer, dayKey, now);
 
     if (next.status === "working") {
       next.workElapsedMs = currentWorkElapsed(next, now.getTime());
+      next.dailyWorkElapsedMs = currentDailyWorkElapsed(next, now.getTime());
       next.workStartedAt = null;
+      next.dailyWorkStartedAt = null;
       next.currentBreakStartedAt = now.toISOString();
       next.status = "paused";
       next.previousStatus = "working";
@@ -75,9 +101,11 @@
       }
       next.currentBreakStartedAt = null;
       next.workStartedAt = now.toISOString();
+      next.dailyWorkStartedAt = now.toISOString();
       next.status = next.status === "stopped" && next.previousStatus === "paused" ? "paused" : "working";
       if (next.status === "paused") {
         next.workStartedAt = null;
+        next.dailyWorkStartedAt = null;
         next.currentBreakStartedAt = now.toISOString();
       }
       next.previousStatus = null;
@@ -88,8 +116,10 @@
 
   const api = {
     currentBreakElapsed,
+    currentDailyWorkElapsed,
     currentWorkElapsed,
     defaultWorkTimer,
+    ensureDailyWorkTimer,
     formatDuration,
     freezeWorkTimer,
     normalizeWorkTimer,

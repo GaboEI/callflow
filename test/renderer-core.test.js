@@ -84,3 +84,29 @@ test("timer core calculates work, break, toggle and freeze states", () => {
   assert.equal(frozen.previousStatus, "paused");
   assert.equal(frozen.breaks[0].durationMs, 120000);
 });
+
+test("timer core tracks daily work separately from total work", () => {
+  const working = {
+    status: "working",
+    workElapsedMs: 3600000,
+    workStartedAt: "2026-06-18T10:00:00.000Z",
+    dailyWorkDate: "2026-06-18",
+    dailyWorkElapsedMs: 60000,
+    dailyWorkStartedAt: "2026-06-18T10:00:00.000Z",
+    breaks: []
+  };
+  const now = new Date("2026-06-18T10:05:00.000Z");
+
+  assert.equal(timers.currentWorkElapsed(working, now.getTime()), 3900000);
+  assert.equal(timers.currentDailyWorkElapsed(working, now.getTime()), 360000);
+
+  const paused = timers.toggleShiftTimer(working, now, "2026-06-18");
+  assert.equal(paused.status, "paused");
+  assert.equal(paused.workElapsedMs, 3900000);
+  assert.equal(paused.dailyWorkElapsedMs, 360000);
+
+  const nextDay = timers.ensureDailyWorkTimer(paused, "2026-06-19", new Date("2026-06-19T08:00:00.000Z"));
+  assert.equal(nextDay.workElapsedMs, 3900000);
+  assert.equal(nextDay.dailyWorkElapsedMs, 0);
+  assert.equal(nextDay.dailyWorkDate, "2026-06-19");
+});

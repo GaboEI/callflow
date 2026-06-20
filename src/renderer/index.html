@@ -298,6 +298,7 @@
                 </label>
                 <div class="primary-outcomes" role="radiogroup" aria-label="Primary outcomes">
                   <div class="outcome-control" data-outcome-control="success">
+                    <span class="outcome-field-label" data-i18n="positiveOutcomeLabel">Resultado positivo</span>
                     <button class="outcome-button outcome-success" type="button" data-outcome-toggle="success">
                       <span data-outcome-label="success">Exitosa</span>
                       <span aria-hidden="true">⌄</span>
@@ -305,6 +306,7 @@
                     <div class="outcome-menu" data-outcome-menu="success"></div>
                   </div>
                   <div class="outcome-control" data-outcome-control="rejection">
+                    <span class="outcome-field-label" data-i18n="rejectionReasonLabel">Motivo de rechazo</span>
                     <button class="outcome-button outcome-rejection" type="button" data-outcome-toggle="rejection">
                       <span data-outcome-label="rejection">Rechazo</span>
                       <span aria-hidden="true">⌄</span>
@@ -312,6 +314,7 @@
                     <div class="outcome-menu" data-outcome-menu="rejection"></div>
                   </div>
                   <div class="outcome-control" data-outcome-control="callback">
+                    <span class="outcome-field-label" data-i18n="callbackOutcomeLabel">Callback / rellamada</span>
                     <button class="outcome-button outcome-callback" type="button" data-outcome-toggle="callback">
                       <span data-outcome-label="callback">Rellamada</span>
                       <span aria-hidden="true">⌄</span>
@@ -492,7 +495,18 @@
                   <button type="button" class="reminder-chip reminder-chip--overdue" data-filter="overdue" data-i18n="filterOverdue">Vencidos</button>
                   <button type="button" class="reminder-chip reminder-chip--invalid" data-filter="invalid" data-i18n="filterInvalid">Inválidos</button>
                   <button type="button" class="reminder-chip reminder-chip--completed" data-filter="completed" data-i18n="filterCompleted">Completados</button>
+                  <button type="button" class="reminder-chip reminder-chip--range" data-filter="range" data-i18n="reportCustomRange">Rango</button>
                   <button type="button" class="reminder-chip reminder-chip--deleted" data-filter="deleted" data-i18n="filterDeleted">🗑 Basura</button>
+                </div>
+                <div class="reminder-range-fields hidden" id="reminderRangeFields">
+                  <label>
+                    <span data-i18n="reportDateFrom">Desde</span>
+                    <input id="reminderDateFrom" type="date" />
+                  </label>
+                  <label>
+                    <span data-i18n="reportDateTo">Hasta</span>
+                    <input id="reminderDateTo" type="date" />
+                  </label>
                 </div>
                 <button type="button" class="icon-button hidden" id="showReminderForm" data-i18n-title="newReminder" title="Crear recordatorio">✎</button>
               </div>
@@ -771,15 +785,11 @@
       </main>
 
       <footer class="statusbar" aria-label="Estado de CallFlow">
-        <div class="statusbar-item statusbar-block">
-          <span class="statusbar-label">Bloque</span>
-          <strong id="currentBlockLabel">--:-- - --:--</strong>
-        </div>
         <div class="shift-timer statusbar-timer" id="shiftTimer">
           <button class="shift-toggle" type="button" id="shiftTimerToggle" data-i18n-title="startWorkTimer" title="Iniciar jornada">▶</button>
           <button class="shift-toggle total-pause-toggle" type="button" id="shiftTimerStop" data-i18n-title="pauseAllTimer" title="Pausa total">■</button>
           <div>
-            <span id="shiftTimerLabel" data-i18n="workTimer">Trabajo</span>
+            <span id="shiftTimerLabel" data-i18n="workTodayTimer">Trabajo hoy</span>
             <strong id="shiftTimerValue">00:00:00</strong>
           </div>
         </div>

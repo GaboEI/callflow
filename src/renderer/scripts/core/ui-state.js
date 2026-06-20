@@ -29,6 +29,10 @@
         from: "",
         to: ""
       },
+      reminderRange: {
+        from: "",
+        to: ""
+      },
       statsRange: {
         preset: "today",
         from: "",

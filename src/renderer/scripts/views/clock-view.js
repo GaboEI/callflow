@@ -121,12 +121,30 @@
       return timers.currentWorkElapsed(state.workTimer, now);
     }
 
-    function currentBreakElapsed(now = Date.now()) {
-      return timers.currentBreakElapsed(state.workTimer, now);
+    function currentWorkDayKey(date = new Date()) {
+      return V.isoDateInTimezone(date, state.settings);
+    }
+
+    function ensureTodayWorkTimer(now = new Date()) {
+      const dayKey = currentWorkDayKey(now);
+      const next = timers.ensureDailyWorkTimer(state.workTimer, dayKey, now);
+      if (
+        next.dailyWorkDate !== state.workTimer?.dailyWorkDate ||
+        next.dailyWorkElapsedMs !== state.workTimer?.dailyWorkElapsedMs ||
+        next.dailyWorkStartedAt !== state.workTimer?.dailyWorkStartedAt
+      ) {
+        state.workTimer = next;
+      }
+      return next;
+    }
+
+    function currentDailyWorkElapsed(now = Date.now()) {
+      return timers.currentDailyWorkElapsed(state.workTimer, now);
     }
 
     function renderShiftTimer() {
-      const timer = normalizeWorkTimer(state.workTimer);
+      const now = new Date();
+      const timer = ensureTodayWorkTimer(now);
       const wrapper = $("#shiftTimer");
       const label = $("#shiftTimerLabel");
       const value = $("#shiftTimerValue");
@@ -141,8 +159,8 @@
       wrapper.classList.toggle("paused", paused);
       wrapper.classList.toggle("working", working);
       wrapper.classList.toggle("stopped", stopped);
-      label.textContent = i18n.t(stopped ? "totalPauseTimer" : paused ? "breakTimer" : "workTimer", language);
-      value.textContent = timers.formatDuration(paused ? currentBreakElapsed() : currentWorkElapsed());
+      label.textContent = i18n.t("workTodayTimer", language);
+      value.textContent = timers.formatDuration(currentDailyWorkElapsed(now.getTime()));
       button.textContent = working ? "⏸" : "▶";
       button.setAttribute(
         "aria-label",
@@ -158,18 +176,20 @@
     }
 
     async function persistWorkTimer() {
-      state.workTimer = normalizeWorkTimer(state.workTimer);
+      state.workTimer = ensureTodayWorkTimer();
       await storage.write("workTimer", state.workTimer);
     }
 
     async function persistActiveTimerSnapshot() {
-      const timer = normalizeWorkTimer(state.workTimer);
       const now = new Date();
+      const timer = ensureTodayWorkTimer(now);
       if (timer.status === "working" && timer.workStartedAt) {
         state.workTimer = {
           ...timer,
           workElapsedMs: currentWorkElapsed(now.getTime()),
-          workStartedAt: now.toISOString()
+          workStartedAt: now.toISOString(),
+          dailyWorkElapsedMs: currentDailyWorkElapsed(now.getTime()),
+          dailyWorkStartedAt: now.toISOString()
         };
         await persistWorkTimer();
       } else if (timer.status === "paused" && timer.currentBreakStartedAt) {
@@ -179,7 +199,8 @@
     }
 
     async function toggleShiftTimer() {
-      state.workTimer = timers.toggleShiftTimer(state.workTimer);
+      const now = new Date();
+      state.workTimer = timers.toggleShiftTimer(state.workTimer, now, currentWorkDayKey(now));
       await persistWorkTimer();
       renderShiftTimer();
     }
@@ -187,7 +208,8 @@
     async function stopShiftTimer() {
       const timer = normalizeWorkTimer(state.workTimer);
       if (timer.status === "idle" || timer.status === "stopped") return;
-      state.workTimer = timers.freezeWorkTimer(timer);
+      const now = new Date();
+      state.workTimer = timers.freezeWorkTimer(timer, now, currentWorkDayKey(now));
       await persistWorkTimer();
       renderShiftTimer();
     }
@@ -195,7 +217,8 @@
     async function freezeAndPersistTimerOnUnload() {
       const timer = normalizeWorkTimer(state.workTimer);
       if (!["working", "paused"].includes(timer.status)) return;
-      state.workTimer = timers.freezeWorkTimer(timer);
+      const now = new Date();
+      state.workTimer = timers.freezeWorkTimer(timer, now, currentWorkDayKey(now));
       await persistWorkTimer();
     }
 

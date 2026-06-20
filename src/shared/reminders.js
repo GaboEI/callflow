@@ -17,7 +17,18 @@
     return { ...reminder, status: due < new Date() ? "overdue" : "pending" };
   }
 
-  function filterReminders(reminders, filter, settings) {
+  function normalizeRange(range) {
+    if (!range || typeof range !== "object") return null;
+    const from = /^\d{4}-\d{2}-\d{2}$/.test(range.from || "") ? range.from : "";
+    const to = /^\d{4}-\d{2}-\d{2}$/.test(range.to || "") ? range.to : "";
+    if (!from && !to) return null;
+    const start = from || to;
+    const end = to || from;
+    return start <= end ? { from: start, to: end } : { from: end, to: start };
+  }
+
+  function filterReminders(reminders, filter, settings, options = {}) {
+    const range = normalizeRange(options.range || options);
     const normalized = reminders.map((reminder) => normalizeReminder(reminder, settings));
     return normalized.filter((reminder) => {
       if (filter === "deleted") return reminder.status === "deleted";
@@ -34,6 +45,7 @@
       if (filter === "today") return diff === 0;
       if (filter === "tomorrow") return diff === 1;
       if (filter === "week") return diff >= 0 && diff <= 7;
+      if (filter === "range") return range ? reminder.date >= range.from && reminder.date <= range.to : true;
       return true;
     });
   }
