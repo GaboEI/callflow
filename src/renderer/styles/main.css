@@ -1366,7 +1366,7 @@ nav {
 .settings-section {
   display: grid;
   gap: 12px;
-  width: min(100%, 980px);
+  width: 100%;
   min-width: 0;
   min-height: 0;
   padding: 16px;
@@ -1376,11 +1376,11 @@ nav {
 }
 
 .settings-tab-panel[data-settings-panel="lists"] {
-  width: min(100%, 1180px);
+  width: 100%;
 }
 
 .settings-tab-panel[data-settings-panel="about"] {
-  width: min(100%, 1040px);
+  width: 100%;
 }
 
 .settings-tab-panel.hidden,
