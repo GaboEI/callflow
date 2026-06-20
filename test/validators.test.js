@@ -123,6 +123,21 @@ test("falls back to the primary timezone when active timezones are missing", () 
   assert.equal(result.lastReminderTimezone, "America/Bogota");
 });
 
+test("normalizes stats timezone separately from reminder timezone", () => {
+  const result = validators.normalizeSettings({
+    timezone: "Europe/Madrid",
+    activeTimezones: ["Europe/Madrid", "America/Bogota"],
+    lastReminderTimezone: "America/Bogota",
+    statsTimezone: "America/Denver",
+    statsCycleStartDay: 15
+  });
+
+  assert.equal(result.timezone, "Europe/Madrid");
+  assert.equal(result.lastReminderTimezone, "America/Bogota");
+  assert.equal(result.statsTimezone, "America/Denver");
+  assert.equal(result.statsCycleStartDay, 15);
+});
+
 test("keeps at least one active timezone when active values are invalid", () => {
   const result = validators.normalizeSettings({
     timezone: "America/Bogota",

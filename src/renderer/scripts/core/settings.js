@@ -138,6 +138,8 @@
       activeTimezones: sanitized.activeTimezones,
       pinnedClockTimezones: sanitized.pinnedClockTimezones,
       lastReminderTimezone: sanitized.lastReminderTimezone,
+      statsTimezone: sanitized.statsTimezone,
+      statsCycleStartDay: sanitized.statsCycleStartDay,
       callTypes: sanitized.callTypes,
       frequentStatuses: sanitized.frequentStatuses,
       customComments: sanitized.customComments,

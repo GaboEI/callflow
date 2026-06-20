@@ -82,6 +82,8 @@ test("builds range analysis from configurable outcomes", () => {
     successLabel: "Venta",
     rejectionLabel: "Rechazo",
     frequentStatuses: ["Sin_respuesta"]
+  }, {
+    callHour: (call) => (call.callType === "3333" ? 10 : 11)
   });
 
   assert.equal(result.total, 4);
@@ -90,7 +92,7 @@ test("builds range analysis from configurable outcomes", () => {
   assert.equal(result.callback, 1);
   assert.equal(result.rates.success, 50);
   assert.deepEqual(result.byType, { 3333: 2, 4444: 2 });
-  assert.deepEqual(result.byHour, { "08": 2, "09": 2 });
+  assert.deepEqual(result.byHour, { 10: 2, 11: 2 });
   assert.equal(result.insights.bestDay, "2026-06-18");
-  assert.equal(result.insights.strongestHour, "08");
+  assert.equal(result.insights.strongestHour, "10");
 });

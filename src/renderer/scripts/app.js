@@ -609,12 +609,19 @@ Africa/Harare ZW
     const settings = state.settings;
     document.body.dataset.theme = settings.theme || "dark";
     const onboardingForm = $("#onboardingForm");
+    const statsTimezoneOptions = V.uniqueItems([settings.statsTimezone || settings.timezone || "local", ...activeTimezones(), settings.timezone || "local"]);
+    const statsTimezoneOptionsHtml = statsTimezoneOptions
+      .map((timezone) => `<option value="${escapeHtml(timezone)}">${escapeHtml(`${timezoneFlag(timezone)} ${shortTimezoneName(timezone)}`)}</option>`)
+      .join("");
     onboardingForm.language.value = settings.language;
     onboardingForm.timezone.value = settings.timezone;
     onboardingForm.operatorName.value = settings.operatorName || "";
     onboardingForm.reportHeaderFormat.value = settings.reportHeaderFormat;
     onboardingForm.linePrefixMode.value = settings.linePrefixMode || "hash";
     onboardingForm.clockFormat.value = settings.clockFormat || "24h";
+    onboardingForm.statsTimezone.innerHTML = statsTimezoneOptionsHtml;
+    onboardingForm.statsTimezone.value = settings.statsTimezone || settings.timezone || "local";
+    onboardingForm.statsCycleStartDay.value = String(settings.statsCycleStartDay || 1);
     onboardingForm.notifyAtExactTime.checked = settings.notifyAtExactTime !== false;
     onboardingForm.notifyBeforeMinutes.value = String(settings.notifyBeforeMinutes || 0);
     onboardingForm.reminderSound.value = settings.reminderSound || "soft";
@@ -643,6 +650,9 @@ Africa/Harare ZW
     settingsForm.linePrefixMode.value = settings.linePrefixMode || "hash";
     settingsForm.theme.value = settings.theme || "dark";
     settingsForm.clockFormat.value = settings.clockFormat || "24h";
+    settingsForm.statsTimezone.innerHTML = statsTimezoneOptionsHtml;
+    settingsForm.statsTimezone.value = settings.statsTimezone || settings.timezone || "local";
+    settingsForm.statsCycleStartDay.value = String(settings.statsCycleStartDay || 1);
     settingsForm.startOnLogin.checked = Boolean(settings.startOnLogin);
     settingsForm.runInBackground.checked = Boolean(settings.runInBackground);
     settingsForm.notifyAtExactTime.checked = settings.notifyAtExactTime !== false;
@@ -708,6 +718,10 @@ Africa/Harare ZW
         : state.settings.reportHeaderFormat,
       linePrefixMode: form.linePrefixMode ? form.linePrefixMode.value : state.settings.linePrefixMode || "hash",
       clockFormat: form.clockFormat ? form.clockFormat.value : state.settings.clockFormat || "24h",
+      statsTimezone: form.statsTimezone ? form.statsTimezone.value : state.settings.statsTimezone || selectedTimezone,
+      statsCycleStartDay: form.statsCycleStartDay
+        ? Math.min(28, Math.max(1, Number(form.statsCycleStartDay.value) || 1))
+        : state.settings.statsCycleStartDay || 1,
       startOnLogin: form.startOnLogin ? form.startOnLogin.checked : Boolean(state.settings.startOnLogin),
       runInBackground: form.runInBackground ? form.runInBackground.checked : Boolean(state.settings.runInBackground),
       notifyAtExactTime: form.notifyAtExactTime
@@ -798,7 +812,8 @@ Africa/Harare ZW
           `${onboardingText("callbackOutcomes")}: ${list(state.formLists.onboardingCallbackOutcomes)}`
         ].join(" | ")
       ],
-      [onboardingText("onboardingReviewReports"), `${form.reportHeaderFormat.value || "-"} · ${onboardingText("linePrefixMode")}: ${form.linePrefixMode.value}`],
+      [onboardingText("onboardingReviewReports"), `${form.reportHeaderFormat.value || "-"} · ${onboardingText("linePrefixMode")}: ${form.linePrefixMode.value} · ${onboardingText("statsCycleStartDay")}: ${form.statsCycleStartDay.value || "1"}`],
+      [onboardingText("statsTimezone"), `${timezoneFlag(form.statsTimezone.value)} ${shortTimezoneName(form.statsTimezone.value)}`],
       [onboardingText("onboardingReviewReminders"), `${onboardingText("notifyBeforeMinutes")}: ${form.notifyBeforeMinutes.value} min · ${onboardingText("reminderSound")}: ${form.reminderSound.value}`]
     ];
     output.innerHTML = reviewItems
@@ -1012,7 +1027,8 @@ Africa/Harare ZW
     setStatusMessage,
     state,
     stats: CallFlowStats,
-    timers: Timers
+    timers: Timers,
+    validators: V
   });
 
   async function updateActiveTimezones(timezones, lastReminderTimezone = state.settings.lastReminderTimezone) {

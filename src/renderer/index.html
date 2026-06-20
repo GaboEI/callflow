@@ -68,6 +68,11 @@
                 <option value="military" data-i18n="clockMilitary">Militar</option>
               </select>
             </label>
+            <label>
+              <span data-i18n="statsTimezone">Zona para estadísticas</span>
+              <select name="statsTimezone"></select>
+              <small class="helper" data-i18n="statsTimezoneHelper">Solo afecta análisis, cortes diarios y agrupaciones; no cambia recordatorios.</small>
+            </label>
           </section>
 
           <section class="onboarding-step span-2 hidden" data-onboarding-step="2">
@@ -142,6 +147,11 @@
                 <option value="none" data-i18n="linePrefixNone">Sin prefijo</option>
                 <option value="dailyNumber" data-i18n="linePrefixDailyNumber">Número diario 001</option>
               </select>
+            </label>
+            <label>
+              <span data-i18n="statsCycleStartDay">Día de corte mensual</span>
+              <input name="statsCycleStartDay" type="number" min="1" max="28" />
+              <small class="helper" data-i18n="statsCycleStartDayHelper">Día en que reinicia el ciclo mensual de estadísticas.</small>
             </label>
             <div class="settings-group onboarding-reminder-group span-2">
               <h3 data-i18n="reminderAutomation">Automatización de recordatorios</h3>
@@ -655,6 +665,16 @@
                   <option value="12h" data-i18n="clock12">12 horas</option>
                   <option value="military" data-i18n="clockMilitary">Militar</option>
                 </select>
+              </label>
+              <label>
+                <span data-i18n="statsTimezone">Zona para estadísticas</span>
+                <select name="statsTimezone"></select>
+                <small class="helper" data-i18n="statsTimezoneHelper">Solo afecta análisis, cortes diarios y agrupaciones; no cambia recordatorios.</small>
+              </label>
+              <label>
+                <span data-i18n="statsCycleStartDay">Día de corte mensual</span>
+                <input name="statsCycleStartDay" type="number" min="1" max="28" />
+                <small class="helper" data-i18n="statsCycleStartDayHelper">Día en que reinicia el ciclo mensual de estadísticas.</small>
               </label>
               <label><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
               <div class="settings-group span-2">

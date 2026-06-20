@@ -86,6 +86,7 @@
 
   function buildStatsAnalysis(calls, reminders, settings, options = {}) {
     const callDate = typeof options.callDate === "function" ? options.callDate : defaultCallDate;
+    const callHourValue = typeof options.callHour === "function" ? options.callHour : callHour;
     const noAnswer = noAnswerLabel(settings);
     const byType = {};
     const byHour = {};
@@ -98,7 +99,7 @@
 
     calls.forEach((call) => {
       const category = outcomeCategory(call, settings);
-      const hour = callHour(call);
+      const hour = callHourValue(call);
       const isoDate = callDate(call);
       const label = call.primaryOutcome?.label || call.rawDescription || call.description || category;
 

@@ -195,6 +195,8 @@
       hasPinnedClockTimezones ? uniqueItems(merged.pinnedClockTimezones, LIMITS.shortText) : activeTimezones.slice(0, 1)
     ).filter((timezone) => activeTimezones.includes(timezone));
     const lastReminderTimezone = text(merged.lastReminderTimezone, LIMITS.shortText);
+    const statsTimezone = text(merged.statsTimezone, LIMITS.shortText) || primaryTimezone || "local";
+    const statsCycleStartDay = Math.min(28, Math.max(1, Number(merged.statsCycleStartDay) || 1));
     const normalized = {
       ...merged,
       language,
@@ -202,6 +204,8 @@
       activeTimezones,
       pinnedClockTimezones,
       lastReminderTimezone: activeTimezones.includes(lastReminderTimezone) ? lastReminderTimezone : primaryTimezone,
+      statsTimezone,
+      statsCycleStartDay,
       operatorName: text(merged.operatorName, LIMITS.shortText),
       callTypes: uniqueItems(merged.callTypes, LIMITS.shortText),
       frequentStatuses: uniqueItems(merged.frequentStatuses || merged.callStatuses, LIMITS.shortText),

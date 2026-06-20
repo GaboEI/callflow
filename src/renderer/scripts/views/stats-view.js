@@ -9,12 +9,12 @@
       displayIsoDate,
       escapeHtml,
       i18n,
-      isoDateOffset,
       runAction,
       setStatusMessage,
       state,
       stats,
-      timers
+      timers,
+      validators: V
     } = context;
 
     function language() {
@@ -38,23 +38,46 @@
       return date.toISOString().slice(0, 10);
     }
 
-    function startOfMonth(isoDate) {
-      return `${isoDate.slice(0, 7)}-01`;
+    function statsTimezone() {
+      return state.settings.statsTimezone || state.settings.timezone || "local";
+    }
+
+    function isoDateInStatsTimezone(date = new Date()) {
+      return V.isoDateInTimezone(date, statsTimezone());
+    }
+
+    function callIsoDateInStatsTimezone(call) {
+      if (call.createdAt) return V.isoDateInTimezone(new Date(call.createdAt), statsTimezone());
+      return callIsoDate(call);
+    }
+
+    function callHourInStatsTimezone(call) {
+      if (call.createdAt) {
+        return Number(V.timeInTimezone(new Date(call.createdAt), statsTimezone()).slice(0, 2)) || 0;
+      }
+      return Number(call.hour) || 0;
+    }
+
+    function cycleStartForDate(isoDate) {
+      const day = Math.min(28, Math.max(1, Number(state.settings.statsCycleStartDay) || 1));
+      const [year, month, currentDay] = isoDate.split("-").map(Number);
+      const cycleMonth = currentDay >= day ? month - 1 : month - 2;
+      return new Date(Date.UTC(year, cycleMonth, day)).toISOString().slice(0, 10);
     }
 
     function statsRangeBounds() {
-      const today = isoDateOffset(0);
+      const today = isoDateInStatsTimezone();
       const allCalls = activeCalls();
-      const sortedDates = allCalls.map(callIsoDate).filter(Boolean).sort(compareIsoDate);
+      const sortedDates = allCalls.map(callIsoDateInStatsTimezone).filter(Boolean).sort(compareIsoDate);
 
       if (state.statsRange.preset === "yesterday") {
-        const date = isoDateOffset(1);
+        const date = addDays(today, -1);
         return { from: date, to: date };
       }
       if (state.statsRange.preset === "week") return { from: startOfWeek(today), to: today };
-      if (state.statsRange.preset === "month") return { from: startOfMonth(today), to: today };
-      if (state.statsRange.preset === "last7") return { from: isoDateOffset(6), to: today };
-      if (state.statsRange.preset === "last30") return { from: isoDateOffset(29), to: today };
+      if (state.statsRange.preset === "month") return { from: cycleStartForDate(today), to: today };
+      if (state.statsRange.preset === "last7") return { from: addDays(today, -6), to: today };
+      if (state.statsRange.preset === "last30") return { from: addDays(today, -29), to: today };
       if (state.statsRange.preset === "all") {
         return { from: sortedDates[0] || today, to: sortedDates[sortedDates.length - 1] || today };
       }
@@ -69,23 +92,20 @@
     function callsForStatsRange() {
       const range = statsRangeBounds();
       return activeCalls().filter((call) => {
-        const isoDate = callIsoDate(call);
+        const isoDate = callIsoDateInStatsTimezone(call);
         return compareIsoDate(isoDate, range.from) >= 0 && compareIsoDate(isoDate, range.to) <= 0;
       });
     }
 
     function currentAnalysis() {
-      return stats.buildStatsAnalysis(callsForStatsRange(), state.reminders, state.settings, { callDate: callIsoDate });
+      return stats.buildStatsAnalysis(callsForStatsRange(), state.reminders, state.settings, {
+        callDate: callIsoDateInStatsTimezone,
+        callHour: callHourInStatsTimezone
+      });
     }
 
     function callHourKey(call) {
-      const hour = Number(call.hour);
-      if (Number.isInteger(hour) && hour >= 0 && hour <= 23) return String(hour).padStart(2, "0");
-      if (call.createdAt) {
-        const date = new Date(call.createdAt);
-        if (!Number.isNaN(date.getTime())) return String(date.getHours()).padStart(2, "0");
-      }
-      return "00";
+      return String(callHourInStatsTimezone(call)).padStart(2, "0");
     }
 
     function outcomeCategory(call) {
@@ -138,7 +158,7 @@
         button.classList.toggle("report-period-chip--active", active);
         button.setAttribute("aria-pressed", active ? "true" : "false");
       });
-      $("#statsRangeLabel").textContent = `${displayIsoDate(range.from)} - ${displayIsoDate(range.to)}`;
+      $("#statsRangeLabel").textContent = `${displayIsoDate(range.from)} - ${displayIsoDate(range.to)} · ${statsTimezone()} · ${t("statsCycleStartDay")} ${state.settings.statsCycleStartDay || 1}`;
     }
 
     function formattedDuration(ms) {
@@ -147,8 +167,23 @@
 
     function workTimeSummary() {
       const range = statsRangeBounds();
-      const today = isoDateOffset(0);
+      const today = isoDateInStatsTimezone();
+      const currentCycleStart = cycleStartForDate(today);
       if (range.from !== today || range.to !== today) {
+        if (range.from === currentCycleStart && range.to === today) {
+          const workMs = timers.currentWorkElapsed(state.workTimer);
+          const breakMs = (state.workTimer?.breaks || [])
+            .filter((item) => {
+              const breakDate = V.isoDateInTimezone(new Date(item.startedAt), statsTimezone());
+              return compareIsoDate(breakDate, range.from) >= 0 && compareIsoDate(breakDate, range.to) <= 0;
+            })
+            .reduce((sum, item) => sum + (Number(item.durationMs) || 0), 0) +
+            timers.currentBreakElapsed(state.workTimer);
+          return {
+            work: formattedDuration(workMs),
+            breaks: formattedDuration(breakMs)
+          };
+        }
         return {
           work: t("statsAvailableWithHistory"),
           breaks: t("statsAvailableWithHistory")
@@ -252,13 +287,13 @@
 
     function renderHourlyPerformance(analysis) {
       const max = Math.max(1, ...Object.values(analysis.byHour));
-      const currentHour = String(new Date().getHours()).padStart(2, "0");
+      const currentHour = V.timeInTimezone(new Date(), statsTimezone()).slice(0, 2);
       $("#statsHourlyPerformance").innerHTML = Array.from({ length: 24 }, (_, hour) => {
         const key = String(hour).padStart(2, "0");
         const count = analysis.byHour[key] || 0;
         const height = count ? Math.max(8, Math.round((count / max) * 100)) : 2;
         const selected = state.selectedStatsHour === key;
-        const current = key === currentHour && statsRangeBounds().to === isoDateOffset(0);
+        const current = key === currentHour && statsRangeBounds().to === isoDateInStatsTimezone();
         return `
           <button type="button" class="stats-hour-cell${selected ? " selected" : ""}${count ? " has-data" : ""}${current ? " current-hour" : ""}" data-stats-hour="${key}" title="${key}:00 · ${count} llamadas">
             <span class="stats-hour-bar" style="height:${height}%"></span>
@@ -295,7 +330,7 @@
       const activeDay = state.selectedStatsDay || state.hoveredStatsDay;
       const activeHour = state.selectedStatsHour || state.hoveredStatsHour;
       const activeFacet = state.selectedStatsFacet || state.hoveredStatsFacet;
-      const dayCalls = activeDay ? calls.filter((call) => callIsoDate(call) === activeDay) : [];
+      const dayCalls = activeDay ? calls.filter((call) => callIsoDateInStatsTimezone(call) === activeDay) : [];
       const hourCalls = activeHour ? calls.filter((call) => callHourKey(call) === activeHour) : [];
       const facetCalls = activeFacet
         ? calls.filter((call) => {
