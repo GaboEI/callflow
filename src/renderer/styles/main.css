@@ -1272,7 +1272,7 @@ nav {
 
 .status-field {
   display: grid;
-  grid-template-rows: 32px auto;
+  grid-template-rows: 32px 38px;
   gap: 6px;
   min-width: 0;
 }
@@ -1286,17 +1286,19 @@ nav {
 .outcome-control {
   position: relative;
   display: grid;
-  grid-template-rows: 32px minmax(38px, auto);
+  grid-template-rows: 32px 38px;
   gap: 6px;
   min-width: 0;
 }
 
 .outcome-field-label {
-  display: block;
+  display: flex;
+  align-items: center;
   align-self: end;
   margin-bottom: 0;
   color: var(--muted);
   font-size: 13px;
+  font-weight: 400;
   line-height: 1.25;
 }
 
@@ -2155,6 +2157,7 @@ code {
 .reminder-chips {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 5px;
   min-width: 0;
   flex: 1;
@@ -2174,8 +2177,9 @@ code {
 }
 
 .reminder-range-fields span {
-  color: #9ec5f7;
-  font-size: 11px;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .reminder-range-fields input {
@@ -2508,7 +2512,7 @@ code {
 .report-period-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   gap: 8px;
 }
 
@@ -2668,6 +2672,8 @@ code {
 
 .report-toolbar label span {
   margin-bottom: 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .report-range-field {
@@ -3031,7 +3037,7 @@ code {
   }
 
   .reminder-range-fields {
-    flex: 1 1 100%;
+    flex: 0 1 auto;
   }
 
   .reminder-range-fields label {
