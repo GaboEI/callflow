@@ -386,7 +386,6 @@
             <div class="panel-header">
               <h2 data-i18n="hourlyReports">Reportes horarios</h2>
               <div class="report-main-actions">
-                <button id="copySelectedBlocks" class="report-copy-action"><span aria-hidden="true">⧉</span> Copiar bloques seleccionados</button>
                 <div class="report-export-actions">
                   <span>Exportar como</span>
                   <button type="button" id="exportSelectedMd">.md</button>
@@ -425,8 +424,8 @@
               </div>
             </div>
             <div class="report-bulk-actions">
-              <button type="button" id="selectAllReportBlocks"><span aria-hidden="true">☑</span> Seleccionar todo</button>
-              <button type="button" id="clearReportSelection"><span aria-hidden="true">☐</span> Deseleccionar todo</button>
+              <button type="button" id="copySelectedBlocks" class="report-copy-action"><span aria-hidden="true">⧉</span></button>
+              <button type="button" id="toggleReportSelection"><span aria-hidden="true">☑</span><span data-report-selection-label>Seleccionar todo</span></button>
             </div>
             <div id="reportBlocks" class="report-list"></div>
           </div>

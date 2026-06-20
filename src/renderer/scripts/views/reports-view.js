@@ -148,6 +148,29 @@
       next.disabled = total < 2;
     }
 
+    function renderSelectionControls() {
+      const language = state.settings.language || "es";
+      const copyButton = $("#copySelectedBlocks");
+      const toggleButton = $("#toggleReportSelection");
+      if (!copyButton || !toggleButton) return;
+
+      const visibleKeys = visibleReportBlockKeys();
+      const allVisibleSelected = visibleKeys.length > 0 && visibleKeys.every((key) => state.selectedBlocks.has(key));
+      const selectLabel = allVisibleSelected ? i18n.t("clearReportSelection", language) : i18n.t("selectAllReportBlocks", language);
+      const selectIcon = allVisibleSelected ? "☐" : "☑";
+      const copyLabel = i18n.t("copySelection", language);
+
+      copyButton.title = copyLabel;
+      copyButton.setAttribute("aria-label", copyLabel);
+      copyButton.disabled = state.selectedBlocks.size === 0;
+      copyButton.querySelector("span").textContent = "⧉";
+
+      toggleButton.disabled = reportTrashMode() || visibleKeys.length === 0;
+      toggleButton.dataset.selectionMode = allVisibleSelected ? "clear" : "select";
+      toggleButton.querySelector("span[aria-hidden='true']").textContent = selectIcon;
+      toggleButton.querySelector("[data-report-selection-label]").textContent = selectLabel;
+    }
+
     function scrollToActiveMatch() {
       const active = document.querySelector(".report-match.active");
       if (!active) return;
@@ -219,6 +242,7 @@
         state.reportSearch.activeIndex = Math.max(0, state.reportSearch.matches - 1);
       }
       renderSearchStatus();
+      renderSelectionControls();
     }
 
     function buildPlainSupervisorReport(block, calls) {
@@ -293,6 +317,13 @@
       renderReportBlocks();
     }
 
+    function toggleVisibleReportBlockSelection() {
+      const visibleKeys = visibleReportBlockKeys();
+      const allVisibleSelected = visibleKeys.length > 0 && visibleKeys.every((key) => state.selectedBlocks.has(key));
+      if (allVisibleSelected) clearSelection();
+      else selectAllVisibleReportBlocks();
+    }
+
     function setReportPeriod(period) {
       state.reportRange.preset = period;
       state.selectedBlocks.clear();
@@ -360,6 +391,7 @@
       if (!event.target.matches("[data-report-block]")) return;
       if (event.target.checked) state.selectedBlocks.add(event.target.dataset.reportBlock);
       else state.selectedBlocks.delete(event.target.dataset.reportBlock);
+      renderSelectionControls();
     }
 
     function handleDocumentClick(event) {
@@ -389,8 +421,7 @@
       $("#copySelectedBlocks").addEventListener("click", copySelectedBlocks);
       $("#exportSelectedMd").addEventListener("click", () => exportSelectedBlocks("md"));
       $("#exportSelectedTxt").addEventListener("click", () => exportSelectedBlocks("txt"));
-      $("#selectAllReportBlocks").addEventListener("click", selectAllVisibleReportBlocks);
-      $("#clearReportSelection").addEventListener("click", clearSelection);
+      $("#toggleReportSelection").addEventListener("click", toggleVisibleReportBlockSelection);
       $("#reportDateFrom").addEventListener("change", (event) => {
         state.reportRange.preset = "custom";
         state.reportRange.from = event.target.value;
