@@ -64,6 +64,6 @@ Inside each report block, calls are listed on consecutive lines without a blank 
 
 The operator creates a callback reminder with optional call ID, date, time, and note. The reminder appears in Today, Tomorrow, This week, Overdue, or Completed.
 
-## Script
+## Scripts
 
 The operator searches or creates internal documents for products, scripts, objections, and quick answers. Documents open in a rendered reading view and can be edited, deleted, or exported as `.md` and `.txt`.

@@ -585,7 +585,7 @@ Africa/Harare ZW
       reports: "Reportes",
       reminders: "Recordatorios",
       stats: "Estadísticas",
-      knowledge: "Script",
+      knowledge: "Scripts",
       settings: "Configuración"
     };
     return titles[view] || "CallFlow";

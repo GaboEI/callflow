@@ -18,7 +18,7 @@
 - Full statistics by primary outcome subtype.
 - Full Onboarding and Settings management for success, rejection, and callback presets.
 
-## MVP 3: Biblioteca Script Markdown
+## MVP 3: Biblioteca Scripts Markdown
 
 - Notes CRUD.
 - Safe rendered Markdown reader.

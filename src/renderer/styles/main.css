@@ -3378,6 +3378,29 @@ code {
   background: rgba(59, 130, 246, 0.28);
 }
 
+/* Keep Markdown source visually plain while editing. Formatting belongs to preview/reader mode. */
+.script-editor-panel .cm-s-easymde span {
+  color: inherit;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  font-style: normal;
+  font-weight: normal;
+  line-height: inherit;
+  text-decoration: none;
+}
+
+.script-editor-panel .cm-s-easymde .cm-header-1,
+.script-editor-panel .cm-s-easymde .cm-header-2,
+.script-editor-panel .cm-s-easymde .cm-header-3,
+.script-editor-panel .cm-s-easymde .cm-header-4,
+.script-editor-panel .cm-s-easymde .cm-header-5,
+.script-editor-panel .cm-s-easymde .cm-header-6 {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
 .script-editor-panel .editor-preview,
 .script-editor-panel .editor-preview-side {
   color: #dbe5f4;
