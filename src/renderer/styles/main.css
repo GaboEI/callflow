@@ -1378,11 +1378,23 @@ nav {
   gap: 8px;
 }
 
+.status-outcome-row:has([data-outcome-menu="callback"].open) {
+  margin-bottom: 240px;
+}
+
 .outcome-menu-list {
   display: grid;
   gap: 4px;
   max-height: 180px;
   overflow: auto;
+}
+
+.outcome-control[data-outcome-control="callback"] .outcome-menu {
+  width: min(360px, 88vw);
+}
+
+.outcome-control[data-outcome-control="callback"] .outcome-menu-list {
+  max-height: 88px;
 }
 
 .outcome-menu-item {
@@ -1416,9 +1428,27 @@ nav {
 }
 
 .outcome-menu-actions button,
-.outcome-clear {
+.outcome-clear,
+.outcome-confirm {
   min-height: 34px;
   padding: 6px 9px;
+}
+
+.outcome-confirm {
+  justify-self: end;
+  min-width: 42px;
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.outcome-confirm:hover {
+  border-color: rgba(34, 197, 94, 0.8);
+  background: rgba(34, 197, 94, 0.24);
+  color: #bbf7d0;
 }
 
 .callback-fields {

@@ -259,6 +259,7 @@
           <input data-new-outcome="${category}" placeholder="${escapeHtml(i18n.t("newOutcome", language))}" />
           <button type="button" data-add-outcome="${category}">${escapeHtml(i18n.t("addOutcome", language))}</button>
         </div>
+        ${category === "callback" ? '<button type="button" class="outcome-confirm" data-confirm-outcome="callback" title="Confirmar selección" aria-label="Confirmar selección">✓</button>' : ""}
         <button type="button" class="outcome-clear" data-clear-outcome>${escapeHtml(i18n.t("clearOutcome", language))}</button>
       `;
     }
@@ -652,6 +653,7 @@
       const addOutcomeCategory = event.target.dataset.addOutcome;
       const removeOutcomeCategory = event.target.dataset.removeOutcome;
       const clearOutcome = event.target.closest("[data-clear-outcome]");
+      const confirmOutcome = event.target.closest("[data-confirm-outcome]");
 
       if (dashboardCallTypeToRemove) removeDashboardCallType(dashboardCallTypeToRemove);
       if (outcomeToggle) {
@@ -665,6 +667,10 @@
       if (selectOutcomeCategory) selectPrimaryOutcome(selectOutcomeCategory, event.target.dataset.value);
       if (addOutcomeCategory) addOutcomePreset(addOutcomeCategory);
       if (removeOutcomeCategory) removeOutcomePreset(removeOutcomeCategory, event.target.dataset.value);
+      if (confirmOutcome) {
+        state.openOutcomeMenu = null;
+        renderOutcomeControls();
+      }
       if (clearOutcome) clearPrimaryOutcome();
       if (statusOption) selectStatusOption(statusOption.dataset.statusOption);
       if (customCommentOption) selectCustomCommentOption(customCommentOption.dataset.customCommentOption);
