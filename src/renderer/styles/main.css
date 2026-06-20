@@ -2411,23 +2411,24 @@ code {
 }
 
 .stats-time-modal {
-  width: min(650px, 100%);
-  max-height: min(820px, calc(100vh - 28px));
+  width: min(1100px, 100%);
+  max-height: min(760px, calc(100vh - 28px));
+  padding: 24px;
 }
 
 .schedule-overview {
   display: grid;
-  grid-template-columns: minmax(210px, 0.82fr) minmax(330px, 1.35fr);
+  grid-template-columns: minmax(270px, 0.72fr) minmax(0, 2fr);
   align-items: stretch;
-  gap: 9px;
-  margin-bottom: 14px;
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
 .schedule-date-panel {
   display: grid;
   align-content: space-between;
   gap: 10px;
-  padding: 9px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #07101f;
@@ -2466,13 +2467,13 @@ code {
 
 .schedule-period-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 9px;
 }
 
 .schedule-period-card {
   min-width: 0;
-  padding: 7px 8px;
+  padding: 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: linear-gradient(180deg, rgba(34, 211, 238, 0.08), transparent), #07101f;
@@ -2497,8 +2498,8 @@ code {
 }
 
 .schedule-period-card strong {
-  margin: 2px 0;
-  font-size: 16px;
+  margin: 4px 0;
+  font-size: 18px;
 }
 
 .schedule-grid-header,
@@ -2510,19 +2511,19 @@ code {
 }
 
 .schedule-grid-header {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .schedule-hour-grid {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  gap: 5px;
 }
 
 .schedule-hour {
   min-width: 0;
-  min-height: 44px;
-  padding: 5px 3px;
+  min-height: 54px;
+  padding: 7px 2px;
   border-color: rgba(96, 165, 250, 0.18);
   background: rgba(15, 23, 42, 0.82);
 }
@@ -2545,7 +2546,7 @@ code {
 }
 
 .schedule-actions {
-  margin-top: 14px;
+  margin-top: 20px;
   justify-content: flex-end;
 }
 
@@ -4562,6 +4563,14 @@ code {
 }
 
 @media (max-width: 979px) {
+  .schedule-period-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .schedule-hour-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
   .report-toolbar {
     grid-template-columns: 1fr;
     gap: 7px;
@@ -4618,6 +4627,18 @@ code {
 }
 
 @media (max-width: 620px) {
+  .schedule-period-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schedule-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-hour-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
   .report-searchbar {
     grid-template-columns: 1fr;
   }
