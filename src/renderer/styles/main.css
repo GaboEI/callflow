@@ -3367,11 +3367,13 @@ code {
   background: #07101f;
   border-color: var(--border);
   border-radius: 0 0 8px 8px;
-  font: 14px/1.62 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font: 14px/1.4 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
 }
 
 .script-editor-panel .CodeMirror-cursor {
-  border-left-color: #e2e8f0;
+  width: 0;
+  border-left: 1px solid #e2e8f0;
+  border-right: 0;
 }
 
 .script-editor-panel .CodeMirror-selected {
