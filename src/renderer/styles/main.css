@@ -1278,6 +1278,12 @@ nav {
   margin: 2px 0 0;
 }
 
+.settings-heading p {
+  margin: 4px 0 0;
+  max-width: 560px;
+  font-size: 13px;
+}
+
 .settings-layout {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -1297,10 +1303,13 @@ nav {
 }
 
 .settings-section-general,
-.settings-section-time,
 .settings-section-reports,
 .settings-section-lists,
 .settings-maintenance {
+  grid-column: 1 / -1;
+}
+
+.settings-section-time {
   grid-column: 1 / -1;
 }
 
@@ -1339,19 +1348,19 @@ nav {
 }
 
 .settings-fields .field-xs {
-  width: min(100%, 132px);
+  width: min(100%, 118px);
 }
 
 .settings-fields .field-sm {
-  width: min(100%, 190px);
+  width: min(100%, 168px);
 }
 
 .settings-fields .field-md {
-  width: min(100%, 320px);
+  width: min(100%, 288px);
 }
 
 .settings-fields .field-wide {
-  width: min(100%, 620px);
+  width: min(100%, 560px);
 }
 
 .settings-fields input,
@@ -1361,35 +1370,126 @@ nav {
 
 .settings-toggle-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, max-content));
   gap: 8px;
 }
 
 .settings-toggle-grid .checkbox-row,
 .settings-section .checkbox-row {
-  min-height: 38px;
-  padding: 8px 10px;
-  background: rgba(11, 18, 32, 0.42);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  border-radius: 7px;
+  min-height: 32px;
+  padding: 4px 2px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 .settings-list-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
 }
 
 .settings-list-grid .list-editor {
+  align-content: start;
   min-width: 0;
-  padding: 12px;
+  min-height: 158px;
+  max-height: 246px;
+  padding: 10px;
   background: rgba(11, 18, 32, 0.36);
   border: 1px solid rgba(148, 163, 184, 0.14);
   border-radius: 8px;
 }
 
+.settings-list-grid .field-label {
+  overflow: hidden;
+  color: #dbeafe;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-list-grid .helper {
+  margin-top: -2px;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.settings-list-grid .inline-add {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+
+.settings-list-grid .inline-add input {
+  min-height: 32px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.settings-list-grid .inline-add button {
+  min-height: 32px;
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
+.settings-value-list,
+#settingsForm .timezone-chip-list {
+  align-content: start;
+  gap: 5px;
+  min-height: 30px;
+  max-height: 104px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+#settingsForm .chip {
+  display: inline-flex;
+  flex: 0 1 auto;
+  max-width: min(100%, 210px);
+  min-width: 0;
+  min-height: 24px;
+  gap: 5px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+#settingsForm .chip-text {
+  display: block;
+  min-width: 0;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#settingsForm .chip button {
+  width: 18px;
+  min-height: 18px;
+  height: 18px;
+  font-size: 12px;
+}
+
+#settingsForm .timezone-chip .chip-text {
+  max-width: 150px;
+}
+
 .settings-secondary-action {
   justify-self: start;
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+#settingsForm .inline-actions {
+  margin-top: 0;
+}
+
+#settingsForm .inline-actions button {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 .settings-save-button {

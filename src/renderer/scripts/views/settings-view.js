@@ -30,8 +30,8 @@
         output.innerHTML = zones
           .map(
             (timezone) => `
-              <span class="chip timezone-chip">
-                ${escapeHtml(timezoneFlag(timezone))} ${escapeHtml(shortTimezoneName(timezone))}
+              <span class="chip timezone-chip" title="${escapeHtml(timezone)}">
+                <span class="chip-text">${escapeHtml(timezoneFlag(timezone))} ${escapeHtml(shortTimezoneName(timezone))}</span>
                 ${
                   zones.length <= 1
                     ? ""
@@ -53,8 +53,8 @@
           ? items
               .map(
                 (item) => `
-                  <span class="chip">
-                    ${escapeHtml(item)}
+                  <span class="chip" title="${escapeHtml(item)}">
+                    <span class="chip-text">${escapeHtml(item)}</span>
                     <button type="button" data-remove-list-item="${listId}" data-value="${escapeHtml(item)}" aria-label="${i18n.t("remove", activeLanguage)}">×</button>
                   </span>
                 `
