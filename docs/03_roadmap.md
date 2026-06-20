@@ -18,10 +18,10 @@
 - Full statistics by primary outcome subtype.
 - Full Onboarding and Settings management for success, rejection, and callback presets.
 
-## MVP 3: Chuleta Markdown
+## MVP 3: Biblioteca Script Markdown
 
 - Notes CRUD.
-- Markdown preview.
+- Safe rendered Markdown reader.
 - Search.
 - Export to `.md` and `.txt`.
 

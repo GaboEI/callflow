@@ -1,6 +1,6 @@
 # CallFlow
 
-CallFlow is a local Windows-oriented desktop app for call center operators and remote workers who need to register calls, generate hourly reports, copy CRM-ready comments, manage callback reminders, and keep a fast Markdown cheat sheet.
+CallFlow is a local Windows-oriented desktop app for call center operators and remote workers who need to register calls, generate hourly reports, copy CRM-ready comments, manage callback reminders, and keep an internal Markdown script library.
 
 ## Tech Stack
 
@@ -28,7 +28,7 @@ npm run check
 
 ## Current Status
 
-Version `0.1.16` adds primary call outcome controls for success, rejection, and callback, including automatic callback reminder creation.
+Version `0.1.16` includes primary call outcome controls and an internal Script library with searchable documents, safe Markdown reading, editing, and optional `.md` or `.txt` export.
 
 The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
 
@@ -50,6 +50,6 @@ git push
 
 - MVP 1: Call registration, reports, CRM copy, history.
 - MVP 2: Statistics and reminders.
-- MVP 3: Markdown cheat sheet.
+- MVP 3: Internal Markdown Script library.
 - MVP 4: Windows `.exe` packaging.
 - MVP 5: Complete multilingual UI and visual improvements.

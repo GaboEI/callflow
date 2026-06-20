@@ -17,6 +17,7 @@
       timerPersistTimer: null,
       reminderTimer: null,
       selectedNoteId: null,
+      knowledgeMode: "library",
       editingReminderId: null,
       lastCall: null,
       pendingCallCapturedAt: null,

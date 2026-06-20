@@ -51,7 +51,7 @@ Responsibilities:
 - Report formatting.
 - Daily statistics.
 - Reminder list and status changes.
-- Knowledge base editor.
+- Script library, Markdown reader, and editor.
 - Settings screen.
 
 Renderer module boundaries:
@@ -60,6 +60,14 @@ Renderer module boundaries:
 - `src/renderer/scripts/core/` owns shared renderer primitives such as DOM helpers, state factory, action/error handling, date/time picker logic, settings, timers, timezones and markdown preview.
 - `src/renderer/scripts/views/` owns view-specific rendering and events. New screens should be added as a `createXView(context)` module with `render()` and `bindEvents()` rather than adding more view logic directly to `app.js`.
 - View modules receive shared dependencies through `context` and should not reach into private variables from another view.
+
+Script library:
+
+- `knowledge_base.json` remains the internal persistence source so existing notes are retained without a destructive migration.
+- The renderer separates library, reader, and editor modes in `knowledge-view.js`.
+- EasyMDE provides the local/offline Markdown editor and formatting toolbar.
+- EasyMDE's GFM rendering is passed through DOMPurify before insertion into the document.
+- Third-party runtime assets are installed as production dependencies and explicitly included in packaged builds; no CDN is required.
 
 Settings compatibility:
 

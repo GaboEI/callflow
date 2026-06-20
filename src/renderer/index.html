@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CallFlow</title>
+    <link rel="stylesheet" href="../../node_modules/easymde/dist/easymde.min.css" />
     <link rel="stylesheet" href="./styles/main.css" />
   </head>
   <body>
@@ -215,7 +216,7 @@
           <button class="nav-link" data-view="reports" data-i18n="reports">Reportes</button>
           <button class="nav-link" data-view="reminders" data-i18n="reminders">Recordatorios</button>
           <button class="nav-link" data-view="stats" data-i18n="stats">Estadísticas</button>
-          <button class="nav-link" data-view="knowledge" data-i18n="knowledge">Chuleta</button>
+          <button class="nav-link" data-view="knowledge" data-i18n="knowledge">Script</button>
           <button class="nav-link" data-view="settings" data-i18n="settings">Configuración</button>
         </nav>
       </aside>
@@ -612,29 +613,60 @@
         </section>
 
         <section id="knowledgeView" class="view">
-          <div class="grid two knowledge-grid">
-            <div class="panel">
-              <div class="panel-header">
-                <h2 data-i18n="knowledge">Chuleta</h2>
-                <button id="newNote" class="primary" data-i18n="newNote">Nueva nota</button>
+          <div class="script-library" id="scriptLibrary">
+            <div class="script-library-header">
+              <div>
+                <span class="eyebrow" data-i18n="scriptLibraryEyebrow">Biblioteca interna</span>
+                <h2 data-i18n="knowledge">Script</h2>
+                <p class="muted" data-i18n="scriptLibraryIntro">Guiones, respuestas y documentos de apoyo disponibles durante tus llamadas.</p>
               </div>
-              <input id="noteSearch" placeholder="Buscar nota" />
-              <div id="notesList" class="item-list"></div>
+              <button id="newNote" class="primary script-create-button" data-i18n="newNote">Nuevo script</button>
             </div>
-            <div class="panel">
-              <form id="noteForm" class="stack">
-                <input name="title" placeholder="Título" required />
-                <textarea name="content" rows="10" placeholder="Markdown" required></textarea>
-                <div class="button-row">
-                  <button class="primary" type="submit" data-i18n="saveNote">Guardar nota</button>
-                  <button type="button" id="deleteNote" class="danger" data-i18n="delete">Eliminar</button>
-                  <button type="button" id="exportMd">.md</button>
-                  <button type="button" id="exportTxt">.txt</button>
-                </div>
-              </form>
-              <div class="preview" id="notePreview"></div>
-            </div>
+            <label class="script-search">
+              <span aria-hidden="true">⌕</span>
+              <input id="noteSearch" data-i18n-placeholder="scriptSearchPlaceholder" placeholder="Buscar por título o contenido..." autocomplete="off" />
+            </label>
+            <div id="notesList" class="script-card-grid"></div>
           </div>
+
+          <article class="script-reader hidden" id="scriptReader">
+            <div class="script-reader-toolbar">
+              <button type="button" id="backToScripts" class="script-back-button" data-i18n="backToScripts">← Biblioteca</button>
+              <div class="inline-actions">
+                <button type="button" id="editNote" class="icon-button script-edit-button" data-i18n-title="editScript" title="Editar script">✎</button>
+                <button type="button" id="exportMd" title="Export Markdown">.md</button>
+                <button type="button" id="exportTxt" title="Export text">.txt</button>
+                <button type="button" id="deleteNote" class="danger" data-i18n="delete">Eliminar</button>
+              </div>
+            </div>
+            <header class="script-document-header">
+              <span class="eyebrow" data-i18n="scriptDocument">Documento</span>
+              <h2 id="scriptReaderTitle"></h2>
+              <p class="muted" id="scriptReaderMeta"></p>
+            </header>
+            <div class="script-markdown" id="notePreview"></div>
+          </article>
+
+          <section class="script-editor-panel hidden" id="scriptEditorPanel">
+            <div class="script-reader-toolbar">
+              <button type="button" id="cancelNoteEdit" class="script-back-button" data-i18n="cancel">← Cancelar</button>
+              <span class="muted" data-i18n="scriptEditorHint">Escribe texto normal o usa Markdown y la barra de formato.</span>
+            </div>
+            <form id="noteForm" class="script-editor-form">
+              <label>
+                <span data-i18n="scriptTitle">Título</span>
+                <input name="title" data-i18n-placeholder="scriptTitlePlaceholder" placeholder="Ejemplo: Guion de venta" required />
+              </label>
+              <label>
+                <span data-i18n="scriptBody">Contenido</span>
+                <textarea id="scriptContent" name="content" rows="14" data-i18n-placeholder="scriptBodyPlaceholder" placeholder="Escribe aquí tu script..." required></textarea>
+              </label>
+              <div class="button-row script-editor-actions">
+                <button class="primary" type="submit" data-i18n="saveNote">Guardar script</button>
+                <button type="button" id="cancelNoteEditBottom" data-i18n="cancel">Cancelar</button>
+              </div>
+            </form>
+          </section>
         </section>
 
         <section id="settingsView" class="view">
@@ -817,6 +849,8 @@
     </div>
 
     <script src="./scripts/i18n.js"></script>
+    <script src="../../node_modules/dompurify/dist/purify.min.js"></script>
+    <script src="../../node_modules/easymde/dist/easymde.min.js"></script>
     <script src="../shared/outcomes.js"></script>
     <script src="../shared/validators.js"></script>
     <script src="../shared/schema.js"></script>

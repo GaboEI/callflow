@@ -174,6 +174,21 @@ test("cleans clipboard call IDs to a single bounded line", () => {
   assert.equal(validators.cleanClipboardCallId("  ABC-123  \nignore this"), "ABC-123");
 });
 
+test("preserves existing Markdown documents when normalizing the Script library", () => {
+  const note = validators.normalizeNote({
+    id: "script-1",
+    title: "Guion de venta",
+    content: "# Producto\n\n- Beneficio\n- **Oferta**",
+    createdAt: "2026-06-01T12:00:00.000Z",
+    updatedAt: "2026-06-20T14:30:00.000Z"
+  });
+
+  assert.equal(note.id, "script-1");
+  assert.equal(note.title, "Guion de venta");
+  assert.match(note.content, /\*\*Oferta\*\*/);
+  assert.equal(note.updatedAt, "2026-06-20T14:30:00.000Z");
+});
+
 test("preserves full-pause timer state without active start timestamps", () => {
   const timer = validators.normalizeWorkTimer({
     status: "stopped",

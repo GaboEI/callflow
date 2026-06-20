@@ -569,11 +569,9 @@ Africa/Harare ZW
     return `${text.slice(0, 48)}...${text.slice(-18)}`;
   }
 
-  const markdownPreview = Markdown.markdownPreview;
   const knowledgeView = window.CallFlowKnowledgeView.createKnowledgeView({
     $,
     escapeHtml,
-    markdownPreview,
     renderApp: () => render(),
     runAction,
     setStatusMessage,
@@ -587,7 +585,7 @@ Africa/Harare ZW
       reports: "Reportes",
       reminders: "Recordatorios",
       stats: "Estadísticas",
-      knowledge: "Chuleta",
+      knowledge: "Script",
       settings: "Configuración"
     };
     return titles[view] || "CallFlow";

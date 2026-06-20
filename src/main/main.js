@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Notification, ipcMain, clipboard, dialog, nativeImage, Menu } = require("electron");
+const { app, BrowserWindow, Notification, ipcMain, clipboard, dialog, nativeImage, Menu, shell } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
 const time = require("../shared/validators");
@@ -264,6 +264,12 @@ function createWindow() {
   mainWindow.setIcon(windowIcon);
   mainWindow.setMenu(null);
   configureDevelopmentTools(mainWindow);
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^(https?:|mailto:)/i.test(url)) {
+      shell.openExternal(url).catch((error) => getLogger().error("external-link-open-failed", { url, message: error.message }));
+    }
+    return { action: "deny" };
+  });
 
   mainWindow.on("close", (event) => {
     if (keepRunningInBackground && !app.isQuitting) {
