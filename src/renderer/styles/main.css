@@ -2101,6 +2101,7 @@ body[data-theme="light"] .outcome-callback.selected {
   color: var(--muted);
   background: transparent;
   border-color: transparent;
+  border-left-width: 5px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -2352,6 +2353,7 @@ body[data-theme="light"] .outcome-callback.selected {
   color: var(--muted);
   background: transparent;
   border-color: transparent;
+  border-left-width: 5px;
   font-size: 12px;
   text-align: left;
   text-overflow: ellipsis;
@@ -4401,7 +4403,7 @@ code {
   padding: 5px 12px 5px 10px;
   border-radius: 6px;
   border: 1px solid rgba(148, 163, 184, 0.18);
-  border-left-width: 3px;
+  border-left-width: 5px;
   background: rgba(15, 23, 42, 0.45);
   color: #94a3b8;
   font-size: 12px;
@@ -4820,7 +4822,7 @@ code {
 }
 
 .report-period-chip {
-  border-left: 3px solid rgba(59, 130, 246, 0.36);
+  border-left: 5px solid rgba(59, 130, 246, 0.36);
   background: rgba(15, 23, 42, 0.52);
   color: #cbd5e1;
 }
