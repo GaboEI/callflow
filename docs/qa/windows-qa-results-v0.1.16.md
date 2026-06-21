@@ -2,6 +2,8 @@
 
 This document is a manual verification log for the Windows target. Until a test is actually executed on Windows, the result must remain `Pending`.
 
+Evidence for future passing tests should live under `docs/qa/evidence/v0.1.16/`.
+
 | Test | Windows version | Result | Evidence | Notes |
 | --- | --- | --- | --- | --- |
 | Installation | Pending | Pending | None | Needs an installed NSIS build on Windows. |

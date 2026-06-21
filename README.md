@@ -232,12 +232,12 @@ scripts?      No separate runtime scripts directory yet
 
 ## En español
 
-CallFlow es una app de escritorio local para centros de llamadas. Sirve para registrar llamadas rapido, copiar lineas para CRM, generar reportes horarios, administrar recordatorios, ver estadisticas y mantener scripts internos en Markdown. Todo se guarda localmente en el equipo, sin backend ni sincronizacion en la nube.
+CallFlow es una app de escritorio local para centros de llamadas. Sirve para registrar llamadas rápido, copiar líneas para CRM, generar reportes horarios, administrar recordatorios, ver estadísticas y mantener scripts internos en Markdown. Todo se guarda localmente en el equipo, sin backend ni sincronización en la nube.
 
 Estado actual:
 
-- el registro de llamadas, reportes, recordatorios, estadisticas, reloj multizona y biblioteca de scripts ya estan implementados
-- Chat IA existe solo como una seccion de interfaz, no como un asistente conectado
+- el registro de llamadas, reportes, recordatorios, estadísticas, reloj multizona y biblioteca de scripts ya están implementados
+- Chat IA existe solo como una sección de interfaz, no como un asistente conectado
 - los datos se guardan en el perfil local de Electron
 - el objetivo principal sigue siendo el empaquetado y pulido para Windows
 

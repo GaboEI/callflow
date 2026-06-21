@@ -15,7 +15,7 @@ For the Windows `.exe` installer, CallFlow should eventually include or referenc
 - Application version from `package.json`.
 - Author/project: GaboEI / CallFlow.
 - Repository: https://github.com/GaboEI/callflow
-- Final repository license after confirmation.
+- Repository license: Apache 2.0.
 - Terms and conditions.
 - Privacy policy / local data notice.
 - Third-party notices.
@@ -25,9 +25,8 @@ For the Windows `.exe` installer, CallFlow should eventually include or referenc
 
 `package.json` currently uses `electron-builder` with NSIS and `deleteAppDataOnUninstall: false`, which is appropriate for avoiding accidental removal of user data on uninstall.
 
-The project should not add a final installer EULA path until the license and legal text are confirmed. Once confirmed, `electron-builder` can be configured to include a license file in the NSIS installer.
+The repository license is already Apache 2.0. The remaining installer text should continue to reference the finalized license plus the still-draft terms and privacy notices before a public release.
 
 ## Local data folder note
 
 The app should continue showing the local data folder in diagnostics/about so users know where settings, reports, reminders, scripts, backups, and other local records live.
-
