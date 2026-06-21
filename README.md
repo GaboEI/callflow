@@ -21,7 +21,7 @@ CallFlow is currently in beta. Core local workflows are functional, the Windows 
 >
 > [![Open Releases](https://img.shields.io/badge/Open_Releases-GitHub-24292f.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1)
 >
-> **Status:** Windows beta builds are being validated locally on Windows 11. Public installer downloads will appear in GitHub Releases when the first tagged release is published.
+> **Status:** Windows beta builds are being validated locally on Windows 11. The NSIS installer is intentionally lightweight and extracts the packaged app during installation. Public installer downloads will appear in GitHub Releases when the first tagged release is published.
 
 ## Screenshots
 

@@ -52,7 +52,8 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "perMachine": true,
+      "perMachine": false,
+      "selectPerMachineByDefault": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "CallFlow",
