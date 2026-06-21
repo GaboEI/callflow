@@ -224,10 +224,16 @@
         <div class="brand">
           <div class="brand-mark">
             <img class="brand-logo-dark" src="./assets/sidebar-logo-dark.svg" alt="CallFlow" />
+            <img class="brand-logo-light" src="./assets/sidebar-logo-light.svg" alt="CallFlow" />
             <strong class="brand-text">CallFlow</strong>
             <span id="dataDirLabel"></span>
           </div>
           <div class="sidebar-operator" id="operatorLabel"></div>
+        </div>
+        <div class="theme-switcher" role="group" aria-label="Tema visual">
+          <button type="button" data-theme-choice="light" data-i18n-title="themeLight" title="Modo claro">☀</button>
+          <button type="button" data-theme-choice="dark" data-i18n-title="themeDark" title="Modo oscuro">☾</button>
+          <button type="button" data-theme-choice="system" data-i18n-title="themeSystem" title="Modo sistema">▣</button>
         </div>
         <nav>
           <button class="nav-link active" data-view="dashboard" data-i18n="dashboard">Dashboard</button>
@@ -962,7 +968,14 @@
                 </div>
                 <div class="settings-fields compact">
                   <label class="field-sm"><span data-i18n="language">Idioma</span><select name="language"></select></label>
-                  <label class="field-sm"><span>Tema visual</span><select name="theme"><option value="dark">Oscuro</option></select></label>
+                  <label class="field-sm">
+                    <span data-i18n="themeVisual">Tema visual</span>
+                    <select name="theme">
+                      <option value="system" data-i18n="themeSystem">Sistema</option>
+                      <option value="dark" data-i18n="themeDark">Oscuro</option>
+                      <option value="light" data-i18n="themeLight">Claro</option>
+                    </select>
+                  </label>
                   <label class="field-md"><span data-i18n="operatorName">Nombre del operador</span><input name="operatorName" required /></label>
                 </div>
               </section>

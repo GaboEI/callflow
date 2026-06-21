@@ -34,7 +34,7 @@
   "notifyBeforeMinutes": 5,
   "notifyAtExactTime": true,
   "reminderSound": "soft",
-  "theme": "dark",
+  "theme": "system",
   "legalAcceptance": null,
   "onboardingCompleted": false
 }

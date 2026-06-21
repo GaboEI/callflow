@@ -39,6 +39,9 @@
       : fallbackTimezones;
   const ONBOARDING_STEP_COUNT = 7;
   const LEGAL_TERMS_VERSION = "2026-06-21";
+  const systemThemeQuery = typeof window.matchMedia === "function"
+    ? window.matchMedia("(prefers-color-scheme: light)")
+    : null;
   const timezoneCountries = Object.fromEntries(
     `
 Europe/Andorra AD
@@ -617,9 +620,32 @@ Africa/Harare ZW
     if (view === "settings") settingsView.setSettingsTab("general");
   }
 
+  function normalizedThemePreference(theme) {
+    return ["dark", "light", "system"].includes(theme) ? theme : "system";
+  }
+
+  function resolvedTheme(theme) {
+    const preference = normalizedThemePreference(theme);
+    if (preference === "system") return systemThemeQuery?.matches ? "light" : "dark";
+    return preference;
+  }
+
+  function applyThemePreference(theme) {
+    const preference = normalizedThemePreference(theme);
+    const resolved = resolvedTheme(preference);
+    document.body.dataset.themePreference = preference;
+    document.body.dataset.theme = resolved;
+    document.body.style.colorScheme = resolved;
+    document.querySelectorAll("[data-theme-choice]").forEach((button) => {
+      const active = button.dataset.themeChoice === preference;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
   function applySettingsToForms() {
     const settings = state.settings;
-    document.body.dataset.theme = settings.theme || "dark";
+    applyThemePreference(settings.theme);
     const onboardingForm = $("#onboardingForm");
     const statsTimezoneOptions = V.uniqueItems([settings.statsTimezone || settings.timezone || "local", ...activeTimezones(), settings.timezone || "local"]);
     const statsTimezoneOptionsHtml = statsTimezoneOptions
@@ -668,7 +694,7 @@ Africa/Harare ZW
     settingsForm.operatorName.value = settings.operatorName || "";
     settingsForm.reportHeaderFormat.value = settings.reportHeaderFormat;
     settingsForm.linePrefixMode.value = settings.linePrefixMode || "hash";
-    settingsForm.theme.value = settings.theme || "dark";
+    settingsForm.theme.value = normalizedThemePreference(settings.theme);
     settingsForm.clockFormat.value = settings.clockFormat || "24h";
     settingsForm.statsTimezone.innerHTML = statsTimezoneOptionsHtml;
     settingsForm.statsTimezone.value = settings.statsTimezone || settings.timezone || "local";
@@ -763,7 +789,7 @@ Africa/Harare ZW
             transactions: state.settings.financial?.transactions || []
           }
         : state.settings.financial || {},
-      theme: form.theme ? form.theme.value : "dark",
+      theme: form.theme ? form.theme.value : state.settings.theme || "system",
       legalAcceptance: form.acceptedLegalTerms?.checked
         ? {
             ...(state.settings.legalAcceptance || {}),
@@ -784,6 +810,17 @@ Africa/Harare ZW
     CallFlowI18n.applyI18n(state.settings.language);
     applySettingsToForms();
     render();
+  }
+
+  async function changeThemePreference(theme) {
+    const nextTheme = normalizedThemePreference(theme);
+    await runAction(async () => {
+      await saveSettings({
+        ...state.settings,
+        theme: nextTheme
+      });
+      setStatusMessage(CallFlowI18n.t("themeSaved", state.settings.language || "es"), "success");
+    });
   }
 
   function activeFormLanguage() {
@@ -1183,6 +1220,7 @@ Africa/Harare ZW
   }
 
   function renderHeader() {
+    applyThemePreference(state.settings.theme);
     const now = CallFlowReports.formatCallTimestamp(new Date(), state.settings);
     const currentBlockLabel = $("#currentBlockLabel");
     if (currentBlockLabel) currentBlockLabel.textContent = CallFlowReports.blockFromHour(now.hour);
@@ -1327,6 +1365,9 @@ Africa/Harare ZW
   function bindEvents() {
     dateTimePicker.enhanceInputs();
     $$(".nav-link").forEach((button) => button.addEventListener("click", () => setView(button.dataset.view)));
+    $$("[data-theme-choice]").forEach((button) => {
+      button.addEventListener("click", () => changeThemePreference(button.dataset.themeChoice));
+    });
     $("#onboardingForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       if (state.onboardingMode === "initial" && !event.currentTarget.acceptedLegalTerms?.checked) {
@@ -1429,6 +1470,12 @@ Africa/Harare ZW
 
     window.addEventListener("resize", handleWindowResize);
     window.addEventListener("scroll", dateTimePicker.position, true);
+    systemThemeQuery?.addEventListener("change", () => {
+      if (state.settings?.theme === "system") {
+        applyThemePreference("system");
+        render();
+      }
+    });
     document.addEventListener("keydown", handleGlobalKeydown);
     window.addEventListener("beforeunload", () => {
       clockView.freezeAndPersistTimerOnUnload();
