@@ -1,7 +1,7 @@
 {
   "name": "callflow",
   "version": "0.1.16",
-  "description": "Desktop call logging assistant for call center operators.",
+  "description": "Local-first Electron desktop app for call-center call logging, hourly reports, reminders, scripts, and shift tracking.",
   "main": "src/main/main.js",
   "scripts": {
     "dev": "electron .",
@@ -21,7 +21,7 @@
     "desktop"
   ],
   "author": "GaboEI",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "private": true,
   "build": {
     "appId": "com.gaboei.callflow",

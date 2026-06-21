@@ -1,6 +1,6 @@
 # License options for CallFlow
 
-Status: comparison only. No license is applied by this document.
+Status: historical comparison only. The repository root now uses Apache 2.0.
 
 Useful references:
 
@@ -9,7 +9,7 @@ Useful references:
 
 ## Current project state
 
-`package.json` currently uses `UNLICENSED` and the repository has no final root `LICENSE` file. That means a final license still needs an explicit decision before public distribution expectations are clear.
+`package.json` and the repository root now use Apache 2.0. This document is kept as a comparison reference for future licensing discussions.
 
 ## Practical comparison
 
@@ -24,12 +24,4 @@ Useful references:
 
 ## Recommendation for CallFlow
 
-For the stated goals, the best candidates are:
-
-1. Apache 2.0 if you want permissive open source with clearer patent language and a professional default for a public GitHub project.
-2. MIT if you want the shortest, simplest, most familiar permissive license.
-
-If the goal is to prevent others from using CallFlow commercially, MIT and Apache 2.0 are not the right fit because they allow commercial use. A noncommercial/custom license can do that, but it would no longer be standard open source and should be reviewed carefully.
-
-No root license file should be added until the final choice is confirmed.
-
+Apache 2.0 was chosen for the repository because it gives the project a permissive public license with clear patent language and a professional default for a GitHub portfolio repo.

@@ -1,6 +1,56 @@
 # CallFlow
 
-CallFlow is a local Windows-oriented desktop app for call center operators and remote workers who need to register calls, generate hourly reports, copy CRM-ready comments, manage callback reminders, and keep an internal Markdown script library.
+CallFlow is a local-first Electron desktop app for call-center operators. It helps agents register calls quickly, copy CRM-ready lines, generate hourly supervisor reports, manage callbacks and reminders, keep shift timers and multizone clocks visible, and maintain a Markdown script library without requiring a backend.
+
+The project is intentionally compact and honest: it shows the product state as it exists today, not the features planned for a later release.
+
+## Screenshots
+
+### Dark mode
+
+| Dashboard | Reports | Reminders |
+| --- | --- | --- |
+| ![Dashboard view](docs/screenshots/dashboard.png) | ![Reports view](docs/screenshots/reports.png) | ![Reminders view](docs/screenshots/reminders.png) |
+| Stats | Scripts | Settings |
+| ![Stats view](docs/screenshots/stats.png) | ![Scripts view](docs/screenshots/knowledge.png) | ![Settings view](docs/screenshots/settings.png) |
+
+### Light mode
+
+| Dashboard | Reports | Settings |
+| --- | --- | --- |
+| ![Dashboard view in light mode](docs/screenshots/dashboard-light.png) | ![Reports view in light mode](docs/screenshots/reports-light.png) | ![Settings view in light mode](docs/screenshots/settings-light.png) |
+
+## What CallFlow does today
+
+- Fast call registration with optional call type, frequent status, custom comment, and primary outcome.
+- CRM copy and supervisor report lines generated from the same stored call record.
+- Hourly report browsing, in-report search, block editing, and block deletion.
+- Callback reminders with pending, overdue, completed, deleted, snooze, mute, and recurrence states.
+- Local statistics for total calls, outcomes, hourly activity, reminders, timesheets, work timers, break time, and estimated earnings.
+- Multi-timezone clocks, pinned clocks, and local work/break tracking.
+- Internal Markdown script library with safe rendering, search, pinning, import/export, and plain-text/PDF-aware document handling.
+- Onboarding and settings for language, time zone, report formatting, reminder behavior, call labels, theme, and finance settings.
+- Local data export/import and diagnostics.
+- An AI Chat shell is present in the UI, but it is currently a placeholder and does not connect to a live AI service yet.
+
+## Who it is for
+
+- Call-center agents who need to log calls quickly during live shifts.
+- Team leads who need hourly or block-based reports.
+- Supervisors who want a fast local tool instead of a browser-only workflow.
+- Technical recruiters or reviewers who want a real desktop product with clear architecture, privacy boundaries, and a visible implementation footprint.
+
+## Why it exists
+
+CallFlow was built to reduce friction around repetitive call-center work:
+
+- one place to register calls,
+- one place to copy CRM-ready lines,
+- one place to track reminders and callbacks,
+- one place to see shift time, time zones, and daily performance,
+- one place to keep scripts and internal notes.
+
+The app is optimized for a compact side-by-side workflow next to CRM, Telegram, or another operator tool.
 
 ## Tech Stack
 
@@ -10,46 +60,173 @@ CallFlow is a local Windows-oriented desktop app for call center operators and r
 - JavaScript
 - Node.js
 - Local JSON persistence
+- Safe Markdown rendering with DOMPurify + EasyMDE assets bundled locally
 
-No React, Vue, Angular, or web backend is used in this MVP.
+There is no React, Vue, Angular, backend service, or cloud database in the current MVP.
+
+## Architecture
+
+- `src/main/main.js` owns the Electron window, IPC, notifications, clipboard access, import/export dialogs, and reminder scheduling.
+- `src/main/storage-service.js` reads and writes versioned JSON data under Electron `app.getPath("userData")`, creates backups, and recovers from corrupt JSON.
+- `src/shared/` contains the domain logic used by both the main and renderer processes, including normalization, reminders, reports, stats, outcomes, and validation.
+- `src/renderer/scripts/app.js` is the orchestration layer that wires views, shared state, settings, and global events together.
+- `src/renderer/scripts/views/` contains the feature modules for dashboard, reports, reminders, stats, scripts, settings, AI shell, calculator, and clock UI.
+- The renderer uses `contextIsolation: true` and a minimal preload bridge instead of direct Node access.
+
+See also:
+
+- [Architecture notes](docs/02_architecture.md)
+- [Product spec](docs/01_product_spec.md)
+- [Windows QA checklist](docs/windows-qa.md)
+
+## Persistent local data
+
+CallFlow stores user data locally inside Electron's `userData` folder. The current storage files are:
+
+- `settings.json`
+- `calls.json`
+- `templates.json`
+- `reminders.json`
+- `knowledge_base.json`
+- `work_timer.json`
+
+The app also creates local backups and logs under the same user data folder. Nothing here is designed to depend on a remote database.
+
+## Privacy and offline posture
+
+- No cloud sync.
+- No backend server.
+- No telemetry pipeline in the current MVP.
+- No data is sent to an external service by default for the implemented features.
+- The AI Chat area is a placeholder, so it does not currently transmit data to a model provider from the app.
+
+The user is responsible for what they store, import, copy, export, or share from the app.
+
+## System requirements
+
+Development:
+
+- Node.js 22.12 or newer
+- npm
+- Electron dependencies installed with `npm install`
+- Linux development has been exercised in this workspace; Windows remains the target packaging platform
+
+Runtime / packaging target:
+
+- Windows 10 or Windows 11 for the `.exe` build path
 
 ## Development
 
+Install dependencies:
+
 ```bash
 npm install
+```
+
+Run the app locally:
+
+```bash
 npm run dev
 ```
 
-Run static JavaScript syntax checks:
+The same command alias is also available as:
+
+```bash
+npm start
+```
+
+Validate syntax and tests:
 
 ```bash
 npm run check
+npm test
+npm run validate
 ```
 
-## Current Status
+## Windows packaging
 
-Version `0.1.16` includes primary call outcome controls and an internal Script library with searchable documents, safe Markdown reading, editing, and optional `.md` or `.txt` export.
-
-The default window opens in a compact work-helper size optimized for side-by-side use with CRM, Telegram, or other call center tools. It remains resizable and maximizable.
-
-User data is stored in Electron's `app.getPath("userData")`, not inside the source tree.
-
-## GitHub Repository
-
-The repository is `https://github.com/GaboEI/callflow`.
-
-The local workspace uses a normal `.git` directory and tracks `origin/main`:
+The repository already includes Electron Builder packaging scripts for Windows:
 
 ```bash
-git status --short --branch
-git remote -v
-git push
+npm run pack:win
+npm run dist:win
+npm run dist:win:portable
 ```
 
-## Roadmap
+These targets are configured for Windows packaging. They should be exercised on Windows or in a Windows-capable build environment.
 
-- MVP 1: Call registration, reports, CRM copy, history.
-- MVP 2: Statistics and reminders.
-- MVP 3: Internal Markdown Script library.
-- MVP 4: Windows `.exe` packaging.
-- MVP 5: Complete multilingual UI and visual improvements.
+## Project status
+
+Current version: `0.1.16`
+
+What is implemented now:
+
+- onboarding and settings
+- fast call logging
+- CRM copy output
+- hourly supervisor reports
+- reminder creation and notification flow
+- daily statistics and timesheets
+- work and break timers
+- Markdown script library
+- diagnostics, export, and import flows
+- local backups and data recovery helpers
+
+What is still not a finished product surface:
+
+- AI Chat is still a placeholder
+- cloud sync is not implemented
+- a backend server is not part of the MVP
+- the legal drafts still need final review before public release
+
+## Repository layout
+
+```text
+src/
+  main/       Electron main process, storage, logging, preload
+  renderer/   UI, screens, styles, client-side orchestration
+  shared/     validation, normalization, reports, reminders, stats
+src/data/     default app configuration
+build/        App icons and packaging assets
+docs/         Product notes, architecture, legal drafts, QA
+scripts?      No separate runtime scripts directory yet
+```
+
+## Documentation and legal files
+
+- [Changelog](CHANGELOG.md)
+- [Contributing](CONTRIBUTING.md)
+- [Privacy draft](docs/legal/PRIVACY_DRAFT.md)
+- [Terms draft](docs/legal/TERMS_DRAFT.md)
+- [Legal notes](docs/legal/README.md)
+
+## What this project demonstrates
+
+- A real Electron app with a strict split between main and renderer processes.
+- Local-first product thinking for sensitive call-center workflows.
+- Domain logic extracted into reusable shared modules instead of being buried in the UI.
+- A strong focus on privacy, offline behavior, and explicit local persistence.
+- A compact but intentional UI with multiple workflow surfaces in one desktop shell.
+- An implementation that is testable, validated, and packaged with Windows in mind.
+
+## Limitations
+
+- This is still an MVP, not a full enterprise call-center platform.
+- No cloud features are available.
+- The AI surface is only a placeholder.
+- Legal text is still draft-oriented and should be reviewed before any public release.
+
+## En español
+
+CallFlow es una app de escritorio local para centros de llamadas. Sirve para registrar llamadas rapido, copiar lineas para CRM, generar reportes horarios, administrar recordatorios, ver estadisticas y mantener scripts internos en Markdown. Todo se guarda localmente en el equipo, sin backend ni sincronizacion en la nube.
+
+Estado actual:
+
+- el registro de llamadas, reportes, recordatorios, estadisticas, reloj multizona y biblioteca de scripts ya estan implementados
+- Chat IA existe solo como una seccion de interfaz, no como un asistente conectado
+- los datos se guardan en el perfil local de Electron
+- el objetivo principal sigue siendo el empaquetado y pulido para Windows
+
+## License
+
+This repository is licensed under [Apache 2.0](LICENSE).
