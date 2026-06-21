@@ -1435,7 +1435,14 @@ body[data-theme="light"] .finance-chart-point:focus {
 body[data-theme="light"] .settings-list-tabs,
 body[data-theme="light"] .settings-list-tab,
 body[data-theme="light"] .settings-tab {
-  background: transparent;
+  background: var(--surface-soft);
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(100, 116, 139, 0.18);
+  border-left-width: 4px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.45),
+    0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
 body[data-theme="light"] .settings-list-tab:hover,
@@ -1443,8 +1450,13 @@ body[data-theme="light"] .settings-list-tab.active,
 body[data-theme="light"] .settings-tab:hover,
 body[data-theme="light"] .settings-tab.active {
   color: #1d4ed8;
-  background: var(--surface-active);
-  border-color: rgba(37, 99, 235, 0.24);
+  background:
+    linear-gradient(180deg, rgba(37, 99, 235, 0.12), rgba(37, 99, 235, 0.05)),
+    var(--surface-active);
+  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow:
+    0 0 0 1px rgba(37, 99, 235, 0.1),
+    0 6px 14px rgba(37, 99, 235, 0.08);
 }
 
 body[data-theme="light"] .button-link {
@@ -1454,7 +1466,9 @@ body[data-theme="light"] .button-link {
 }
 
 body[data-theme="light"] .settings-list-tabs {
-  background: #ffffff;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.72), transparent 36%),
+    var(--surface-muted);
   border-color: rgba(100, 116, 139, 0.2);
 }
 
@@ -2097,6 +2111,8 @@ body[data-theme="light"] .outcome-callback.selected {
   color: #dbeafe;
   background: rgba(59, 130, 246, 0.16);
   border-color: rgba(59, 130, 246, 0.32);
+  transform: translateY(-1px);
+  animation: cf-accent-breathe 1.8s ease-in-out infinite alternate;
 }
 
 .settings-layout {
@@ -2347,6 +2363,8 @@ body[data-theme="light"] .outcome-callback.selected {
   color: #dbeafe;
   background: rgba(59, 130, 246, 0.15);
   border-color: rgba(59, 130, 246, 0.28);
+  transform: translateX(1px);
+  animation: cf-accent-breathe 1.8s ease-in-out infinite alternate;
 }
 
 .settings-list-editor-shell {
@@ -4404,6 +4422,7 @@ code {
   color: #e2e8f0;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  animation: cf-accent-breathe 1.8s ease-in-out infinite alternate;
 }
 
 .reminder-chip:active {
@@ -4809,6 +4828,8 @@ code {
 .report-period-chip:hover {
   border-left-color: rgba(59, 130, 246, 0.82);
   color: #dbeafe;
+  transform: translateY(-1px);
+  animation: cf-accent-breathe 1.8s ease-in-out infinite alternate;
 }
 
 .report-period-chip--active {
@@ -6850,7 +6871,7 @@ body[data-theme="light"] .ai-suggestion-row button {
   color: var(--badge-info-text);
   border-style: solid;
   border-width: 1px;
-  border-left-width: 4px;
+  border-left-width: 5px;
 }
 
 body[data-theme="light"] .report-period-chip[data-report-period="all"],
@@ -6858,9 +6879,10 @@ body[data-theme="light"] .reminder-chip[data-filter="all"] {
   border-left-color: #64748b !important;
   border-color: rgba(100, 116, 139, 0.34) !important;
   box-shadow:
-    0 0 0 1px rgba(100, 116, 139, 0.1),
-    0 4px 12px rgba(15, 23, 42, 0.04),
-    inset 4px 0 0 rgba(100, 116, 139, 0.58);
+    0 0 0 1px rgba(100, 116, 139, 0.12),
+    0 0 0 3px rgba(100, 116, 139, 0.06),
+    0 5px 14px rgba(15, 23, 42, 0.05),
+    inset 5px 0 0 rgba(100, 116, 139, 0.68);
 }
 
 body[data-theme="light"] .report-period-chip[data-report-period="today"],
@@ -6872,9 +6894,10 @@ body[data-theme="light"] .reminder-chip[data-filter="today"] {
     radial-gradient(circle at 16% 0%, rgba(59, 130, 246, 0.18), transparent 34%),
     var(--chip-bg);
   box-shadow:
-    0 0 0 1px rgba(59, 130, 246, 0.12),
-    0 4px 12px rgba(59, 130, 246, 0.06),
-    inset 4px 0 0 rgba(59, 130, 246, 0.68);
+    0 0 0 1px rgba(59, 130, 246, 0.14),
+    0 0 0 3px rgba(59, 130, 246, 0.08),
+    0 5px 14px rgba(59, 130, 246, 0.08),
+    inset 5px 0 0 rgba(59, 130, 246, 0.74);
 }
 
 body[data-theme="light"] .report-period-chip[data-report-period="yesterday"],
@@ -6886,9 +6909,10 @@ body[data-theme="light"] .reminder-chip[data-filter="tomorrow"] {
     radial-gradient(circle at 16% 0%, rgba(34, 197, 94, 0.16), transparent 34%),
     var(--chip-bg);
   box-shadow:
-    0 0 0 1px rgba(34, 197, 94, 0.12),
-    0 4px 12px rgba(34, 197, 94, 0.06),
-    inset 4px 0 0 rgba(34, 197, 94, 0.68);
+    0 0 0 1px rgba(34, 197, 94, 0.14),
+    0 0 0 3px rgba(34, 197, 94, 0.08),
+    0 5px 14px rgba(34, 197, 94, 0.08),
+    inset 5px 0 0 rgba(34, 197, 94, 0.74);
 }
 
 body[data-theme="light"] .report-period-chip[data-report-period="last7"],
@@ -6900,9 +6924,10 @@ body[data-theme="light"] .reminder-chip[data-filter="week"] {
     radial-gradient(circle at 16% 0%, rgba(139, 92, 246, 0.16), transparent 34%),
     var(--chip-bg);
   box-shadow:
-    0 0 0 1px rgba(139, 92, 246, 0.12),
-    0 4px 12px rgba(139, 92, 246, 0.06),
-    inset 4px 0 0 rgba(139, 92, 246, 0.68);
+    0 0 0 1px rgba(139, 92, 246, 0.14),
+    0 0 0 3px rgba(139, 92, 246, 0.08),
+    0 5px 14px rgba(139, 92, 246, 0.08),
+    inset 5px 0 0 rgba(139, 92, 246, 0.74);
 }
 
 body[data-theme="light"] .report-period-chip[data-report-period="last30"],
@@ -6914,9 +6939,10 @@ body[data-theme="light"] .reminder-chip[data-filter="overdue"] {
     radial-gradient(circle at 16% 0%, rgba(245, 158, 11, 0.16), transparent 34%),
     var(--chip-bg);
   box-shadow:
-    0 0 0 1px rgba(245, 158, 11, 0.12),
-    0 4px 12px rgba(245, 158, 11, 0.06),
-    inset 4px 0 0 rgba(245, 158, 11, 0.68);
+    0 0 0 1px rgba(245, 158, 11, 0.14),
+    0 0 0 3px rgba(245, 158, 11, 0.08),
+    0 5px 14px rgba(245, 158, 11, 0.08),
+    inset 5px 0 0 rgba(245, 158, 11, 0.74);
 }
 
 body[data-theme="light"] .report-period-chip[data-report-period="custom"] {
@@ -6927,9 +6953,10 @@ body[data-theme="light"] .report-period-chip[data-report-period="custom"] {
     radial-gradient(circle at 16% 0%, rgba(236, 72, 153, 0.16), transparent 34%),
     var(--chip-bg);
   box-shadow:
-    0 0 0 1px rgba(236, 72, 153, 0.12),
-    0 4px 12px rgba(236, 72, 153, 0.06),
-    inset 4px 0 0 rgba(236, 72, 153, 0.68);
+    0 0 0 1px rgba(236, 72, 153, 0.14),
+    0 0 0 3px rgba(236, 72, 153, 0.08),
+    0 5px 14px rgba(236, 72, 153, 0.08),
+    inset 5px 0 0 rgba(236, 72, 153, 0.74);
 }
 
 body[data-theme="light"] .report-trash-chip,
@@ -6941,9 +6968,10 @@ body[data-theme="light"] .reminder-chip[data-filter="deleted"] {
     radial-gradient(circle at 16% 0%, rgba(239, 68, 68, 0.14), transparent 36%),
     var(--chip-bg);
   box-shadow:
-    0 0 0 1px rgba(239, 68, 68, 0.12),
-    0 4px 12px rgba(239, 68, 68, 0.06),
-    inset 4px 0 0 rgba(239, 68, 68, 0.68);
+    0 0 0 1px rgba(239, 68, 68, 0.14),
+    0 0 0 3px rgba(239, 68, 68, 0.08),
+    0 5px 14px rgba(239, 68, 68, 0.08),
+    inset 5px 0 0 rgba(239, 68, 68, 0.74);
 }
 
 body[data-theme="light"] .chip.preset {
@@ -7692,4 +7720,318 @@ body[data-theme="light"] .report-match {
 body[data-theme="light"] .report-match.active {
   background: var(--badge-success-bg);
   color: var(--badge-success-text);
+}
+
+body .settings-tabs > .settings-tab,
+body .settings-list-tabs > .settings-list-tab,
+body .report-period-chip,
+body .reminder-chip {
+  border-style: solid !important;
+  border-width: 1px !important;
+  border-left-width: 5px !important;
+}
+
+body .settings-tabs > .settings-tab {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+body .settings-list-tabs > .settings-list-tab {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+body .settings-tabs > .settings-tab:nth-child(1) {
+  border-left-color: rgba(100, 116, 139, 0.85) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(2) {
+  border-left-color: rgba(34, 197, 94, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(3) {
+  border-left-color: rgba(37, 99, 235, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(4) {
+  border-left-color: rgba(139, 92, 246, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(5) {
+  border-left-color: rgba(236, 72, 153, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(6) {
+  border-left-color: rgba(245, 158, 11, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(7) {
+  border-left-color: rgba(14, 165, 233, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab.active,
+body .settings-tabs > .settings-tab:hover,
+body .settings-list-tabs > .settings-list-tab.active,
+body .settings-list-tabs > .settings-list-tab:hover {
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.14), rgba(255, 255, 255, 0.86) 18%),
+    var(--surface-active) !important;
+  border-color: rgba(37, 99, 235, 0.34) !important;
+  color: #1d4ed8 !important;
+  box-shadow:
+    0 0 0 1px rgba(37, 99, 235, 0.12),
+    0 6px 14px rgba(37, 99, 235, 0.1) !important;
+}
+
+body .report-period-chip[data-report-period="all"],
+body .reminder-chip[data-filter="all"] {
+  border-left-color: rgba(100, 116, 139, 0.86) !important;
+}
+
+body .report-period-chip[data-report-period="today"],
+body .reminder-chip[data-filter="today"] {
+  border-left-color: rgba(37, 99, 235, 0.9) !important;
+}
+
+body .report-period-chip[data-report-period="yesterday"],
+body .reminder-chip[data-filter="tomorrow"] {
+  border-left-color: rgba(34, 197, 94, 0.9) !important;
+}
+
+body .report-period-chip[data-report-period="last7"],
+body .reminder-chip[data-filter="week"] {
+  border-left-color: rgba(139, 92, 246, 0.9) !important;
+}
+
+body .report-period-chip[data-report-period="last30"],
+body .reminder-chip[data-filter="overdue"] {
+  border-left-color: rgba(245, 158, 11, 0.9) !important;
+}
+
+body .report-period-chip[data-report-period="custom"] {
+  border-left-color: rgba(236, 72, 153, 0.9) !important;
+}
+
+body .report-trash-chip,
+body .reminder-chip[data-filter="deleted"] {
+  border-left-color: rgba(239, 68, 68, 0.9) !important;
+}
+
+body[data-theme="light"] .settings-tabs > .settings-tab,
+body[data-theme="light"] .settings-list-tabs > .settings-list-tab {
+  border-style: solid !important;
+  border-width: 1px !important;
+  border-left-width: 5px !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.72),
+    0 4px 10px rgba(15, 23, 42, 0.05) !important;
+}
+
+body[data-theme="light"] .settings-tabs > .settings-tab {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.84), rgba(241, 245, 249, 0.84)) !important;
+  border-color: rgba(100, 116, 139, 0.18) !important;
+  color: var(--text-soft) !important;
+}
+
+body[data-theme="light"] .settings-tabs > .settings-tab:nth-child(1) {
+  border-left-color: rgba(100, 116, 139, 0.68) !important;
+}
+
+body[data-theme="light"] .settings-tabs > .settings-tab:nth-child(2) {
+  border-left-color: rgba(34, 197, 94, 0.72) !important;
+}
+
+body[data-theme="light"] .settings-tabs > .settings-tab:nth-child(3) {
+  border-left-color: rgba(37, 99, 235, 0.72) !important;
+}
+
+body[data-theme="light"] .settings-tabs > .settings-tab:nth-child(4) {
+  border-left-color: rgba(139, 92, 246, 0.72) !important;
+}
+
+body[data-theme="light"] .settings-tabs > .settings-tab:nth-child(5) {
+  border-left-color: rgba(236, 72, 153, 0.72) !important;
+}
+
+body[data-theme="light"] .settings-tabs > .settings-tab:nth-child(6) {
+  border-left-color: rgba(245, 158, 11, 0.72) !important;
+}
+
+body[data-theme="light"] .settings-tabs > .settings-tab:nth-child(7) {
+  border-left-color: rgba(14, 165, 233, 0.72) !important;
+}
+
+body[data-theme="light"] .settings-tabs > .settings-tab:hover,
+body[data-theme="light"] .settings-tabs > .settings-tab.active {
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.9) 18%),
+    var(--surface-active) !important;
+  border-color: rgba(37, 99, 235, 0.34) !important;
+  color: #1d4ed8 !important;
+  box-shadow:
+    0 0 0 1px rgba(37, 99, 235, 0.12),
+    0 6px 14px rgba(37, 99, 235, 0.1) !important;
+}
+
+body[data-theme="light"] .settings-list-tabs > .settings-list-tab {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.84), rgba(241, 245, 249, 0.84)) !important;
+  border-color: rgba(100, 116, 139, 0.18) !important;
+  color: var(--text-soft) !important;
+}
+
+body[data-theme="light"] .settings-list-tabs > .settings-list-tab:hover,
+body[data-theme="light"] .settings-list-tabs > .settings-list-tab.active {
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.9) 18%),
+    var(--surface-active) !important;
+  border-color: rgba(37, 99, 235, 0.34) !important;
+  color: #1d4ed8 !important;
+  box-shadow:
+    0 0 0 1px rgba(37, 99, 235, 0.12),
+    0 6px 14px rgba(37, 99, 235, 0.1) !important;
+}
+
+body[data-theme="light"] .report-period-chip,
+body[data-theme="light"] .reminder-chip {
+  border-style: solid !important;
+  border-width: 1px !important;
+  border-left-width: 6px !important;
+}
+
+body[data-theme="light"] .report-period-chip[data-report-period="all"],
+body[data-theme="light"] .reminder-chip[data-filter="all"] {
+  border-left-color: rgba(100, 116, 139, 0.88) !important;
+}
+
+body[data-theme="light"] .report-period-chip[data-report-period="today"],
+body[data-theme="light"] .reminder-chip[data-filter="today"] {
+  border-left-color: rgba(37, 99, 235, 0.88) !important;
+}
+
+body[data-theme="light"] .report-period-chip[data-report-period="yesterday"],
+body[data-theme="light"] .reminder-chip[data-filter="tomorrow"] {
+  border-left-color: rgba(34, 197, 94, 0.88) !important;
+}
+
+body[data-theme="light"] .report-period-chip[data-report-period="last7"],
+body[data-theme="light"] .reminder-chip[data-filter="week"] {
+  border-left-color: rgba(139, 92, 246, 0.88) !important;
+}
+
+body[data-theme="light"] .report-period-chip[data-report-period="last30"],
+body[data-theme="light"] .reminder-chip[data-filter="overdue"] {
+  border-left-color: rgba(245, 158, 11, 0.88) !important;
+}
+
+body[data-theme="light"] .report-period-chip[data-report-period="custom"] {
+  border-left-color: rgba(236, 72, 153, 0.88) !important;
+}
+
+body[data-theme="light"] .report-trash-chip,
+body[data-theme="light"] .reminder-chip[data-filter="deleted"] {
+  border-left-color: rgba(239, 68, 68, 0.88) !important;
+}
+
+body .settings-tabs > .settings-tab,
+body .settings-list-tabs > .settings-list-tab,
+body .report-period-chip,
+body .reminder-chip {
+  border-style: solid !important;
+  border-width: 1px !important;
+  border-left-width: 5px !important;
+}
+
+body .settings-tabs > .settings-tab:hover,
+body .settings-tabs > .settings-tab.active,
+body .settings-list-tabs > .settings-list-tab:hover,
+body .settings-list-tabs > .settings-list-tab.active,
+body .report-period-chip:hover,
+body .reminder-chip:hover {
+  animation: cf-accent-breathe 1.8s ease-in-out infinite alternate;
+  transform: translateY(-1px);
+}
+
+body .settings-tabs > .settings-tab:nth-child(1),
+body .settings-list-tabs > .settings-list-tab:nth-child(1) {
+  border-color: rgba(100, 116, 139, 0.34) !important;
+  border-left-color: rgba(100, 116, 139, 0.86) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(2),
+body .settings-list-tabs > .settings-list-tab:nth-child(2) {
+  border-color: rgba(34, 197, 94, 0.34) !important;
+  border-left-color: rgba(34, 197, 94, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(3),
+body .settings-list-tabs > .settings-list-tab:nth-child(3) {
+  border-color: rgba(37, 99, 235, 0.34) !important;
+  border-left-color: rgba(37, 99, 235, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(4),
+body .settings-list-tabs > .settings-list-tab:nth-child(4) {
+  border-color: rgba(139, 92, 246, 0.34) !important;
+  border-left-color: rgba(139, 92, 246, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(5),
+body .settings-list-tabs > .settings-list-tab:nth-child(5) {
+  border-color: rgba(236, 72, 153, 0.34) !important;
+  border-left-color: rgba(236, 72, 153, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(6),
+body .settings-list-tabs > .settings-list-tab:nth-child(6) {
+  border-color: rgba(245, 158, 11, 0.34) !important;
+  border-left-color: rgba(245, 158, 11, 0.9) !important;
+}
+
+body .settings-tabs > .settings-tab:nth-child(7),
+body .settings-list-tabs > .settings-list-tab:nth-child(7) {
+  border-color: rgba(14, 165, 233, 0.34) !important;
+  border-left-color: rgba(14, 165, 233, 0.9) !important;
+}
+
+body .report-period-chip[data-report-period="all"],
+body .reminder-chip[data-filter="all"] {
+  border-color: rgba(100, 116, 139, 0.7) !important;
+  border-left-color: rgba(100, 116, 139, 0.86) !important;
+}
+
+body .report-period-chip[data-report-period="today"],
+body .reminder-chip[data-filter="today"] {
+  border-color: rgba(37, 99, 235, 0.72) !important;
+  border-left-color: rgba(37, 99, 235, 0.9) !important;
+}
+
+body .report-period-chip[data-report-period="yesterday"],
+body .reminder-chip[data-filter="tomorrow"] {
+  border-color: rgba(34, 197, 94, 0.72) !important;
+  border-left-color: rgba(34, 197, 94, 0.9) !important;
+}
+
+body .report-period-chip[data-report-period="last7"],
+body .reminder-chip[data-filter="week"] {
+  border-color: rgba(139, 92, 246, 0.72) !important;
+  border-left-color: rgba(139, 92, 246, 0.9) !important;
+}
+
+body .report-period-chip[data-report-period="last30"],
+body .reminder-chip[data-filter="overdue"] {
+  border-color: rgba(245, 158, 11, 0.72) !important;
+  border-left-color: rgba(245, 158, 11, 0.9) !important;
+}
+
+body .report-period-chip[data-report-period="custom"] {
+  border-color: rgba(236, 72, 153, 0.72) !important;
+  border-left-color: rgba(236, 72, 153, 0.9) !important;
+}
+
+body .report-trash-chip,
+body .reminder-chip[data-filter="deleted"] {
+  border-color: rgba(239, 68, 68, 0.72) !important;
+  border-left-color: rgba(239, 68, 68, 0.9) !important;
 }
