@@ -35,6 +35,8 @@ contextBridge.exposeInMainWorld("callflow", {
   readClipboardText: () => invoke("clipboard:readText"),
   exportBackup: () => invoke("backup:export"),
   importBackup: () => invoke("backup:import"),
+  resetLocalData: () => invoke("storage:clearAll"),
+  restartApp: () => invoke("app:restart"),
   exportNote: (payload) => invoke("export:note", payload),
   importKnowledgeDocument: () => invoke("knowledge:import"),
   getDiagnostics: () => invoke("diagnostics:get"),

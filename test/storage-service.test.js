@@ -105,3 +105,18 @@ test("exports and imports a full backup bundle", async () => {
   assert.equal(imported.knowledgeBase[0].pdfData, "JVBERi0=");
   assert.equal((await service.read("calls"))[0].callId, "A1");
 });
+
+test("clears the local data directory on request", async () => {
+  const { root, service } = await createTestStorage();
+  const dataDir = path.join(root, "userData");
+
+  await service.write("settings", { language: "en", operatorName: "Agent" });
+  await service.write("calls", [{ id: "call-1", callId: "A1", date: "06.18", time: "09:00" }]);
+
+  assert.ok(await fs.stat(dataDir));
+
+  await service.clearAllData();
+
+  await assert.rejects(fs.stat(dataDir), /ENOENT/);
+  assert.deepEqual(service.getHealth(), []);
+});

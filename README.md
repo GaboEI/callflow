@@ -40,8 +40,10 @@ These screenshots show the app in a light theme state.
 - Local statistics for total calls, outcomes, hourly activity, reminders, timesheets, work timers, break time, and estimated earnings.
 - Multi-timezone clocks, pinned clocks, and local work/break tracking.
 - Internal Markdown script library with safe rendering, search, pinning, import/export, and plain-text/PDF-aware document handling.
+- Maintenance actions for controlled local-data reset and safe backup/import workflows.
 - Onboarding and settings for language, time zone, report formatting, reminder behavior, call labels, theme, and finance settings.
 - Local data export/import and diagnostics.
+- Explicit legal review in onboarding, with accepted terms stored locally and surfaced in About.
 - An AI Chat shell is present in the UI, but it is currently a placeholder and does not connect to a live AI service yet.
 
 ## Who it is for
@@ -182,6 +184,8 @@ What is implemented now:
 - Markdown script library
 - diagnostics, export, and import flows
 - local backups and data recovery helpers
+- controlled local-data erase and restart flow from Settings
+- explicit onboarding legal disclosure, blocking, and acceptance metadata
 - Windows NSIS and portable packaging paths that have been validated on a Windows 11 VM
 
 What is still not a finished product surface:

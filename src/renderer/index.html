@@ -200,8 +200,14 @@
             <p class="muted" data-i18n="onboardingStepReviewHelp">Confirma la configuración. Al finalizar se guardan solo preferencias; llamadas, reportes, recordatorios y estadísticas permanecen intactos.</p>
             <div class="onboarding-review" id="onboardingReview"></div>
             <div class="onboarding-legal-note">
-              <strong data-i18n="legalOnboardingTitle">Términos y privacidad</strong>
-              <p class="muted" data-i18n="legalOnboardingSummary">CallFlow guarda tus datos localmente en este equipo. Eres responsable de la información que introduces, importas o copias en la aplicación.</p>
+              <details id="onboardingLegalDisclosure" class="legal-disclosure">
+                <summary data-i18n="legalDisclosureSummary">Abrir términos y privacidad</summary>
+                <div class="legal-disclosure-body">
+                  <strong data-i18n="legalOnboardingTitle">Términos y privacidad</strong>
+                  <p class="muted" data-i18n="legalOnboardingSummary">CallFlow guarda tus datos localmente en este equipo. Eres responsable de la información que introduces, importas o copias en la aplicación.</p>
+                  <p class="muted" data-i18n="legalDisclosureHelp">Lee esta información antes de marcar la casilla de aceptación.</p>
+                </div>
+              </details>
               <label class="checkbox-row">
                 <input name="acceptedLegalTerms" type="checkbox" />
                 <span data-i18n="legalAcceptText">Acepto los términos y condiciones y la política de privacidad.</span>
@@ -1156,12 +1162,13 @@
               <section class="settings-section settings-maintenance settings-tab-panel hidden" data-settings-panel="maintenance">
                 <div class="settings-section-header">
                   <h3 data-i18n="maintenanceDiagnostics">Mantenimiento y diagnóstico</h3>
-                  <p class="muted" data-i18n="maintenanceDiagnosticsHelper">Backups completos, importación y datos útiles para soporte.</p>
+                  <p class="muted" data-i18n="maintenanceDiagnosticsHelper">Backups completos, importación, reinicio local y datos útiles para soporte.</p>
                 </div>
                 <div class="inline-actions">
                   <button type="button" id="openOnboardingWizard" data-i18n="reconfigureOnboarding">Reconfigurar asistente</button>
                   <button type="button" id="exportBackup" data-i18n="exportBackup">Exportar backup</button>
                   <button type="button" id="importBackup" data-i18n="importBackup">Importar backup</button>
+                  <button type="button" id="eraseLocalData" class="danger" data-i18n="eraseLocalData">Borrar datos locales</button>
                   <button type="button" id="refreshDiagnostics" data-i18n="diagnostics">Diagnóstico</button>
                 </div>
                 <p id="diagnosticsSummary" class="diagnostics-summary" aria-live="polite"></p>
@@ -1211,10 +1218,12 @@
                     <h4 data-i18n="legalTermsTitle">Términos y condiciones</h4>
                     <p data-i18n="legalTermsSummary">Base editable: el uso de CallFlow es responsabilidad del usuario, incluyendo datos sensibles, cumplimiento de normas internas y respaldo de información local.</p>
                     <small class="helper"><span data-i18n="legalTermsVersion">Versión de términos</span>: <strong id="aboutTermsVersion">2026-06-21</strong></small>
+                    <small class="helper"><span data-i18n="legalAcceptanceVersionLabel">Versión aceptada</span>: <strong id="aboutTermsAcceptedVersion" data-i18n="legalNotAccepted">No aceptado todavía</strong></small>
+                    <small class="helper"><span data-i18n="legalAcceptedAt">Aceptado el</span>: <strong id="aboutTermsAcceptedAt" data-i18n="legalNotAccepted">No aceptado todavía</strong></small>
                   </article>
                   <article class="about-card">
                     <h4 data-i18n="aboutLicense">Licencia</h4>
-                    <p data-i18n="aboutLicensePending">La licencia final del repositorio todavía no fue seleccionada. Hay una comparación editable preparada antes de aplicar MIT, Apache 2.0, GPL, AGPL u otra opción.</p>
+                    <p data-i18n="aboutLicensePending">El repositorio usa Apache 2.0 como licencia raíz. Los textos legales editables siguen disponibles para revisión antes de una distribución pública.</p>
                   </article>
                   <article class="about-card">
                     <h4 data-i18n="legalThirdPartyTitle">Licencias de terceros</h4>
@@ -1225,7 +1234,7 @@
                   <summary data-i18n="legalInstallerPrep">Notas para instalador Windows</summary>
                   <p class="muted" data-i18n="legalInstallerPrepText">La documentación legal editable ya contempla licencia, términos, privacidad, autor, versión y carpeta local de datos para el empaquetado final.</p>
                 </details>
-                <p class="copyright-note" data-i18n="aboutCopyright">Copyright © 2026 GaboEI. Base legal editable, pendiente de revisión final.</p>
+                <p class="copyright-note" data-i18n="aboutCopyright">Copyright © 2026 GaboEI. La base legal está revisada en su licencia raíz, pero los textos de términos y privacidad siguen en revisión de beta.</p>
               </section>
             </form>
           </div>

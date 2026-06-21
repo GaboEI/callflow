@@ -852,6 +852,26 @@ body[data-theme="light"] .onboarding-logo-fallback {
   border-radius: 8px;
 }
 
+.legal-disclosure {
+  display: grid;
+  gap: 10px;
+  padding: 12px 12px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.32);
+}
+
+.legal-disclosure summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.legal-disclosure-body {
+  display: grid;
+  gap: 8px;
+}
+
 .onboarding-legal-note.onboarding-legal-note--error {
   border-color: rgba(239, 68, 68, 0.48);
   box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.06);
@@ -884,6 +904,11 @@ body[data-theme="light"] .onboarding-logo-fallback {
 body[data-theme="light"] .onboarding-legal-note.onboarding-legal-note--error {
   border-color: rgba(239, 68, 68, 0.38);
   box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.05);
+}
+
+body[data-theme="light"] .legal-disclosure {
+  background: rgba(248, 250, 252, 0.84);
+  border-color: rgba(148, 163, 184, 0.28);
 }
 
 body[data-theme="light"] .onboarding-legal-error {

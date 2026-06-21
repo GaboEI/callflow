@@ -346,6 +346,12 @@ function createStorageService({ dataDir, defaultConfigPath, backupLimit = CALL_B
     return normalized;
   }
 
+  async function clearAllData() {
+    await fs.rm(dataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    dataHealthEvents.length = 0;
+    return true;
+  }
+
   async function getDiagnostics(appInfo = {}) {
     return {
       ...appInfo,
@@ -362,6 +368,7 @@ function createStorageService({ dataDir, defaultConfigPath, backupLimit = CALL_B
     DEFAULT_DATA,
     backupCallsFile,
     createBackupBundle,
+    clearAllData,
     ensureDataFiles,
     exportBackup,
     getDataFile,

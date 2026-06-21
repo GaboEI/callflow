@@ -440,6 +440,18 @@ ipcMain.handle("backup:import", ipcHandler(async () => {
   return { canceled: false, data };
 }, "BACKUP_IMPORT_FAILED"));
 
+ipcMain.handle("storage:clearAll", ipcHandler(async () => {
+  await getStorage().clearAllData();
+  notificationThrottle.clear();
+  return { cleared: true, dataDir: getDataDir() };
+}, "STORAGE_CLEAR_ALL_FAILED"));
+
+ipcMain.handle("app:restart", ipcHandler(async () => {
+  app.relaunch();
+  Promise.resolve().then(() => app.quit());
+  return { restarted: true };
+}, "APP_RESTART_FAILED"));
+
 ipcMain.handle("diagnostics:get", ipcHandler(async () => {
   return getStorage().getDiagnostics({
     appVersion: app.getVersion(),

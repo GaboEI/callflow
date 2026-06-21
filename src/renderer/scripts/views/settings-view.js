@@ -164,7 +164,29 @@
       const versionOutput = document.querySelector("#aboutAppVersion");
       const dataDirOutput = document.querySelector("#aboutDataDir");
       const termsOutput = document.querySelector("#aboutTermsVersion");
+      const acceptedVersionOutput = document.querySelector("#aboutTermsAcceptedVersion");
+      const acceptedAtOutput = document.querySelector("#aboutTermsAcceptedAt");
+      const accepted = state.settings?.legalAcceptance || null;
+      const formatDateTime = (value) => {
+        if (!value) return i18n.t("legalNotAccepted", language);
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return value;
+        try {
+          return new Intl.DateTimeFormat(language, {
+            dateStyle: "medium",
+            timeStyle: "short"
+          }).format(date);
+        } catch (_error) {
+          return date.toLocaleString(language);
+        }
+      };
       if (termsOutput) termsOutput.textContent = legalTermsVersion;
+      if (acceptedVersionOutput) {
+        acceptedVersionOutput.textContent = accepted?.termsVersion || i18n.t("legalNotAccepted", language);
+      }
+      if (acceptedAtOutput) {
+        acceptedAtOutput.textContent = formatDateTime(accepted?.acceptedAt);
+      }
       try {
         const diagnostics = await window.callflow.getDiagnostics();
         if (versionOutput) versionOutput.textContent = diagnostics.appVersion || "0.2.0-beta.1";
@@ -203,6 +225,24 @@
       });
     }
 
+    async function eraseLocalData() {
+      const language = state.settings?.language || "es";
+      const confirmMessage = i18n.t("eraseLocalDataConfirm", language);
+      const confirmToken = i18n.t("eraseLocalDataConfirmToken", language);
+      if (!window.confirm(confirmMessage)) return;
+      const typed = window.prompt(i18n.t("eraseLocalDataTypeConfirm", language), confirmToken);
+      if (!typed || typed.trim() !== confirmToken) {
+        setStatusMessage(i18n.t("eraseLocalDataCanceled", language), "warning");
+        return;
+      }
+      await runAction(async () => {
+        setStatusMessage(i18n.t("eraseLocalDataInProgress", language), "warning");
+        await window.callflow.resetLocalData();
+        setStatusMessage(i18n.t("eraseLocalDataRestarting", language), "success");
+        await window.callflow.restartApp();
+      });
+    }
+
     function render() {
       setSettingsTab(activeSettingsTab);
       setSettingsList(activeSettingsList);
@@ -219,6 +259,7 @@
       });
       document.querySelector("#exportBackup").addEventListener("click", exportBackup);
       document.querySelector("#importBackup").addEventListener("click", importBackup);
+      document.querySelector("#eraseLocalData").addEventListener("click", eraseLocalData);
       document.querySelector("#refreshDiagnostics").addEventListener("click", refreshDiagnostics);
       document.querySelector("#checkUpdates")?.addEventListener("click", checkUpdates);
     }

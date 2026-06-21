@@ -8,16 +8,21 @@ This file summarizes the public-facing state of the project. The full historical
 
 - Beta-stage public repository status and README wording.
 - Windows validation note and beta release notes for recruiter-facing review.
+- Controlled local-data reset action in Settings > Maintenance & diagnostics.
 
 ### Changed
 
 - Version bumped to `0.2.0-beta.1` across the repo.
 - README, badges, and project status now describe CallFlow as a beta-stage Windows desktop app.
 - Documentation now distinguishes current beta status from the earlier alpha validation history.
+- Legal acceptance is now explicit in the onboarding flow, with persisted acceptance metadata visible in About.
+- Onboarding statistics timezone options now follow the active timezone set used in Settings.
 
 ### Fixed
 
 - Formalized the public status so the repo no longer reads like an early prototype.
+- The onboarding legal gate now shows clear feedback before acceptance.
+- The local data reset path clears the app's userData store and restarts CallFlow cleanly.
 
 ### Known limitations
 

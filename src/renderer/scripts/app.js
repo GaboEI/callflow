@@ -921,15 +921,18 @@ Africa/Harare ZW
 
   function syncOnboardingLegalAcceptanceState() {
     const form = $("#onboardingForm");
+    const disclosure = $("#onboardingLegalDisclosure");
     if (!form?.acceptedLegalTerms) return;
     const note = $("#onboardingLegalLocked");
     const accepted = Boolean(
       state.settings?.legalAcceptance?.termsVersion === LEGAL_TERMS_VERSION || state.settings?.onboardingCompleted
     );
     const locked = state.onboardingMode === "reconfigure" && accepted;
+    const disclosureUnlocked = form.dataset.legalDisclosureUnlocked === "true" || Boolean(disclosure?.open);
+    if (disclosure?.open) form.dataset.legalDisclosureUnlocked = "true";
     form.acceptedLegalTerms.checked = accepted;
-    form.acceptedLegalTerms.disabled = locked;
-    form.acceptedLegalTerms.setAttribute("aria-disabled", String(locked));
+    form.acceptedLegalTerms.disabled = locked || !disclosureUnlocked;
+    form.acceptedLegalTerms.setAttribute("aria-disabled", String(form.acceptedLegalTerms.disabled));
     if (note) note.classList.toggle("hidden", !locked);
   }
 
@@ -998,6 +1001,10 @@ Africa/Harare ZW
   function openOnboardingWizard(mode = "initial") {
     state.onboardingMode = mode;
     state.onboardingStep = 0;
+    const onboardingForm = $("#onboardingForm");
+    const disclosure = $("#onboardingLegalDisclosure");
+    if (disclosure) disclosure.open = false;
+    if (onboardingForm) delete onboardingForm.dataset.legalDisclosureUnlocked;
     applySettingsToForms();
     syncOnboardingLegalAcceptanceState();
     clearOnboardingLegalError();
@@ -1468,6 +1475,13 @@ Africa/Harare ZW
       if ($("#onboardingForm").acceptedLegalTerms?.checked) {
         clearOnboardingLegalError();
       }
+    });
+    $("#onboardingLegalDisclosure")?.addEventListener("toggle", () => {
+      const form = $("#onboardingForm");
+      if (form && $("#onboardingLegalDisclosure")?.open) {
+        form.dataset.legalDisclosureUnlocked = "true";
+      }
+      syncOnboardingLegalAcceptanceState();
     });
     $("#onboardingCancel").addEventListener("click", closeOnboardingWizardWithoutSaving);
     $$(".onboarding-logo-dark").forEach((logo) => {
