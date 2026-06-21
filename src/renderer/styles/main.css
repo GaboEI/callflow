@@ -852,6 +852,11 @@ body[data-theme="light"] .onboarding-logo-fallback {
   border-radius: 8px;
 }
 
+.onboarding-legal-note.onboarding-legal-note--error {
+  border-color: rgba(239, 68, 68, 0.48);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.06);
+}
+
 .onboarding-legal-note p {
   margin: 0;
 }
@@ -863,6 +868,26 @@ body[data-theme="light"] .onboarding-logo-fallback {
   padding: 0;
   background: transparent;
   border: 0;
+}
+
+.onboarding-legal-error {
+  color: #fca5a5;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.onboarding-legal-note .checkbox-row input[aria-invalid="true"] {
+  outline: 2px solid rgba(239, 68, 68, 0.38);
+  outline-offset: 2px;
+}
+
+body[data-theme="light"] .onboarding-legal-note.onboarding-legal-note--error {
+  border-color: rgba(239, 68, 68, 0.38);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.05);
+}
+
+body[data-theme="light"] .onboarding-legal-error {
+  color: #b91c1c;
 }
 
 @media (max-width: 560px) {

@@ -911,6 +911,38 @@ Africa/Harare ZW
       .join("");
   }
 
+  function clearOnboardingLegalError() {
+    const form = $("#onboardingForm");
+    const note = form?.querySelector(".onboarding-legal-note");
+    const checkbox = form?.acceptedLegalTerms;
+    const error = $("#onboardingLegalError");
+    if (note) note.classList.remove("onboarding-legal-note--error");
+    if (checkbox) {
+      checkbox.removeAttribute("aria-invalid");
+      checkbox.setCustomValidity("");
+    }
+    if (error) {
+      error.textContent = "";
+      error.classList.add("hidden");
+    }
+  }
+
+  function showOnboardingLegalError(message) {
+    const form = $("#onboardingForm");
+    const note = form?.querySelector(".onboarding-legal-note");
+    const checkbox = form?.acceptedLegalTerms;
+    const error = $("#onboardingLegalError");
+    if (note) note.classList.add("onboarding-legal-note--error");
+    if (checkbox) {
+      checkbox.setAttribute("aria-invalid", "true");
+      checkbox.setCustomValidity(message);
+    }
+    if (error) {
+      error.textContent = message;
+      error.classList.remove("hidden");
+    }
+  }
+
   function renderOnboardingWizard() {
     const form = $("#onboardingForm");
     if (!form) return;
@@ -944,6 +976,7 @@ Africa/Harare ZW
     state.onboardingMode = mode;
     state.onboardingStep = 0;
     applySettingsToForms();
+    clearOnboardingLegalError();
     $("#onboarding").classList.remove("hidden");
     $("#app").classList.add("hidden");
     CallFlowI18n.applyI18n($("#onboardingForm").language.value || state.settings.language);
@@ -1370,12 +1403,21 @@ Africa/Harare ZW
     });
     $("#onboardingForm").addEventListener("submit", async (event) => {
       event.preventDefault();
+      const isFinalStep = state.onboardingStep === ONBOARDING_STEP_COUNT - 1;
+      if (!isFinalStep) {
+        if (!event.currentTarget.reportValidity()) return;
+        clearOnboardingLegalError();
+        setOnboardingStep(state.onboardingStep + 1);
+        return;
+      }
       if (state.onboardingMode === "initial" && !event.currentTarget.acceptedLegalTerms?.checked) {
-        setOnboardingStep(ONBOARDING_STEP_COUNT - 1);
-        setStatusMessage(CallFlowI18n.t("legalAcceptanceRequired", activeFormLanguage()), "error");
+        const message = CallFlowI18n.t("legalAcceptanceRequired", activeFormLanguage());
+        showOnboardingLegalError(message);
+        setStatusMessage(message, "error");
         event.currentTarget.acceptedLegalTerms?.focus();
         return;
       }
+      clearOnboardingLegalError();
       await runAction(async () => {
         await saveSettings(settingsFromForm(event.currentTarget, true));
         $("#onboarding").classList.add("hidden");
@@ -1388,10 +1430,17 @@ Africa/Harare ZW
     });
     $("#onboardingNext").addEventListener("click", () => {
       if (!$("#onboardingForm").reportValidity()) return;
+      clearOnboardingLegalError();
       setOnboardingStep(state.onboardingStep + 1);
     });
     $("#onboardingBack").addEventListener("click", () => {
+      clearOnboardingLegalError();
       setOnboardingStep(state.onboardingStep - 1);
+    });
+    $("#onboardingForm").acceptedLegalTerms?.addEventListener("change", () => {
+      if ($("#onboardingForm").acceptedLegalTerms?.checked) {
+        clearOnboardingLegalError();
+      }
     });
     $("#onboardingCancel").addEventListener("click", closeOnboardingWizardWithoutSaving);
     $$(".onboarding-logo-dark").forEach((logo) => {
