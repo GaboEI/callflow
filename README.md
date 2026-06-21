@@ -16,6 +16,13 @@ CallFlow is currently in beta. Core local workflows are functional, the Windows 
 
 **Windows download:** [GitHub Releases](https://github.com/GaboEI/callflow/releases) - public installer downloads will appear here when a tagged release is published.
 
+<div align="left">
+  <a href="https://github.com/GaboEI/callflow/releases" style="display:inline-block;padding:10px 16px;border-radius:10px;background:#0a66ff;color:#ffffff;text-decoration:none;font-weight:700;border:1px solid rgba(10,102,255,0.38);box-shadow:0 10px 22px rgba(10,102,255,0.18);">
+    Download for Windows
+  </a>
+  <p><small>Public installer downloads will appear here when a tagged release is published. The current Windows build is generated locally for validation.</small></p>
+</div>
+
 ## Screenshots
 
 ### Dark mode
