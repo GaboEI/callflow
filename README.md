@@ -1,5 +1,12 @@
 # CallFlow
 
+![CI](https://img.shields.io/github/actions/workflow/status/GaboEI/callflow/ci.yml?branch=main&label=CI)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.1.16-2ea44f.svg)
+![Windows target](https://img.shields.io/badge/target-Windows%20%7C%20NSIS-0078d6.svg)
+![Electron](https://img.shields.io/badge/runtime-Electron-47848f.svg)
+![Local-first](https://img.shields.io/badge/storage-local--first%20offline-2e8b57.svg)
+
 CallFlow is a local-first Electron desktop app for call-center operators. It helps agents register calls quickly, copy CRM-ready lines, generate hourly supervisor reports, manage callbacks and reminders, keep shift timers and multizone clocks visible, and maintain a Markdown script library without requiring a backend.
 
 The project is intentionally compact and honest: it shows the product state as it exists today, not the features planned for a later release.
@@ -15,6 +22,8 @@ The project is intentionally compact and honest: it shows the product state as i
 | ![Stats view](docs/screenshots/stats.png) | ![Scripts view](docs/screenshots/knowledge.png) | ![Settings view](docs/screenshots/settings.png) |
 
 ### Light mode
+
+These screenshots show the app in a light theme state.
 
 | Dashboard | Reports | Settings |
 | --- | --- | --- |
@@ -194,8 +203,13 @@ scripts?      No separate runtime scripts directory yet
 
 ## Documentation and legal files
 
+- [Case study](docs/00_case_study.md)
+- [Windows QA results](docs/qa/windows-qa-results-v0.1.16.md)
+- [Release notes](docs/releases/v0.1.16-alpha.md)
+- [Windows QA checklist](docs/windows-qa.md)
 - [Changelog](CHANGELOG.md)
 - [Contributing](CONTRIBUTING.md)
+- [Repository setup](docs/repository-setup.md)
 - [Privacy draft](docs/legal/PRIVACY_DRAFT.md)
 - [Terms draft](docs/legal/TERMS_DRAFT.md)
 - [Legal notes](docs/legal/README.md)

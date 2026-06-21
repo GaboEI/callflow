@@ -44,7 +44,7 @@ To the maximum extent permitted by applicable law, the author and project are no
 
 ## Open source status
 
-The repository license has not been selected yet. Until a final license is applied, this draft should not be interpreted as granting permissions beyond those explicitly stated by the project owner.
+The repository is licensed under Apache 2.0. This draft exists to describe product terms, user responsibilities, data handling, and the intended posture for future features without changing the license grant in the repository root.
 
 ## Changes to these terms
 
