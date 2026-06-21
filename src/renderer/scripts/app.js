@@ -636,6 +636,9 @@ Africa/Harare ZW
     document.body.dataset.themePreference = preference;
     document.body.dataset.theme = resolved;
     document.body.style.colorScheme = resolved;
+    document.querySelectorAll(".theme-switcher").forEach((container) => {
+      container.dataset.themeActive = preference;
+    });
     document.querySelectorAll("[data-theme-choice]").forEach((button) => {
       const active = button.dataset.themeChoice === preference;
       button.classList.toggle("active", active);
