@@ -17,7 +17,9 @@ CallFlow is currently in beta. Core local workflows are functional, the Windows 
 
 > **Download for Windows**
 >
-> [![Download for Windows](https://img.shields.io/badge/Download_for_Windows-GitHub_Releases-0a66ff.svg?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/GaboEI/callflow/releases)
+> [![Download installer](https://img.shields.io/badge/Download_installer-Windows_NSIS-0a66ff.svg?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/GaboEI/callflow/releases/download/v0.2.0-beta.1/CallFlow.Setup.0.2.0-beta.1.exe)
+>
+> [![Open Releases](https://img.shields.io/badge/Open_Releases-GitHub-24292f.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1)
 >
 > **Status:** Windows beta builds are being validated locally on Windows 11. Public installer downloads will appear in GitHub Releases when the first tagged release is published.
 
