@@ -171,6 +171,14 @@ npm run dist:win:all
 
 These targets are configured for Windows packaging. `dist:win` is the primary x64 installer path. The `ia32` targets are prepared for evaluation and should only be advertised as supported if Windows validation passes on real 32-bit builds.
 
+## Download Windows installer
+
+Public Windows downloads will be published in [GitHub Releases](https://github.com/GaboEI/callflow/releases) once a release is tagged.
+
+- No public installer has been released yet.
+- The current Windows `.exe` build is generated locally during packaging and is used for validation before a public release.
+- When a release is published, this section will point to the exact installer artifact and release notes.
+
 ## Project status
 
 Current version: `0.2.0-beta.1`
