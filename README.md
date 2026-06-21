@@ -6,7 +6,6 @@
 ![Windows target](https://img.shields.io/badge/target-Windows%20%7C%20NSIS-0078d6.svg)
 ![Electron](https://img.shields.io/badge/runtime-Electron-47848f.svg)
 ![Local-first](https://img.shields.io/badge/storage-local--first%20offline-2e8b57.svg)
-[![Downloads](https://img.shields.io/badge/Downloads-GitHub%20Releases-0a66ff.svg?style=for-the-badge)](https://github.com/GaboEI/callflow/releases)
 
 CallFlow is a local-first Electron desktop beta app for call-center operators. It helps agents register calls quickly, copy CRM-ready lines, generate hourly supervisor reports, manage callbacks and reminders, keep shift timers and multizone clocks visible, and maintain a Markdown script library without requiring a backend.
 
@@ -14,14 +13,11 @@ The project is intentionally compact and honest: it shows the product state as i
 
 CallFlow is currently in beta. Core local workflows are functional, the Windows installer builds successfully, and active testing is being performed on Windows 11. Some UX, documentation, legal text, and release polish are still being refined.
 
-**Windows download:** [GitHub Releases](https://github.com/GaboEI/callflow/releases) - public installer downloads will appear here when a tagged release is published.
+## Windows download
 
-<div align="left">
-  <a href="https://github.com/GaboEI/callflow/releases" style="display:inline-block;padding:10px 16px;border-radius:10px;background:#0a66ff;color:#ffffff;text-decoration:none;font-weight:700;border:1px solid rgba(10,102,255,0.38);box-shadow:0 10px 22px rgba(10,102,255,0.18);">
-    Download for Windows
-  </a>
-  <p><small>Public installer downloads will appear here when a tagged release is published. The current Windows build is generated locally for validation.</small></p>
-</div>
+[![Download for Windows](https://img.shields.io/badge/Download_for_Windows-GitHub_Releases-0a66ff.svg?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/GaboEI/callflow/releases)
+
+Public installer downloads will appear in GitHub Releases when a tagged release is published. The current Windows build is generated locally for validation.
 
 ## Screenshots
 
