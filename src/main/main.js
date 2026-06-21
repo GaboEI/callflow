@@ -266,6 +266,15 @@ function createWindow() {
   mainWindow.setIcon(windowIcon);
   mainWindow.setMenu(null);
   configureDevelopmentTools(mainWindow);
+  mainWindow.webContents.on("devtools-opened", () => {
+    if (!IS_DEVELOPMENT && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.closeDevTools();
+    }
+  });
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    if (/^file:/i.test(url)) return;
+    event.preventDefault();
+  });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^(https?:|mailto:)/i.test(url)) {
       shell.openExternal(url).catch((error) => getLogger().error("external-link-open-failed", { url, message: error.message }));
@@ -314,6 +323,7 @@ app.on("before-quit", () => {
 });
 
 ipcMain.handle("storage:getDataDir", ipcHandler(() => getDataDir(), "GET_DATA_DIR_FAILED"));
+ipcMain.handle("app:getLocale", ipcHandler(() => app.getLocale(), "GET_APP_LOCALE_FAILED"));
 
 ipcMain.handle("storage:getHealth", ipcHandler(() => getStorage().getHealth(), "GET_STORAGE_HEALTH_FAILED"));
 

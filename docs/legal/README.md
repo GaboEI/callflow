@@ -9,3 +9,4 @@ The repository now uses Apache 2.0 as its root license. The files in this folder
 - `LICENSE_OPTIONS.md`: practical comparison kept for historical reference.
 - `THIRD_PARTY_NOTICES_DRAFT.md`: third-party notices structure.
 - `WINDOWS_INSTALLER_LEGAL_NOTES.md`: notes for the Windows installer and packaging flow.
+- `WINDOWS_INSTALLER_EULA_PLACEHOLDER.txt`: placeholder text used by the NSIS installer license screen until final installer legal copy is approved.

@@ -164,9 +164,12 @@ The repository already includes Electron Builder packaging scripts for Windows:
 npm run pack:win
 npm run dist:win
 npm run dist:win:portable
+npm run dist:win:ia32
+npm run dist:win:portable:ia32
+npm run dist:win:all
 ```
 
-These targets are configured for Windows packaging. They should be exercised on Windows or in a Windows-capable build environment.
+These targets are configured for Windows packaging. `dist:win` is the primary x64 installer path. The `ia32` targets are prepared for evaluation and should only be advertised as supported if Windows validation passes on real 32-bit builds.
 
 ## Project status
 

@@ -6,6 +6,13 @@ Run this checklist on a Windows machine or VM after building the NSIS installer 
 npm run dist:win
 ```
 
+For 32-bit validation, use the experimental targets:
+
+```bash
+npm run dist:win:ia32
+npm run dist:win:portable:ia32
+```
+
 ## Install and launch
 
 - Install CallFlow from the generated NSIS installer.

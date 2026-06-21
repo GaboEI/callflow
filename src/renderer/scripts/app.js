@@ -853,11 +853,19 @@ Africa/Harare ZW
     renderOnboardingWizard();
   }
 
-  function detectedSystemLanguage() {
-    const language = String(navigator.language || navigator.userLanguage || "es").toLowerCase();
-    if (language.startsWith("en")) return "en";
+  function supportedLanguageFromLocale(locale) {
+    const language = String(locale || "").toLowerCase();
+    if (language.startsWith("es")) return "es";
     if (language.startsWith("ru")) return "ru";
-    return "es";
+    if (language.startsWith("en")) return "en";
+    return "en";
+  }
+
+  async function detectedSystemLanguage() {
+    const systemLocale = typeof window.callflow?.getSystemLocale === "function"
+      ? await window.callflow.getSystemLocale().catch(() => null)
+      : null;
+    return supportedLanguageFromLocale(systemLocale || navigator.language || navigator.userLanguage || "en");
   }
 
   function onboardingText(key) {
@@ -1584,9 +1592,10 @@ Africa/Harare ZW
     Object.assign(state, data);
     state.settings = normalizeSettings(state.settings);
     if (!state.settings.onboardingCompleted) {
+      const initialLanguage = await detectedSystemLanguage();
       state.settings = normalizeSettings({
         ...state.settings,
-        language: detectedSystemLanguage()
+        language: initialLanguage
       });
     }
     normalizeRuntimeData();

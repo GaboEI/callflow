@@ -20,10 +20,11 @@ For the Windows `.exe` installer, CallFlow should eventually include or referenc
 - Privacy policy / local data notice.
 - Third-party notices.
 - Local data folder behavior.
+- NSIS installer license screen text, currently provided by `WINDOWS_INSTALLER_EULA_PLACEHOLDER.txt`.
 
 ## Current packaging state
 
-`package.json` currently uses `electron-builder` with NSIS and `deleteAppDataOnUninstall: false`, which is appropriate for avoiding accidental removal of user data on uninstall.
+`package.json` currently uses `electron-builder` with NSIS, `perMachine: true`, and `deleteAppDataOnUninstall: false`, which is appropriate for an all-users Windows install while avoiding accidental removal of user data on uninstall.
 
 The repository license is already Apache 2.0. The remaining installer text should continue to reference the finalized license plus the still-draft terms and privacy notices before a public release.
 

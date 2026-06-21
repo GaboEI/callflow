@@ -10,12 +10,15 @@ This page records GitHub-side setup that cannot be guaranteed purely from the so
 - Add branch protection so `npm run validate` is required before merges if you want merge gating.
 - Enable Code scanning / CodeQL in GitHub Security after the workflow runs.
 - Publish releases only after the Windows installer has actually been generated and tested.
+- If you want x86/ia32 release coverage, validate the additional Windows build scripts before advertising 32-bit support.
 
 ## Current state
 
 - Repository description updated for the portfolio use case.
 - Apache 2.0 is the root license.
 - CI, Dependabot, security, QA, and release documentation are now committed in the tree.
+- Windows packaging scripts exist for x64 production builds, plus experimental ia32 targets for validation.
+- NSIS installer license text is driven by the editable `docs/legal/WINDOWS_INSTALLER_EULA_PLACEHOLDER.txt` placeholder until final legal copy is approved.
 - GitHub-side settings confirmed via API:
   - Actions workflows are present and running successfully.
   - `main` branch protection is enabled with required checks.

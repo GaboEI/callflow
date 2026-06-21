@@ -22,6 +22,7 @@ async function invoke(channel, ...args) {
 
 contextBridge.exposeInMainWorld("callflow", {
   getDataDir: () => invoke("storage:getDataDir"),
+  getSystemLocale: () => invoke("app:getLocale"),
   getHealth: () => invoke("storage:getHealth"),
   read: (key) => {
     assertKey(key);

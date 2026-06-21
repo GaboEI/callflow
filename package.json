@@ -10,9 +10,13 @@
     "test": "node --test",
     "lint": "eslint src test",
     "validate": "npm run check && npm test && npm run lint",
-    "pack:win": "electron-builder --win nsis --dir",
-    "dist:win": "electron-builder --win nsis",
-    "dist:win:portable": "electron-builder --win portable"
+    "pack:win": "electron-builder --win nsis --dir --x64",
+    "pack:win:ia32": "electron-builder --win nsis --dir --ia32",
+    "dist:win": "electron-builder --win nsis --x64",
+    "dist:win:ia32": "electron-builder --win nsis --ia32",
+    "dist:win:portable": "electron-builder --win portable --x64",
+    "dist:win:portable:ia32": "electron-builder --win portable --ia32",
+    "dist:win:all": "npm run dist:win && npm run dist:win:ia32 && npm run dist:win:portable && npm run dist:win:portable:ia32"
   },
   "keywords": [
     "electron",
@@ -48,10 +52,15 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "perMachine": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "CallFlow",
-      "deleteAppDataOnUninstall": false
+      "deleteAppDataOnUninstall": false,
+      "license": "docs/legal/WINDOWS_INSTALLER_EULA_PLACEHOLDER.txt",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
     }
   },
   "devDependencies": {
