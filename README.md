@@ -2,14 +2,16 @@
 
 ![CI](https://img.shields.io/github/actions/workflow/status/GaboEI/callflow/ci.yml?branch=main&label=CI)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
-![Version](https://img.shields.io/badge/version-0.1.16-2ea44f.svg)
+![Version](https://img.shields.io/badge/version-0.2.0--beta.1-2ea44f.svg)
 ![Windows target](https://img.shields.io/badge/target-Windows%20%7C%20NSIS-0078d6.svg)
 ![Electron](https://img.shields.io/badge/runtime-Electron-47848f.svg)
 ![Local-first](https://img.shields.io/badge/storage-local--first%20offline-2e8b57.svg)
 
-CallFlow is a local-first Electron desktop app for call-center operators. It helps agents register calls quickly, copy CRM-ready lines, generate hourly supervisor reports, manage callbacks and reminders, keep shift timers and multizone clocks visible, and maintain a Markdown script library without requiring a backend.
+CallFlow is a local-first Electron desktop beta app for call-center operators. It helps agents register calls quickly, copy CRM-ready lines, generate hourly supervisor reports, manage callbacks and reminders, keep shift timers and multizone clocks visible, and maintain a Markdown script library without requiring a backend.
 
 The project is intentionally compact and honest: it shows the product state as it exists today, not the features planned for a later release.
+
+CallFlow is currently in beta. Core local workflows are functional, the Windows installer builds successfully, and active testing is being performed on Windows 11. Some UX, documentation, legal text, and release polish are still being refined.
 
 ## Screenshots
 
@@ -166,7 +168,7 @@ These targets are configured for Windows packaging. They should be exercised on 
 
 ## Project status
 
-Current version: `0.1.16`
+Current version: `0.2.0-beta.1`
 
 What is implemented now:
 
@@ -180,6 +182,7 @@ What is implemented now:
 - Markdown script library
 - diagnostics, export, and import flows
 - local backups and data recovery helpers
+- Windows NSIS and portable packaging paths that have been validated on a Windows 11 VM
 
 What is still not a finished product surface:
 
@@ -205,7 +208,8 @@ scripts?      No separate runtime scripts directory yet
 
 - [Case study](docs/00_case_study.md)
 - [Windows QA results](docs/qa/windows-qa-results-v0.1.16.md)
-- [Release notes](docs/releases/v0.1.16-alpha.md)
+- [Beta release notes](docs/releases/v0.2.0-beta.1.md)
+- [Previous alpha release notes](docs/releases/v0.1.16-alpha.md)
 - [Windows QA checklist](docs/windows-qa.md)
 - [Changelog](CHANGELOG.md)
 - [Contributing](CONTRIBUTING.md)
@@ -225,21 +229,21 @@ scripts?      No separate runtime scripts directory yet
 
 ## Limitations
 
-- This is still an MVP, not a full enterprise call-center platform.
+- This is still a beta-stage desktop app, not a full enterprise call-center platform.
 - No cloud features are available.
 - The AI surface is only a placeholder.
 - Legal text is still draft-oriented and should be reviewed before any public release.
 
 ## En español
 
-CallFlow es una app de escritorio local para centros de llamadas. Sirve para registrar llamadas rápido, copiar líneas para CRM, generar reportes horarios, administrar recordatorios, ver estadísticas y mantener scripts internos en Markdown. Todo se guarda localmente en el equipo, sin backend ni sincronización en la nube.
+CallFlow es una app de escritorio local en etapa beta para centros de llamadas. Sirve para registrar llamadas rápido, copiar líneas para CRM, generar reportes horarios, administrar recordatorios, ver estadísticas y mantener scripts internos en Markdown. Todo se guarda localmente en el equipo, sin backend ni sincronización en la nube.
 
 Estado actual:
 
 - el registro de llamadas, reportes, recordatorios, estadísticas, reloj multizona y biblioteca de scripts ya están implementados
 - Chat IA existe solo como una sección de interfaz, no como un asistente conectado
 - los datos se guardan en el perfil local de Electron
-- el objetivo principal sigue siendo el empaquetado y pulido para Windows
+- el objetivo principal sigue siendo el empaquetado y pulido para Windows beta
 
 ## License
 

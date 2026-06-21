@@ -2,6 +2,29 @@
 
 This file summarizes the public-facing state of the project. The full historical changelog remains in `docs/04_changelog.md`.
 
+## v0.2.0-beta.1
+
+### Added
+
+- Beta-stage public repository status and README wording.
+- Windows validation note and beta release notes for recruiter-facing review.
+
+### Changed
+
+- Version bumped to `0.2.0-beta.1` across the repo.
+- README, badges, and project status now describe CallFlow as a beta-stage Windows desktop app.
+- Documentation now distinguishes current beta status from the earlier alpha validation history.
+
+### Fixed
+
+- Formalized the public status so the repo no longer reads like an early prototype.
+
+### Known limitations
+
+- AI Chat remains a placeholder.
+- Legal drafts still need final review before public distribution.
+- Some UX and release polish continue to be refined during beta testing.
+
 ## v0.1.16-alpha
 
 ### Added

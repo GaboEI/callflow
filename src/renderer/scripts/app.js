@@ -647,18 +647,13 @@ Africa/Harare ZW
     const settings = state.settings;
     applyThemePreference(settings.theme);
     const onboardingForm = $("#onboardingForm");
-    const statsTimezoneOptions = V.uniqueItems([settings.statsTimezone || settings.timezone || "local", ...activeTimezones(), settings.timezone || "local"]);
-    const statsTimezoneOptionsHtml = statsTimezoneOptions
-      .map((timezone) => `<option value="${escapeHtml(timezone)}">${escapeHtml(`${timezoneFlag(timezone)} ${shortTimezoneName(timezone)}`)}</option>`)
-      .join("");
     onboardingForm.language.value = settings.language;
     onboardingForm.timezone.value = settings.timezone;
     onboardingForm.operatorName.value = settings.operatorName || "";
     onboardingForm.reportHeaderFormat.value = settings.reportHeaderFormat;
     onboardingForm.linePrefixMode.value = settings.linePrefixMode || "hash";
     onboardingForm.clockFormat.value = settings.clockFormat || "24h";
-    onboardingForm.statsTimezone.innerHTML = statsTimezoneOptionsHtml;
-    onboardingForm.statsTimezone.value = settings.statsTimezone || settings.timezone || "local";
+    renderStatsTimezoneOptions(onboardingForm);
     onboardingForm.statsCycleStartDay.value = String(settings.statsCycleStartDay || 1);
     onboardingForm.notifyAtExactTime.checked = settings.notifyAtExactTime !== false;
     onboardingForm.notifyBeforeMinutes.value = String(settings.notifyBeforeMinutes || 0);
@@ -666,11 +661,6 @@ Africa/Harare ZW
     onboardingForm.financialCurrency.value = settings.financial?.currency || "USD";
     onboardingForm.financialHourlyRate.value = settings.financial?.hourlyRate || "";
     onboardingForm.financialPaidBreaks.checked = Boolean(settings.financial?.paidBreaks);
-    if (onboardingForm.acceptedLegalTerms) {
-      onboardingForm.acceptedLegalTerms.checked = Boolean(
-        settings.legalAcceptance?.termsVersion === LEGAL_TERMS_VERSION || settings.onboardingCompleted
-      );
-    }
     state.onboardingActiveTimezones = activeTimezones();
     state.formLists.onboardingCallTypes = [...settings.callTypes];
     state.formLists.onboardingFrequentStatuses = [...settings.frequentStatuses];
@@ -696,8 +686,7 @@ Africa/Harare ZW
     settingsForm.linePrefixMode.value = settings.linePrefixMode || "hash";
     settingsForm.theme.value = normalizedThemePreference(settings.theme);
     settingsForm.clockFormat.value = settings.clockFormat || "24h";
-    settingsForm.statsTimezone.innerHTML = statsTimezoneOptionsHtml;
-    settingsForm.statsTimezone.value = settings.statsTimezone || settings.timezone || "local";
+    renderStatsTimezoneOptions(settingsForm);
     settingsForm.statsCycleStartDay.value = String(settings.statsCycleStartDay || 1);
     settingsForm.financialCurrency.value = settings.financial?.currency || "USD";
     settingsForm.financialHourlyRate.value = settings.financial?.hourlyRate || "";
@@ -714,6 +703,7 @@ Africa/Harare ZW
     state.formLists.settingsCallbackOutcomes = [...settings.outcomePresets.callback.items];
     state.presetMeta.settingsFrequentStatuses.custom = [...settings.frequentStatuses];
     timezonePicker.renderAll(settings.language);
+    syncOnboardingLegalAcceptanceState();
     settingsView.renderListEditors();
     settingsView.renderActiveTimezoneEditors();
     renderOnboardingWizard();
@@ -848,6 +838,7 @@ Africa/Harare ZW
   function handleLanguageChange(form, language) {
     CallFlowI18n.applyI18n(language);
     timezonePicker.renderAll(language);
+    renderStatsTimezoneOptions(form);
     settingsView.renderActiveTimezoneEditors();
 
     if (form.id === "onboardingForm" && !state.settings.onboardingCompleted) {
@@ -911,6 +902,37 @@ Africa/Harare ZW
       .join("");
   }
 
+  function statsTimezoneOptionsForForm(form) {
+    const selected = form?.statsTimezone?.value || state.settings?.statsTimezone || state.settings?.timezone || "local";
+    const primaryTimezone = form?.timezone?.value || state.settings?.timezone || "local";
+    const activeZones = form?.id === "onboardingForm" ? onboardingActiveTimezones() : activeTimezones();
+    return V.uniqueItems([selected, primaryTimezone, ...activeZones, state.settings?.timezone || "local"]);
+  }
+
+  function renderStatsTimezoneOptions(form) {
+    if (!form?.statsTimezone) return;
+    const previous = form.statsTimezone.value || state.settings?.statsTimezone || state.settings?.timezone || "local";
+    const options = statsTimezoneOptionsForForm(form);
+    form.statsTimezone.innerHTML = options
+      .map((timezone) => `<option value="${escapeHtml(timezone)}">${escapeHtml(`${timezoneFlag(timezone)} ${shortTimezoneName(timezone)}`)}</option>`)
+      .join("");
+    form.statsTimezone.value = options.includes(previous) ? previous : options[0] || "local";
+  }
+
+  function syncOnboardingLegalAcceptanceState() {
+    const form = $("#onboardingForm");
+    if (!form?.acceptedLegalTerms) return;
+    const note = $("#onboardingLegalLocked");
+    const accepted = Boolean(
+      state.settings?.legalAcceptance?.termsVersion === LEGAL_TERMS_VERSION || state.settings?.onboardingCompleted
+    );
+    const locked = state.onboardingMode === "reconfigure" && accepted;
+    form.acceptedLegalTerms.checked = accepted;
+    form.acceptedLegalTerms.disabled = locked;
+    form.acceptedLegalTerms.setAttribute("aria-disabled", String(locked));
+    if (note) note.classList.toggle("hidden", !locked);
+  }
+
   function clearOnboardingLegalError() {
     const form = $("#onboardingForm");
     const note = form?.querySelector(".onboarding-legal-note");
@@ -946,6 +968,7 @@ Africa/Harare ZW
   function renderOnboardingWizard() {
     const form = $("#onboardingForm");
     if (!form) return;
+    syncOnboardingLegalAcceptanceState();
     const step = Math.max(0, Math.min(Number(state.onboardingStep) || 0, ONBOARDING_STEP_COUNT - 1));
     state.onboardingStep = step;
     $$("[data-onboarding-step]").forEach((section) => {
@@ -976,6 +999,7 @@ Africa/Harare ZW
     state.onboardingMode = mode;
     state.onboardingStep = 0;
     applySettingsToForms();
+    syncOnboardingLegalAcceptanceState();
     clearOnboardingLegalError();
     $("#onboarding").classList.remove("hidden");
     $("#app").classList.add("hidden");
@@ -1193,6 +1217,7 @@ Africa/Harare ZW
     const value = pickerState.selectedTimezoneValue || timezonePicker.form(pickerId).timezone.value || "local";
     if (pickerId === "onboarding") {
       state.onboardingActiveTimezones = V.uniqueItems([...onboardingActiveTimezones(), value]).slice(0, V.MAX_ACTIVE_TIMEZONES);
+      renderStatsTimezoneOptions($("#onboardingForm"));
       settingsView.renderActiveTimezoneEditors();
       renderOnboardingWizard();
       return;
@@ -1218,6 +1243,7 @@ Africa/Harare ZW
       if (!zones.includes($("#onboardingForm").timezone.value)) {
         $("#onboardingForm").timezone.value = zones[0];
       }
+      renderStatsTimezoneOptions($("#onboardingForm"));
       timezonePicker.renderAll(activeFormLanguage());
       settingsView.renderActiveTimezoneEditors();
       renderOnboardingWizard();
@@ -1367,6 +1393,7 @@ Africa/Harare ZW
     }
     if (timezonePickerId) {
       timezonePicker.select(timezonePickerId, timezoneOption.dataset.value);
+      renderStatsTimezoneOptions(timezonePicker.form(timezonePickerId));
     }
     if (!event.target.closest(".timezone-picker")) {
       timezonePicker.close("onboarding");
