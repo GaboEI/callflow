@@ -6,12 +6,15 @@
 ![Windows target](https://img.shields.io/badge/target-Windows%20%7C%20NSIS-0078d6.svg)
 ![Electron](https://img.shields.io/badge/runtime-Electron-47848f.svg)
 ![Local-first](https://img.shields.io/badge/storage-local--first%20offline-2e8b57.svg)
+[![Downloads](https://img.shields.io/badge/Downloads-GitHub%20Releases-0a66ff.svg?style=for-the-badge)](https://github.com/GaboEI/callflow/releases)
 
 CallFlow is a local-first Electron desktop beta app for call-center operators. It helps agents register calls quickly, copy CRM-ready lines, generate hourly supervisor reports, manage callbacks and reminders, keep shift timers and multizone clocks visible, and maintain a Markdown script library without requiring a backend.
 
 The project is intentionally compact and honest: it shows the product state as it exists today, not the features planned for a later release.
 
 CallFlow is currently in beta. Core local workflows are functional, the Windows installer builds successfully, and active testing is being performed on Windows 11. Some UX, documentation, legal text, and release polish are still being refined.
+
+**Windows download:** [GitHub Releases](https://github.com/GaboEI/callflow/releases) - public installer downloads will appear here when a tagged release is published.
 
 ## Screenshots
 
