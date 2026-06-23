@@ -455,7 +455,14 @@ ipcMain.handle("backup:import", ipcHandler(async () => {
   return { canceled: false, data };
 }, "BACKUP_IMPORT_FAILED"));
 
-ipcMain.handle("storage:clearAll", ipcHandler(async () => {
+const CLEAR_ALL_TOKEN = "CONFIRM_CLEAR_ALL";
+
+ipcMain.handle("storage:clearAll", ipcHandler(async (_event, token) => {
+  if (token !== CLEAR_ALL_TOKEN) {
+    const error = new Error("Missing or invalid confirmation token");
+    error.code = "CLEAR_ALL_TOKEN_REQUIRED";
+    throw error;
+  }
   await getStorage().clearAllData();
   notificationThrottle.clear();
   return { cleared: true, dataDir: getDataDir() };

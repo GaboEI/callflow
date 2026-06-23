@@ -479,7 +479,9 @@
   }
 
   function cleanClipboardCallId(value) {
-    return text(String(value || "").split(/\r?\n/)[0], LIMITS.callId);
+    const line = String(value || "").split(/\r?\n/)[0];
+    const sanitized = line.replace(/[^a-zA-Z0-9\s._-]/g, "");
+    return text(sanitized, LIMITS.callId);
   }
 
   const api = {
