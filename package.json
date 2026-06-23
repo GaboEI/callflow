@@ -58,7 +58,7 @@
       "createStartMenuShortcut": true,
       "shortcutName": "CallFlow",
       "deleteAppDataOnUninstall": false,
-      "license": "docs/legal/WINDOWS_INSTALLER_EULA_PLACEHOLDER.txt",
+      "license": "docs/legal/WINDOWS_INSTALLER_EULA.txt",
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
       "installerHeaderIcon": "build/icon.ico"

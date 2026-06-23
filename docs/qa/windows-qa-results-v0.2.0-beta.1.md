@@ -2,6 +2,22 @@
 
 Validation performed on Windows 11 VM.
 
+## Installer artifact
+
+| Item | Value |
+| --- | --- |
+| File name | `CallFlow.Setup.0.2.0-beta.1.exe` |
+| File size | 104,978,791 bytes (~100 MB) |
+| SHA-256 | `3b93bd97a0d6144b63d79223498b73d675d410950fdcefc24a33ea0194da4ef0` |
+| Build date | 2026-06-22 |
+| Published | 2026-06-22T00:15:39Z |
+| Architecture | x64 |
+| Installer type | NSIS |
+| Code signed | No (SmartScreen warning expected) |
+| Download | [GitHub Releases](https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1) |
+
+Companion archive: `callflow-0.2.0-beta.1-x64.nsis.7z` (103,982,439 bytes, SHA-256: `b295bb1b87cba83d5e8aa9c8338ed1a8daf8415e9ce56eb52fcf67e82a85b6bb`)
+
 ## Environment
 
 | Item | Value |
@@ -44,7 +60,10 @@ Validation performed on Windows 11 VM.
 
 - Installer is unsigned; SmartScreen warning appears on first run.
 - AI Chat section is a placeholder with no live backend.
-- Legal text is still in draft form.
+
+## Visual evidence
+
+Screenshots are stored in `docs/qa/evidence/v0.2.0-beta.1/` when available.
 
 ## Validation date
 

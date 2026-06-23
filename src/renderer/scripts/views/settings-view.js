@@ -208,9 +208,20 @@
       });
     }
 
-    async function importBackup() {
-      const language = state.settings.language || "es";
-      if (!window.confirm("Importar un backup reemplazará los datos actuales después de crear un backup local. ¿Continuar?")) return;
+    function openImportBackupModal() {
+      const language = state.settings?.language || "es";
+      const modal = document.getElementById("importBackupModal");
+      i18n.applyI18n(language, modal);
+      modal.classList.remove("hidden");
+    }
+
+    function closeImportBackupModal() {
+      document.getElementById("importBackupModal").classList.add("hidden");
+    }
+
+    async function executeImportBackup() {
+      closeImportBackupModal();
+      const language = state.settings?.language || "es";
       await runAction(async () => {
         const result = await window.callflow.importBackup();
         if (result.canceled) return;
@@ -311,7 +322,10 @@
         button.addEventListener("click", () => setSettingsList(button.dataset.settingsListTab));
       });
       document.querySelector("#exportBackup").addEventListener("click", exportBackup);
-      document.querySelector("#importBackup").addEventListener("click", importBackup);
+      document.querySelector("#importBackup").addEventListener("click", openImportBackupModal);
+      document.querySelector("#importBackupModalClose").addEventListener("click", closeImportBackupModal);
+      document.querySelector("#importBackupModalCancel").addEventListener("click", closeImportBackupModal);
+      document.querySelector("#importBackupModalConfirm").addEventListener("click", executeImportBackup);
       document.querySelector("#eraseLocalData").addEventListener("click", openEraseModal);
       document.querySelector("#eraseConfirmClose").addEventListener("click", closeEraseModal);
       document.querySelector("#eraseConfirmCancel").addEventListener("click", closeEraseModal);
@@ -324,7 +338,7 @@
     return {
       addListItem,
       bindEvents,
-      importBackup,
+      openImportBackupModal,
       refreshAboutInfo,
       refreshDiagnostics,
       removeListItem,

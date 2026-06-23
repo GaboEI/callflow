@@ -1,0 +1,54 @@
+CallFlow Beta License Agreement
+Version: 0.2.0-beta.1
+
+IMPORTANT: Please read this agreement before installing CallFlow.
+
+1. About CallFlow
+
+CallFlow is a local-first desktop application for call-center operators.
+It helps agents register calls, generate reports, manage reminders,
+track work time, and maintain internal scripts — all stored locally
+on the user's computer without requiring a backend server or cloud service.
+
+2. Beta status
+
+This is a beta release. Core workflows are functional and have been
+validated, but the software is provided as-is without warranty of any kind.
+Some features, documentation, and legal text may be refined in future versions.
+
+3. License
+
+The CallFlow source code is licensed under Apache 2.0.
+The full license text is available in the project repository at:
+https://github.com/GaboEI/callflow
+
+4. Local data and privacy
+
+CallFlow stores all user data locally on this computer. The application
+does not collect, transmit, or sync data to external servers by default.
+The user is responsible for the information they enter, import, copy,
+export, or store inside the application. This includes call records,
+customer identifiers, reports, scripts, reminders, and any other
+operationally sensitive information.
+
+5. User responsibility
+
+The user must comply with their organization's policies and applicable
+privacy and data protection laws when handling customer data, internal
+procedures, or sensitive business information within CallFlow.
+
+6. No warranty
+
+CallFlow is provided without warranty. The developer is not responsible
+for data loss, inaccurate reports, missed reminders, or any damages
+arising from the use of the software. The user should verify important
+work outputs and maintain their own backups.
+
+7. Future changes
+
+This agreement, the privacy policy, and the terms of use may be updated
+in future releases. Continued use after an update constitutes acceptance
+of the revised terms.
+
+Copyright (c) 2026 GaboEI
+https://github.com/GaboEI/callflow

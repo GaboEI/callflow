@@ -20,7 +20,7 @@ For the Windows `.exe` installer, CallFlow should eventually include or referenc
 - Privacy policy / local data notice.
 - Third-party notices.
 - Local data folder behavior.
-- NSIS installer license screen text, currently provided by `WINDOWS_INSTALLER_EULA_PLACEHOLDER.txt`.
+- NSIS installer license screen text, provided by `WINDOWS_INSTALLER_EULA.txt`.
 
 ## Current packaging state
 

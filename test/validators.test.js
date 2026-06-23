@@ -173,6 +173,13 @@ test("normalizes legacy call records without throwing", () => {
 
 test("cleans clipboard call IDs to a single bounded line", () => {
   assert.equal(validators.cleanClipboardCallId("  ABC-123  \nignore this"), "ABC-123");
+  assert.equal(validators.cleanClipboardCallId("ABC_456"), "ABC_456");
+  assert.equal(validators.cleanClipboardCallId("CALL.2026.07"), "CALL.2026.07");
+  assert.equal(validators.cleanClipboardCallId("id<script>alert(1)</script>"), "idscriptalert1script");
+  assert.equal(validators.cleanClipboardCallId("contraseña!@#$%^&*()"), "contrasea");
+  assert.equal(validators.cleanClipboardCallId(""), "");
+  assert.equal(validators.cleanClipboardCallId(null), "");
+  assert.equal(validators.cleanClipboardCallId("A".repeat(300)), "A".repeat(120));
 });
 
 test("preserves existing Markdown documents when normalizing the Script library", () => {

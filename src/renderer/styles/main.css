@@ -3759,6 +3759,25 @@ code {
   background: rgba(2, 6, 23, 0.86);
 }
 
+.import-backup-modal {
+  width: min(440px, 100%);
+}
+
+.import-backup-list {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  color: var(--yellow);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.import-backup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .erase-confirm-modal {
   width: min(440px, 100%);
 }
