@@ -225,17 +225,70 @@
       });
     }
 
-    async function eraseLocalData() {
+    function openEraseModal() {
       const language = state.settings?.language || "es";
-      const confirmMessage = i18n.t("eraseLocalDataConfirm", language);
-      const confirmToken = i18n.t("eraseLocalDataConfirmToken", language);
-      if (!window.confirm(confirmMessage)) return;
-      const typed = window.prompt(i18n.t("eraseLocalDataTypeConfirm", language), confirmToken);
-      if (!typed || typed.trim() !== confirmToken) {
-        setStatusMessage(i18n.t("eraseLocalDataCanceled", language), "warning");
-        return;
-      }
+      const modal = document.getElementById("eraseConfirmModal");
+      const input = document.getElementById("eraseConfirmInput");
+      const submit = document.getElementById("eraseConfirmSubmit");
+      const errorEl = document.getElementById("eraseConfirmError");
+      input.value = "";
+      submit.disabled = true;
+      errorEl.classList.add("hidden");
+      i18n.applyI18n(language, modal);
+      modal.classList.remove("hidden");
+      input.focus();
+    }
+
+    function closeEraseModal() {
+      const modal = document.getElementById("eraseConfirmModal");
+      modal.classList.add("hidden");
+      document.getElementById("eraseConfirmInput").value = "";
+    }
+
+    function handleEraseInputChange() {
+      const language = state.settings?.language || "es";
+      const token = i18n.t("eraseLocalDataConfirmToken", language);
+      const input = document.getElementById("eraseConfirmInput");
+      const submit = document.getElementById("eraseConfirmSubmit");
+      const errorEl = document.getElementById("eraseConfirmError");
+      const value = input.value.trim();
+      submit.disabled = value !== token;
+      errorEl.classList.toggle("hidden", value.length === 0 || value === token);
+    }
+
+    let eraseInProgress = false;
+
+    async function executeErase() {
+      if (eraseInProgress) return;
+      const language = state.settings?.language || "es";
+      const token = i18n.t("eraseLocalDataConfirmToken", language);
+      const input = document.getElementById("eraseConfirmInput");
+      if (input.value.trim() !== token) return;
+
+      eraseInProgress = true;
+      const submit = document.getElementById("eraseConfirmSubmit");
+      submit.disabled = true;
+
       await runAction(async () => {
+        const backupCheckbox = document.getElementById("eraseBackupFirst");
+        if (backupCheckbox && backupCheckbox.checked) {
+          try {
+            const result = await window.callflow.exportBackup();
+            if (result.canceled) {
+              eraseInProgress = false;
+              submit.disabled = false;
+              return;
+            }
+            setStatusMessage(i18n.t("eraseBackupCreated", language), "success");
+          } catch (_error) {
+            setStatusMessage(i18n.t("eraseBackupFailed", language), "warning");
+            eraseInProgress = false;
+            submit.disabled = false;
+            return;
+          }
+        }
+
+        closeEraseModal();
         setStatusMessage(i18n.t("eraseLocalDataInProgress", language), "warning");
         await window.callflow.resetLocalData();
         setStatusMessage(i18n.t("eraseLocalDataRestarting", language), "success");
@@ -259,7 +312,11 @@
       });
       document.querySelector("#exportBackup").addEventListener("click", exportBackup);
       document.querySelector("#importBackup").addEventListener("click", importBackup);
-      document.querySelector("#eraseLocalData").addEventListener("click", eraseLocalData);
+      document.querySelector("#eraseLocalData").addEventListener("click", openEraseModal);
+      document.querySelector("#eraseConfirmClose").addEventListener("click", closeEraseModal);
+      document.querySelector("#eraseConfirmCancel").addEventListener("click", closeEraseModal);
+      document.querySelector("#eraseConfirmInput").addEventListener("input", handleEraseInputChange);
+      document.querySelector("#eraseConfirmSubmit").addEventListener("click", executeErase);
       document.querySelector("#refreshDiagnostics").addEventListener("click", refreshDiagnostics);
       document.querySelector("#checkUpdates")?.addEventListener("click", checkUpdates);
     }

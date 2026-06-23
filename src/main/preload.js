@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld("callflow", {
     return invoke("storage:write", key, value);
   },
   copyText: (text) => invoke("clipboard:writeText", text),
-  readClipboardText: () => invoke("clipboard:readText"),
+  readClipboardCallId: () => invoke("clipboard:readCallId"),
   exportBackup: () => invoke("backup:export"),
   importBackup: () => invoke("backup:import"),
   resetLocalData: () => invoke("storage:clearAll"),

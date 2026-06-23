@@ -276,8 +276,10 @@ function createWindow() {
     event.preventDefault();
   });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^(https?:|mailto:)/i.test(url)) {
+    if (/^https:/i.test(url)) {
       shell.openExternal(url).catch((error) => getLogger().error("external-link-open-failed", { url, message: error.message }));
+    } else {
+      getLogger().warn("external-link-blocked", { url }).catch(() => {});
     }
     return { action: "deny" };
   });
@@ -349,7 +351,10 @@ ipcMain.handle("clipboard:writeText", ipcHandler((_event, text) => {
   return true;
 }, "CLIPBOARD_WRITE_FAILED"));
 
-ipcMain.handle("clipboard:readText", ipcHandler(() => clipboard.readText(), "CLIPBOARD_READ_FAILED"));
+ipcMain.handle("clipboard:readCallId", ipcHandler(() => {
+  const raw = clipboard.readText() || "";
+  return time.cleanClipboardCallId(raw);
+}, "CLIPBOARD_READ_CALL_ID_FAILED"));
 
 ipcMain.handle("export:note", ipcHandler(async (_event, payload = {}) => {
   const { fileName, content, extension } = payload;

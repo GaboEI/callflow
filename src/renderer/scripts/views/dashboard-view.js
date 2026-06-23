@@ -647,8 +647,7 @@
     }
 
     async function importCallIdFromClipboard() {
-      const text = await runAction(() => window.callflow.readClipboardText());
-      const callId = V.cleanClipboardCallId(text);
+      const callId = await runAction(() => window.callflow.readClipboardCallId());
       if (!callId) return;
       const form = $("#callForm");
       form.callId.value = callId;

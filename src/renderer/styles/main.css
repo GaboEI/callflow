@@ -3759,6 +3759,60 @@ code {
   background: rgba(2, 6, 23, 0.86);
 }
 
+.erase-confirm-modal {
+  width: min(440px, 100%);
+}
+
+.erase-confirm-list {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  color: var(--red);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.erase-confirm-backup-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.erase-confirm-input-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.erase-confirm-input-label input {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+}
+
+.erase-confirm-error {
+  margin: 4px 0 10px;
+  font-size: 0.82rem;
+  color: var(--red);
+}
+
+.erase-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .stats-time-modal {
   width: min(1100px, 100%);
   max-height: min(760px, calc(100vh - 28px));

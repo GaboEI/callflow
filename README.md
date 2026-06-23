@@ -21,7 +21,7 @@ CallFlow is currently in beta. Core local workflows are functional, the Windows 
 >
 > [![Open Releases](https://img.shields.io/badge/Open_Releases-GitHub-24292f.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1)
 >
-> **Status:** Windows beta builds are being validated locally on Windows 11. The NSIS installer is intentionally lightweight and extracts the packaged app during installation. Public installer downloads will appear in GitHub Releases when the first tagged release is published.
+> **Status:** The current Windows beta installer is available from GitHub Releases. Version 0.2.0-beta.1 is an NSIS installer validated on Windows 11. This is a beta release, not a stable enterprise build. The installer is currently unsigned — Windows SmartScreen may show a warning on first run.
 
 ## Screenshots
 
@@ -183,11 +183,14 @@ These targets are configured for Windows packaging. `dist:win` is the primary x6
 
 ## Download Windows installer
 
-Public Windows downloads will be published in [GitHub Releases](https://github.com/GaboEI/callflow/releases) once a release is tagged.
+The current Windows beta installer is available from [GitHub Releases](https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1).
 
-- No public installer has been released yet.
-- The current Windows `.exe` build is generated locally during packaging and is used for validation before a public release.
-- When a release is published, this section will point to the exact installer artifact and release notes.
+- **Version:** 0.2.0-beta.1
+- **Installer:** NSIS `.exe` (x64)
+- **Status:** beta, validated on Windows 11
+- **Signing:** currently unsigned — Windows SmartScreen may show a warning until official code signing is configured
+
+This is not a stable enterprise release yet. See [release notes](docs/releases/v0.2.0-beta.1.md) for details.
 
 ## Project status
 
@@ -226,13 +229,14 @@ src/
 src/data/     default app configuration
 build/        App icons and packaging assets
 docs/         Product notes, architecture, legal drafts, QA
-scripts?      No separate runtime scripts directory yet
+scripts/      Build and validation helpers
 ```
 
 ## Documentation and legal files
 
 - [Case study](docs/00_case_study.md)
-- [Windows QA results](docs/qa/windows-qa-results-v0.1.16.md)
+- [Windows QA results (v0.2.0-beta.1)](docs/qa/windows-qa-results-v0.2.0-beta.1.md)
+- [Windows QA results (v0.1.16)](docs/qa/windows-qa-results-v0.1.16.md)
 - [Beta release notes](docs/releases/v0.2.0-beta.1.md)
 - [Previous alpha release notes](docs/releases/v0.1.16-alpha.md)
 - [Windows QA checklist](docs/windows-qa.md)
@@ -273,3 +277,5 @@ Estado actual:
 ## License
 
 This repository is licensed under [Apache 2.0](LICENSE).
+
+The npm package is marked as `"private": true` in `package.json` to prevent accidental publishing to the npm registry. The source code itself is fully open under the Apache 2.0 license.
