@@ -245,7 +245,7 @@ input[type="time"].cf-datetime-input:focus {
 .cf-date-range-trigger--selected {
   display: grid;
   gap: 3px;
-  min-width: 172px;
+  min-width: min(172px, 100%);
   min-height: 36px;
   border-color: rgba(59, 130, 246, 0.78);
   background:
@@ -1740,7 +1740,7 @@ body[data-theme="light"] .outcome-callback.selected {
 .main-content {
   height: 100%;
   min-height: 0;
-  overflow: hidden;
+  overflow: hidden auto;
 }
 
 .status-pill {
@@ -1863,7 +1863,7 @@ body[data-theme="light"] .outcome-callback.selected {
   justify-content: flex-end;
   align-items: center;
   gap: 8px;
-  flex: 1 1 420px;
+  flex: 1 1 280px;
   min-width: 0;
 }
 
@@ -2569,7 +2569,7 @@ body[data-theme="light"] .outcome-callback.selected {
 }
 
 .settings-save-button {
-  min-width: 174px;
+  min-width: min(174px, 100%);
   min-height: 38px;
   padding: 8px 14px;
   background: linear-gradient(180deg, #3b82f6, #2563eb);
@@ -3207,7 +3207,7 @@ code {
 
 .calculator-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 0.72fr) minmax(360px, 1.28fr);
+  grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
   gap: 12px;
 }
 
@@ -3468,6 +3468,7 @@ code {
 .finance-period-toggle,
 .finance-period-navigation {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
@@ -3498,6 +3499,8 @@ code {
 
 .finance-period-navigation input {
   width: 150px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .finance-chart {
@@ -4870,7 +4873,7 @@ code {
 
 .report-toolbar {
   display: grid;
-  grid-template-columns: minmax(420px, 1fr) minmax(360px, 0.72fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
   align-items: start;
   gap: 12px;
   margin: 0 0 10px;
@@ -5082,7 +5085,7 @@ code {
 }
 
 .report-range-field {
-  flex: 0 0 172px;
+  flex: 1 1 140px;
   max-width: 172px;
 }
 
@@ -6470,6 +6473,27 @@ code {
 
   .cards.compact {
     grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  }
+
+  .stats-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schedule-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-save-button {
+    width: 100%;
+  }
+
+  .report-range-field {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+
+  .finance-period-navigation input {
+    width: 120px;
   }
 }
 
@@ -8122,6 +8146,160 @@ body[data-theme="light"] .report-period-chip[data-report-period="custom"] {
 body[data-theme="light"] .report-trash-chip,
 body[data-theme="light"] .reminder-chip[data-filter="deleted"] {
   border-left-color: rgba(239, 68, 68, 0.88) !important;
+}
+
+body[data-theme="light"] .finance-movement-type-chip {
+  color: var(--text-soft);
+  background: var(--chip-bg);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+body[data-theme="light"] .finance-chart-point {
+  fill: #ffffff;
+  stroke: #2563eb;
+}
+
+body[data-theme="light"] .finance-chart-tooltip {
+  color: var(--text);
+  background: #ffffff;
+  border-color: rgba(37, 99, 235, 0.22);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.1);
+}
+
+body[data-theme="light"] .script-plain-toolbar {
+  background: var(--surface-raised);
+  border-color: var(--border);
+}
+
+body[data-theme="light"] .script-plain-toolbar button {
+  color: var(--text-soft);
+}
+
+body[data-theme="light"] .script-plain-toolbar button:hover {
+  color: var(--text);
+  background: var(--button-hover);
+}
+
+body[data-theme="light"] .script-pdf-reader {
+  background: var(--surface-raised);
+}
+
+body[data-theme="light"] .script-editor-form #scriptContent {
+  color: var(--text);
+  caret-color: var(--text);
+}
+
+body[data-theme="light"] .chip.preset {
+  color: var(--text-subtle);
+  background: var(--surface-muted);
+  border-color: rgba(100, 116, 139, 0.18);
+}
+
+body[data-theme="light"] .shift-timer.stopped {
+  color: var(--text-subtle);
+}
+
+body[data-theme="light"] .diagnostics-summary {
+  color: var(--text-soft);
+}
+
+body[data-theme="light"] .diagnostics-output {
+  color: var(--text);
+  background: var(--code-bg);
+  border-color: var(--border);
+}
+
+body[data-theme="light"] .calculator-key-utility {
+  color: var(--text-soft);
+}
+
+body[data-theme="light"] .reminder-deleted .reminder-meta {
+  color: var(--text-subtle);
+}
+
+body[data-theme="light"] .reminder-deleted .reminder-chip {
+  color: var(--text-subtle);
+  background: var(--surface-muted);
+}
+
+body[data-theme="light"] .script-type-label {
+  color: var(--text-subtle);
+}
+
+body[data-theme="light"] .script-copy-code {
+  color: var(--text-subtle);
+}
+
+body[data-theme="light"] .script-copy-code:hover {
+  color: var(--text);
+}
+
+body[data-theme="light"] .cf-picker-month-year option:checked,
+body[data-theme="light"] .cf-picker-cell:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+
+body[data-theme="light"] .onboarding-review-item {
+  background: var(--surface-muted);
+  border-color: var(--border);
+}
+
+body[data-theme="light"] .icon-button:hover {
+  background: var(--surface-hover);
+}
+
+body[data-theme="light"] .nested-modal {
+  background: rgba(15, 23, 42, 0.32);
+}
+
+body[data-theme="light"] .reminder-alarm-overlay {
+  background: rgba(15, 23, 42, 0.28);
+}
+
+body[data-theme="light"] .onboarding-panel {
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+}
+
+body[data-theme="light"] .clock-panel {
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+}
+
+body[data-theme="light"] .call-type-shell .status-manager {
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme="light"] .status-options {
+  background: #ffffff;
+  border-color: var(--border);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.1);
+}
+
+body[data-theme="light"] .settings-tab,
+body[data-theme="light"] .settings-list-tab {
+  border-color: var(--border);
+}
+
+body[data-theme="light"] .finance-period-toggle button {
+  border-color: var(--border);
+}
+
+body[data-theme="light"] .stats-bar-row {
+  border-color: var(--border);
+}
+
+body[data-theme="light"] .script-card-action,
+body[data-theme="light"] .script-card footer button {
+  border-color: var(--border);
+}
+
+body[data-theme="light"] .script-back-button {
+  border-color: var(--border);
+}
+
+body[data-theme="light"] .reminder-chip[data-cat] {
+  color: var(--text-soft);
 }
 
 body .settings-tabs > .settings-tab,
