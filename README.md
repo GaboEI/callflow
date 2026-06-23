@@ -217,7 +217,7 @@ What is still not a finished product surface:
 - AI Chat is still a placeholder
 - cloud sync is not implemented
 - a backend server is not part of the MVP
-- the legal drafts still need final review before public release
+- installer beta terms are included for v0.2.0-beta.1; privacy and terms drafts remain under review before any stable public release
 
 ## Repository layout
 
@@ -261,7 +261,7 @@ scripts/      Build and validation helpers
 - This is still a beta-stage desktop app, not a full enterprise call-center platform.
 - No cloud features are available.
 - The AI surface is only a placeholder.
-- Legal text is still draft-oriented and should be reviewed before any public release.
+- Installer beta terms are included for v0.2.0-beta.1. Privacy and terms drafts remain under review before any stable public release.
 
 ## En español
 
