@@ -63,7 +63,7 @@ Companion archive: `callflow-0.2.0-beta.1-x64.nsis.7z` (103,982,439 bytes, SHA-2
 
 ## Visual evidence
 
-Screenshots are stored in `docs/qa/evidence/v0.2.0-beta.1/` when available.
+Screenshots are stored in `docs/qa/evidence/v0.2.0-beta.1/` when available. Visual evidence is optional for this beta validation cycle and can be added from a Windows session without requiring a new code release.
 
 ## Validation date
 

@@ -219,21 +219,29 @@
       document.getElementById("importBackupModal").classList.add("hidden");
     }
 
+    let importInProgress = false;
+
     async function executeImportBackup() {
+      if (importInProgress) return;
+      importInProgress = true;
       closeImportBackupModal();
       const language = state.settings?.language || "es";
-      await runAction(async () => {
-        const result = await window.callflow.importBackup();
-        if (result.canceled) return;
-        const data = await storage.readAll();
-        Object.assign(state, data);
-        state.settings = normalizeSettings(state.settings);
-        normalizeRuntimeData();
-        applySettingsToForms();
-        i18n.applyI18n(state.settings.language);
-        renderApp();
-        setStatusMessage(i18n.t("saved", language), "success");
-      });
+      try {
+        await runAction(async () => {
+          const result = await window.callflow.importBackup();
+          if (result.canceled) return;
+          const data = await storage.readAll();
+          Object.assign(state, data);
+          state.settings = normalizeSettings(state.settings);
+          normalizeRuntimeData();
+          applySettingsToForms();
+          i18n.applyI18n(state.settings.language);
+          renderApp();
+          setStatusMessage(i18n.t("saved", language), "success");
+        });
+      } finally {
+        importInProgress = false;
+      }
     }
 
     function openEraseModal() {

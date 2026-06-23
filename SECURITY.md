@@ -18,7 +18,7 @@ CallFlow is a local-first desktop app for call-center workflows. It can store op
 
 ## Project posture
 
-- CallFlow is an MVP, not a hardened enterprise platform.
+- CallFlow is a beta-stage local-first desktop app, not a hardened enterprise platform.
 - The app is designed to work offline and locally by default.
 - The current release does not rely on a backend service or cloud sync for implemented features.
 - The repository documentation intentionally treats unfinished surfaces as unfinished.
