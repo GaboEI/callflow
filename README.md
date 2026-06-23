@@ -234,7 +234,10 @@ scripts/      Build and validation helpers
 
 ## Documentation and legal files
 
+- [Roadmap to v1.0 Stable](docs/roadmap/v1.0-stable.md)
 - [Case study](docs/00_case_study.md)
+- [v1.0.0 release notes (draft)](docs/releases/v1.0.0.md)
+- [v1.0.0 Windows QA (template)](docs/qa/windows-qa-results-v1.0.0.md)
 - [Windows QA results (v0.2.0-beta.1)](docs/qa/windows-qa-results-v0.2.0-beta.1.md)
 - [Windows QA results (v0.1.16)](docs/qa/windows-qa-results-v0.1.16.md)
 - [Beta release notes](docs/releases/v0.2.0-beta.1.md)
@@ -255,6 +258,12 @@ scripts/      Build and validation helpers
 - A strong focus on privacy, offline behavior, and explicit local persistence.
 - A compact but intentional UI with multiple workflow surfaces in one desktop shell.
 - An implementation that is testable, validated, and packaged with Windows in mind.
+
+## Roadmap to 1.0 Stable
+
+CallFlow `v0.2.0-beta.1` is the frozen Official Beta baseline. No new beta features will be added except critical hotfixes.
+
+Work toward `v1.0.0` will focus on visual polish, AI engine implementation, final QA, and stable release documentation. See [Roadmap to v1.0 Stable](docs/roadmap/v1.0-stable.md) for scope, versioning plan, and exit criteria.
 
 ## Limitations
 
