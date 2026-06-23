@@ -30,12 +30,16 @@ Security configuration:
 - `read(key)`
 - `write(key, value)`
 - `copyText(text)`
-- `readClipboardText()`
+- `readClipboardCallId()`
 - `exportNote(payload)`
 - `exportBackup()`
 - `importBackup()`
+- `resetLocalData()`
+- `restartApp()`
+- `importKnowledgeDocument()`
 - `getDiagnostics()`
 - `getDataDir()`
+- `getSystemLocale()`
 - `getHealth()`
 
 Only known storage keys are allowed.
@@ -56,10 +60,17 @@ Responsibilities:
 
 Renderer module boundaries:
 
-- `src/renderer/scripts/app.js` is the runtime orchestrator: initial load, global subscriptions, navigation, shared context, and render coordination.
+- `src/renderer/scripts/app.js` is the runtime orchestrator: initial load, global subscriptions, navigation, shared context, and render coordination. It currently handles onboarding, settings application, theme/language switching, and global event wiring. As the app grows, these responsibilities should be extracted into focused modules following the same `context` pattern used by views.
 - `src/renderer/scripts/core/` owns shared renderer primitives such as DOM helpers, state factory, action/error handling, date/time picker logic, settings, timers, timezones and markdown preview.
 - `src/renderer/scripts/views/` owns view-specific rendering and events. New screens should be added as a `createXView(context)` module with `render()` and `bindEvents()` rather than adding more view logic directly to `app.js`.
 - View modules receive shared dependencies through `context` and should not reach into private variables from another view.
+
+Planned gradual refactor for `app.js`:
+
+1. Extract onboarding helpers into a dedicated module.
+2. Extract settings application and form sync helpers.
+3. Extract global actions (navigation, theme, language switching).
+4. Leave `app.js` as a minimal bootstrap/orchestrator that wires modules together.
 
 Script library:
 
