@@ -166,6 +166,16 @@ npm test
 npm run validate
 ```
 
+## Product landing page
+
+The repository includes a static product presentation page under `website/`. It is separate from the Electron app and can be opened directly in a browser:
+
+```bash
+xdg-open website/index.html
+```
+
+You can also serve the folder with any local static server if needed. The page uses local assets from `website/assets/` and describes the current beta feature set without adding a backend or web app runtime.
+
 ## Windows packaging
 
 The repository already includes Electron Builder packaging scripts for Windows:

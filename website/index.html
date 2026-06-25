@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="CallFlow es una app local-first de escritorio para registrar llamadas, generar reportes horarios, gestionar recordatorios y mantener scripts de call center."
+    />
+    <title>CallFlow | App local-first para call center</title>
+    <link rel="icon" href="./assets/logo/callflow-icon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b1220;
+        --panel: #0f172a;
+        --panel-strong: #111827;
+        --card: #172033;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --soft: #cbd5e1;
+        --blue: #3b82f6;
+        --cyan: #22d3ee;
+        --green: #22c55e;
+        --violet: #8b5cf6;
+        --pink: #f472b6;
+        --amber: #facc15;
+        --red: #ef4444;
+        --border: rgba(148, 163, 184, 0.16);
+        --shadow: rgba(0, 0, 0, 0.45);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.22), transparent 30rem),
+          radial-gradient(circle at 88% 12%, rgba(34, 211, 238, 0.16), transparent 26rem),
+          linear-gradient(180deg, #08111f 0%, var(--bg) 38%, #070d18 100%);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: 0;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      img {
+        max-width: 100%;
+      }
+
+      .site-nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        background: rgba(11, 17, 32, 0.78);
+        backdrop-filter: blur(14px);
+      }
+
+      .nav-inner,
+      .section,
+      .footer-inner {
+        width: min(1200px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        min-height: 68px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 170px;
+        text-decoration: none;
+      }
+
+      .brand img {
+        width: 150px;
+        height: auto;
+        display: block;
+      }
+
+      .nav-links {
+        display: flex;
+        flex: 1;
+        gap: 24px;
+      }
+
+      .nav-links a,
+      .nav-action {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .nav-links a:hover,
+      .nav-action:hover {
+        color: var(--text);
+      }
+
+      .nav-action {
+        color: var(--soft);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+        gap: 54px;
+        align-items: center;
+        min-height: calc(100vh - 68px);
+        padding: 74px 0 56px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        padding: 7px 14px;
+        border: 1px solid rgba(34, 211, 238, 0.28);
+        border-radius: 999px;
+        background: rgba(34, 211, 238, 0.1);
+        color: #67e8f9;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 720px;
+        margin-bottom: 22px;
+        font-size: clamp(42px, 7vw, 76px);
+        line-height: 1.02;
+        font-weight: 900;
+      }
+
+      .gradient-text {
+        background: linear-gradient(120deg, #60a5fa, var(--cyan) 58%, var(--green));
+        background-clip: text;
+        color: transparent;
+      }
+
+      .lead {
+        max-width: 660px;
+        margin-bottom: 30px;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.7;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-bottom: 34px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 13px 22px;
+        border: 1px solid rgba(147, 197, 253, 0.32);
+        border-radius: 12px;
+        color: #fff;
+        background: linear-gradient(180deg, var(--blue), #2563eb);
+        box-shadow: 0 16px 38px rgba(37, 99, 235, 0.36);
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .button.secondary {
+        border-color: var(--border);
+        background: rgba(30, 41, 59, 0.78);
+        box-shadow: none;
+        color: var(--soft);
+      }
+
+      .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        max-width: 650px;
+      }
+
+      .stat {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.66);
+        padding: 17px;
+      }
+
+      .stat strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 28px;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .product-window {
+        position: relative;
+      }
+
+      .product-window::before {
+        content: "";
+        position: absolute;
+        inset: -34px -10px 18%;
+        z-index: 0;
+        border-radius: 38px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.28), transparent 64%);
+        filter: blur(28px);
+      }
+
+      .window-frame {
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 16px;
+        background: var(--panel);
+        box-shadow: 0 42px 90px var(--shadow);
+      }
+
+      .window-bar {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        background: #0b1220;
+      }
+
+      .dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 999px;
+      }
+
+      .dot.red {
+        background: var(--red);
+      }
+
+      .dot.yellow {
+        background: var(--amber);
+      }
+
+      .dot.green {
+        background: var(--green);
+      }
+
+      .window-title {
+        margin-left: 10px;
+        color: #64748b;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+      }
+
+      .window-frame img {
+        display: block;
+        width: 100%;
+        background: #0b1120;
+      }
+
+      .section {
+        padding: 78px 0;
+      }
+
+      .section-heading {
+        max-width: 720px;
+        margin: 0 auto 34px;
+        text-align: center;
+      }
+
+      .section-kicker {
+        margin-bottom: 10px;
+        color: var(--cyan);
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .section-heading h2,
+      .cta h2 {
+        margin-bottom: 14px;
+        font-size: clamp(32px, 5vw, 46px);
+        line-height: 1.1;
+        font-weight: 900;
+      }
+
+      .section-heading p,
+      .cta p {
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.65;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .feature-card {
+        min-height: 196px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background:
+          linear-gradient(180deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.78)),
+          var(--panel);
+        padding: 22px;
+        transition:
+          transform 0.2s ease,
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(59, 130, 246, 0.42);
+        box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+      }
+
+      .feature-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        margin-bottom: 16px;
+        border-radius: 10px;
+        background: rgba(59, 130, 246, 0.14);
+        color: var(--cyan);
+        font-size: 22px;
+        font-weight: 900;
+      }
+
+      .feature-card h3 {
+        margin-bottom: 9px;
+        font-size: 18px;
+      }
+
+      .feature-card p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 14.5px;
+        line-height: 1.58;
+      }
+
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 26px;
+      }
+
+      .tab {
+        min-height: 40px;
+        padding: 10px 18px;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 10px;
+        background: #1e293b;
+        color: var(--muted);
+        cursor: pointer;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .tab.active {
+        border-color: rgba(147, 197, 253, 0.34);
+        background: linear-gradient(180deg, var(--blue), #2563eb);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.24);
+      }
+
+      .showcase-caption {
+        max-width: 620px;
+        margin: 18px auto 0;
+        color: var(--muted);
+        text-align: center;
+        line-height: 1.55;
+      }
+
+      .privacy-panel,
+      .cta {
+        overflow: hidden;
+        border: 1px solid rgba(34, 197, 94, 0.22);
+        border-radius: 22px;
+        background:
+          radial-gradient(circle at 15% 0%, rgba(34, 197, 94, 0.12), transparent 40%),
+          radial-gradient(circle at 90% 100%, rgba(37, 99, 235, 0.12), transparent 42%),
+          var(--panel);
+      }
+
+      .privacy-panel {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 42px;
+        align-items: center;
+        padding: 48px;
+      }
+
+      .privacy-panel h2 {
+        margin-bottom: 16px;
+        font-size: clamp(30px, 5vw, 42px);
+        line-height: 1.1;
+      }
+
+      .privacy-panel p {
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .check-list {
+        display: grid;
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .check-list li {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 14px 16px;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 12px;
+        background: rgba(11, 18, 32, 0.62);
+        color: #e2e8f0;
+        font-weight: 650;
+      }
+
+      .check-list span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        border-radius: 8px;
+        background: rgba(34, 197, 94, 0.16);
+        color: #4ade80;
+      }
+
+      .stack-list {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .stack-list span {
+        padding: 11px 18px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--panel-strong);
+        color: var(--soft);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+
+      .cta {
+        position: relative;
+        border-color: rgba(59, 130, 246, 0.28);
+        background: linear-gradient(180deg, #0f1d3a, #0b1426);
+        padding: 56px 48px;
+        text-align: center;
+      }
+
+      .cta::before {
+        content: "";
+        position: absolute;
+        top: -120px;
+        left: 50%;
+        width: 480px;
+        height: 320px;
+        transform: translateX(-50%);
+        background: radial-gradient(circle, rgba(37, 99, 235, 0.38), transparent 60%);
+        filter: blur(40px);
+      }
+
+      .cta > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .release-meta {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px 20px;
+        margin-top: 22px;
+        color: #64748b;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12.5px;
+      }
+
+      footer {
+        border-top: 1px solid rgba(148, 163, 184, 0.1);
+        background: #0b1220;
+      }
+
+      .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 32px 0;
+      }
+
+      .footer-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .footer-brand img {
+        width: 38px;
+        height: 38px;
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 22px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .footer-links a {
+        text-decoration: none;
+      }
+
+      [data-reveal] {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
+          transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      [data-reveal].is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 920px) {
+        .nav-inner {
+          flex-wrap: wrap;
+          gap: 12px 20px;
+          padding: 14px 0;
+        }
+
+        .brand {
+          flex: 1 1 100%;
+        }
+
+        .nav-links {
+          order: 3;
+          flex: 1 1 100%;
+          overflow-x: auto;
+          padding-bottom: 2px;
+        }
+
+        .hero,
+        .privacy-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          min-height: auto;
+          padding-top: 50px;
+        }
+
+        .feature-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .nav-inner,
+        .section,
+        .footer-inner {
+          width: min(100% - 28px, 1200px);
+        }
+
+        .brand img {
+          width: 138px;
+        }
+
+        .hero {
+          gap: 34px;
+          padding-bottom: 40px;
+        }
+
+        .hero-actions,
+        .quick-stats,
+        .feature-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .button {
+          width: 100%;
+        }
+
+        .section {
+          padding: 54px 0;
+        }
+
+        .privacy-panel,
+        .cta {
+          padding: 30px 22px;
+        }
+
+        .footer-inner {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .footer-links {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body id="top">
+    <header class="site-nav">
+      <div class="nav-inner">
+        <a class="brand" href="#top" aria-label="CallFlow inicio">
+          <img src="./assets/logo/callflow-logo-dark.svg" alt="CallFlow" />
+        </a>
+        <nav class="nav-links" aria-label="Secciones de la página">
+          <a href="#features">Funciones</a>
+          <a href="#showcase">Capturas</a>
+          <a href="#privacy">Privacidad</a>
+          <a href="#stack">Tecnología</a>
+        </nav>
+        <a class="nav-action" href="https://github.com/GaboEI/callflow" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="section hero" aria-labelledby="hero-title">
+        <div>
+          <div class="eyebrow" data-reveal>Beta local-first para Windows</div>
+          <h1 id="hero-title" data-reveal>
+            Tu centro de llamadas,<br />
+            <span class="gradient-text">en una sola ventana.</span>
+          </h1>
+          <p class="lead" data-reveal>
+            CallFlow ayuda a operadores de call center a registrar llamadas rápido, copiar líneas para CRM, generar reportes
+            horarios, gestionar callbacks y mantener scripts Markdown sin depender de una nube o backend.
+          </p>
+          <div class="hero-actions" data-reveal>
+            <a class="button" href="https://github.com/GaboEI/callflow/releases/download/v0.2.0-beta.1/CallFlow.Setup.0.2.0-beta.1.exe">
+              Descargar instalador
+            </a>
+            <a class="button secondary" href="#showcase">Ver capturas</a>
+          </div>
+          <div class="quick-stats" data-reveal>
+            <div class="stat">
+              <strong>Local</strong>
+              <span>Datos en JSON dentro del perfil local de Electron.</span>
+            </div>
+            <div class="stat">
+              <strong>Beta</strong>
+              <span>Instalador NSIS validado en Windows 11.</span>
+            </div>
+            <div class="stat">
+              <strong>Offline</strong>
+              <span>Flujos principales sin cuenta, servidor ni telemetría.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-window" data-reveal>
+          <div class="window-frame">
+            <div class="window-bar">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+              <span class="window-title">CallFlow - Dashboard</span>
+            </div>
+            <img src="./assets/images/dashboard.png" alt="Dashboard de CallFlow con registro rápido de llamadas" />
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section" aria-labelledby="features-title">
+        <div class="section-heading" data-reveal>
+          <div class="section-kicker">Funciones reales del MVP</div>
+          <h2 id="features-title">Herramientas compactas para el turno diario</h2>
+          <p>
+            La landing describe el estado actual del producto: flujos locales de operador, reportes, recordatorios,
+            estadísticas y biblioteca de scripts.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card" data-reveal>
+            <div class="feature-icon">#</div>
+            <h3>Registro rápido de llamadas</h3>
+            <p>ID, tipo de llamada, estados frecuentes, resultado principal y comentario personalizado en un flujo corto.</p>
+          </article>
+          <article class="feature-card" data-reveal>
+            <div class="feature-icon">↗</div>
+            <h3>Copias para CRM y supervisor</h3>
+            <p>La misma llamada genera líneas listas para CRM y bloques horarios para reportes de supervisor.</p>
+          </article>
+          <article class="feature-card" data-reveal>
+            <div class="feature-icon">⌁</div>
+            <h3>Recordatorios de callbacks</h3>
+            <p>Estados pendiente, vencido, completado, eliminado, pospuesto, silenciado y recurrencias locales.</p>
+          </article>
+          <article class="feature-card" data-reveal>
+            <div class="feature-icon">◷</div>
+            <h3>Relojes y pausas</h3>
+            <p>Relojes multizona, reloj de trabajo y seguimiento de pausas para acompañar el turno.</p>
+          </article>
+          <article class="feature-card" data-reveal>
+            <div class="feature-icon">∑</div>
+            <h3>Estadísticas locales</h3>
+            <p>Totales, resultados, actividad por hora, turnos, descansos y estimaciones financieras configurables.</p>
+          </article>
+          <article class="feature-card" data-reveal>
+            <div class="feature-icon">¶</div>
+            <h3>Scripts Markdown</h3>
+            <p>Biblioteca interna con render seguro, búsqueda, fijado, import/export y soporte para texto o PDF.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="showcase" class="section" aria-labelledby="showcase-title">
+        <div class="section-heading" data-reveal>
+          <div class="section-kicker">Capturas reales</div>
+          <h2 id="showcase-title">Una interfaz, muchos flujos</h2>
+        </div>
+        <div class="tabs" data-reveal role="tablist" aria-label="Capturas de CallFlow">
+          <button class="tab active" type="button" data-shot="0">Dashboard</button>
+          <button class="tab" type="button" data-shot="1">Reportes</button>
+          <button class="tab" type="button" data-shot="2">Recordatorios</button>
+          <button class="tab" type="button" data-shot="3">Estadísticas</button>
+          <button class="tab" type="button" data-shot="4">Scripts</button>
+          <button class="tab" type="button" data-shot="5">Ajustes</button>
+        </div>
+        <div class="product-window" data-reveal>
+          <div class="window-frame">
+            <div class="window-bar">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+              <span class="window-title" data-shot-title>CallFlow - Dashboard</span>
+            </div>
+            <img data-shot-img src="./assets/images/dashboard.png" alt="Dashboard de CallFlow" />
+          </div>
+          <p class="showcase-caption" data-shot-caption>
+            Registro rápido, bloques del día y estadísticas en vivo en una sola pantalla.
+          </p>
+        </div>
+      </section>
+
+      <section id="privacy" class="section" aria-labelledby="privacy-title">
+        <div class="privacy-panel" data-reveal>
+          <div>
+            <div class="eyebrow">Privacidad por diseño</div>
+            <h2 id="privacy-title">Tus datos no salen de tu equipo</h2>
+            <p>
+              CallFlow guarda todo en el perfil local de Electron. Sin sincronización en la nube, sin servidor backend y sin
+              pipeline de telemetría en el MVP actual. El usuario decide qué guarda, importa, copia o exporta.
+            </p>
+          </div>
+          <ul class="check-list">
+            <li><span>✓</span> Sin nube ni cuenta requerida</li>
+            <li><span>✓</span> Backups y recuperación locales</li>
+            <li><span>✓</span> contextIsolation y preload mínimo</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="stack" class="section" aria-labelledby="stack-title">
+        <div class="section-heading" data-reveal>
+          <div class="section-kicker" style="color: var(--violet)">Tecnología</div>
+          <h2 id="stack-title">Honesto y sin sobrecarga</h2>
+          <p>
+            Sin React, Vue, Angular, backend ni base de datos en la nube. Solo HTML, CSS, JavaScript, Electron y módulos
+            compartidos para la lógica de dominio.
+          </p>
+        </div>
+        <div class="stack-list" data-reveal>
+          <span>Electron</span>
+          <span>Node.js</span>
+          <span>HTML · CSS · JS</span>
+          <span>JSON local</span>
+          <span>DOMPurify</span>
+          <span>EasyMDE</span>
+          <span>Electron Builder · NSIS</span>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="download-title">
+        <div class="cta" data-reveal>
+          <h2 id="download-title">Descarga la beta para Windows</h2>
+          <p>
+            Instalador NSIS validado en Windows 11. Es una beta, no una build empresarial estable. El instalador no está
+            firmado todavía, por lo que Windows SmartScreen puede mostrar un aviso en el primer arranque.
+          </p>
+          <div class="hero-actions" style="justify-content: center; margin: 26px 0 0">
+            <a class="button" href="https://github.com/GaboEI/callflow/releases/download/v0.2.0-beta.1/CallFlow.Setup.0.2.0-beta.1.exe">
+              Descargar instalador (.exe)
+            </a>
+            <a class="button secondary" href="https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1" target="_blank" rel="noopener">
+              Ver releases
+            </a>
+          </div>
+          <div class="release-meta">
+            <span>v0.2.0-beta.1</span>
+            <span>NSIS x64</span>
+            <span>Windows 10 / 11</span>
+            <span>Apache 2.0</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <img src="./assets/logo/callflow-icon.svg" alt="" aria-hidden="true" />
+          <div>
+            <strong>CallFlow</strong>
+            <div style="color: #64748b; font-size: 13px">App local-first para centros de llamadas</div>
+          </div>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/GaboEI/callflow" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1" target="_blank" rel="noopener">Releases</a>
+          <span>© 2026 · Apache 2.0</span>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const shots = [
+        {
+          src: "./assets/images/dashboard.png",
+          title: "CallFlow - Dashboard",
+          alt: "Dashboard de CallFlow",
+          caption: "Registro rápido, bloques del día y estadísticas en vivo en una sola pantalla."
+        },
+        {
+          src: "./assets/images/reports.png",
+          title: "CallFlow - Reportes",
+          alt: "Vista de reportes de CallFlow",
+          caption: "Reportes por hora con búsqueda interna, edición y borrado de bloques."
+        },
+        {
+          src: "./assets/images/reminders.png",
+          title: "CallFlow - Recordatorios",
+          alt: "Vista de recordatorios de CallFlow",
+          caption: "Callbacks con estados de pendiente, vencido, posponer, silenciar y recurrencia."
+        },
+        {
+          src: "./assets/images/stats.png",
+          title: "CallFlow - Estadísticas",
+          alt: "Vista de estadísticas de CallFlow",
+          caption: "Totales, resultados, actividad por hora, turnos y ganancia estimada."
+        },
+        {
+          src: "./assets/images/knowledge.png",
+          title: "CallFlow - Scripts",
+          alt: "Biblioteca de scripts de CallFlow",
+          caption: "Biblioteca de scripts Markdown con render seguro, búsqueda y fijado."
+        },
+        {
+          src: "./assets/images/settings.png",
+          title: "CallFlow - Ajustes",
+          alt: "Vista de configuración de CallFlow",
+          caption: "Idioma, zona horaria, formato de reportes, tema y ajustes de finanzas."
+        }
+      ];
+
+      const shotImage = document.querySelector("[data-shot-img]");
+      const shotTitle = document.querySelector("[data-shot-title]");
+      const shotCaption = document.querySelector("[data-shot-caption]");
+      const tabs = document.querySelectorAll("[data-shot]");
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const shot = shots[Number(tab.dataset.shot)] || shots[0];
+          tabs.forEach((item) => item.classList.toggle("active", item === tab));
+          if (shotTitle) shotTitle.textContent = shot.title;
+          if (shotCaption) shotCaption.textContent = shot.caption;
+          if (shotImage) {
+            shotImage.style.opacity = "0";
+            setTimeout(() => {
+              shotImage.src = shot.src;
+              shotImage.alt = shot.alt;
+              shotImage.style.opacity = "1";
+            }, 120);
+          }
+        });
+      });
+
+      const revealItems = document.querySelectorAll("[data-reveal]");
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            });
+          },
+          { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+        );
+        revealItems.forEach((item) => observer.observe(item));
+      } else {
+        revealItems.forEach((item) => item.classList.add("is-visible"));
+      }
+    </script>
+  </body>
+</html>
