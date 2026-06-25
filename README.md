@@ -13,6 +13,14 @@ The project is intentionally compact and honest: it shows the product state as i
 
 CallFlow is currently in beta. Core local workflows are functional, the Windows installer builds successfully, and active testing is being performed on Windows 11. Some UX, documentation, legal text, and release polish are still being refined.
 
+## Product page
+
+> **Open the product page**
+>
+> [https://gaboei.github.io/callflow/](https://gaboei.github.io/callflow/)
+>
+> The public page presents the current beta feature set and download path. It is a static GitHub Pages site, not a separate web app or backend service.
+
 ## Windows download
 
 > **Download for Windows**
@@ -168,13 +176,17 @@ npm run validate
 
 ## Product landing page
 
-The repository includes a static product presentation page under `website/`. It is separate from the Electron app and can be opened directly in a browser:
+The repository includes a static product presentation page under `website/`. The public GitHub Pages URL is:
+
+[https://gaboei.github.io/callflow/](https://gaboei.github.io/callflow/)
+
+It is separate from the Electron app and can also be opened directly in a browser:
 
 ```bash
 xdg-open website/index.html
 ```
 
-You can also serve the folder with any local static server if needed. The page uses local assets from `website/assets/` and describes the current beta feature set without adding a backend or web app runtime.
+GitHub Pages publishes from `main` + `/(root)` and the root `index.html` redirects to `website/`. You can also serve the folder with any local static server if needed. The page uses local assets from `website/assets/` and describes the current beta feature set without adding a backend or web app runtime.
 
 ## Windows packaging
 
