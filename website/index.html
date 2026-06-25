@@ -1,956 +1,1192 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="CallFlow es una app local-first de escritorio para registrar llamadas, generar reportes horarios, gestionar recordatorios y mantener scripts de call center."
-    />
-    <title>CallFlow | App local-first para call center</title>
-    <link rel="icon" href="./assets/logo/callflow-icon.svg" type="image/svg+xml" />
-    <style>
-      :root {
-        color-scheme: dark;
-        --bg: #0b1220;
-        --panel: #0f172a;
-        --panel-strong: #111827;
-        --card: #172033;
-        --text: #f8fafc;
-        --muted: #94a3b8;
-        --soft: #cbd5e1;
-        --blue: #3b82f6;
-        --cyan: #22d3ee;
-        --green: #22c55e;
-        --violet: #8b5cf6;
-        --pink: #f472b6;
-        --amber: #facc15;
-        --red: #ef4444;
-        --border: rgba(148, 163, 184, 0.16);
-        --shadow: rgba(0, 0, 0, 0.45);
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
-
-      body {
-        margin: 0;
-        background:
-          radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.22), transparent 30rem),
-          radial-gradient(circle at 88% 12%, rgba(34, 211, 238, 0.16), transparent 26rem),
-          linear-gradient(180deg, #08111f 0%, var(--bg) 38%, #070d18 100%);
-        color: var(--text);
-        font-family:
-          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        letter-spacing: 0;
-      }
-
-      a {
-        color: inherit;
-      }
-
-      img {
-        max-width: 100%;
-      }
-
-      .site-nav {
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-        background: rgba(11, 17, 32, 0.78);
-        backdrop-filter: blur(14px);
-      }
-
-      .nav-inner,
-      .section,
-      .footer-inner {
-        width: min(1200px, calc(100% - 40px));
-        margin: 0 auto;
-      }
-
-      .nav-inner {
-        display: flex;
-        align-items: center;
-        gap: 28px;
-        min-height: 68px;
-      }
-
-      .brand {
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 170px;
-        text-decoration: none;
-      }
-
-      .brand img {
-        width: 150px;
-        height: auto;
-        display: block;
-      }
-
-      .nav-links {
-        display: flex;
-        flex: 1;
-        gap: 24px;
-      }
-
-      .nav-links a,
-      .nav-action {
-        color: var(--muted);
-        font-size: 14px;
-        font-weight: 600;
-        text-decoration: none;
-      }
-
-      .nav-links a:hover,
-      .nav-action:hover {
-        color: var(--text);
-      }
-
-      .nav-action {
-        color: var(--soft);
-      }
-
-      .hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
-        gap: 54px;
-        align-items: center;
-        min-height: calc(100vh - 68px);
-        padding: 74px 0 56px;
-      }
-
-      .eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 20px;
-        padding: 7px 14px;
-        border: 1px solid rgba(34, 211, 238, 0.28);
-        border-radius: 999px;
-        background: rgba(34, 211, 238, 0.1);
-        color: #67e8f9;
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      h1,
-      h2,
-      h3,
-      p {
-        margin-top: 0;
-      }
-
-      h1 {
-        max-width: 720px;
-        margin-bottom: 22px;
-        font-size: clamp(42px, 7vw, 76px);
-        line-height: 1.02;
-        font-weight: 900;
-      }
-
-      .gradient-text {
-        background: linear-gradient(120deg, #60a5fa, var(--cyan) 58%, var(--green));
-        background-clip: text;
-        color: transparent;
-      }
-
-      .lead {
-        max-width: 660px;
-        margin-bottom: 30px;
-        color: var(--muted);
-        font-size: 18px;
-        line-height: 1.7;
-      }
-
-      .hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 14px;
-        margin-bottom: 34px;
-      }
-
-      .button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 48px;
-        padding: 13px 22px;
-        border: 1px solid rgba(147, 197, 253, 0.32);
-        border-radius: 12px;
-        color: #fff;
-        background: linear-gradient(180deg, var(--blue), #2563eb);
-        box-shadow: 0 16px 38px rgba(37, 99, 235, 0.36);
-        font-weight: 800;
-        text-decoration: none;
-      }
-
-      .button.secondary {
-        border-color: var(--border);
-        background: rgba(30, 41, 59, 0.78);
-        box-shadow: none;
-        color: var(--soft);
-      }
-
-      .quick-stats {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-        max-width: 650px;
-      }
-
-      .stat {
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        background: rgba(15, 23, 42, 0.66);
-        padding: 17px;
-      }
-
-      .stat strong {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 28px;
-      }
-
-      .stat span {
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.45;
-      }
-
-      .product-window {
-        position: relative;
-      }
-
-      .product-window::before {
-        content: "";
-        position: absolute;
-        inset: -34px -10px 18%;
-        z-index: 0;
-        border-radius: 38px;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.28), transparent 64%);
-        filter: blur(28px);
-      }
-
-      .window-frame {
-        position: relative;
-        z-index: 1;
-        overflow: hidden;
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        border-radius: 16px;
-        background: var(--panel);
-        box-shadow: 0 42px 90px var(--shadow);
-      }
-
-      .window-bar {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        padding: 12px 14px;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-        background: #0b1220;
-      }
-
-      .dot {
-        width: 11px;
-        height: 11px;
-        border-radius: 999px;
-      }
-
-      .dot.red {
-        background: var(--red);
-      }
-
-      .dot.yellow {
-        background: var(--amber);
-      }
-
-      .dot.green {
-        background: var(--green);
-      }
-
-      .window-title {
-        margin-left: 10px;
-        color: #64748b;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 12px;
-      }
-
-      .window-frame img {
-        display: block;
-        width: 100%;
-        background: #0b1120;
-      }
-
-      .section {
-        padding: 78px 0;
-      }
-
-      .section-heading {
-        max-width: 720px;
-        margin: 0 auto 34px;
-        text-align: center;
-      }
-
-      .section-kicker {
-        margin-bottom: 10px;
-        color: var(--cyan);
-        font-size: 13px;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      .section-heading h2,
-      .cta h2 {
-        margin-bottom: 14px;
-        font-size: clamp(32px, 5vw, 46px);
-        line-height: 1.1;
-        font-weight: 900;
-      }
-
-      .section-heading p,
-      .cta p {
-        color: var(--muted);
-        font-size: 16px;
-        line-height: 1.65;
-      }
-
-      .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 18px;
-      }
-
-      .feature-card {
-        min-height: 196px;
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        background:
-          linear-gradient(180deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.78)),
-          var(--panel);
-        padding: 22px;
-        transition:
-          transform 0.2s ease,
-          border-color 0.2s ease,
-          box-shadow 0.2s ease;
-      }
-
-      .feature-card:hover {
-        transform: translateY(-5px);
-        border-color: rgba(59, 130, 246, 0.42);
-        box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
-      }
-
-      .feature-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 42px;
-        height: 42px;
-        margin-bottom: 16px;
-        border-radius: 10px;
-        background: rgba(59, 130, 246, 0.14);
-        color: var(--cyan);
-        font-size: 22px;
-        font-weight: 900;
-      }
-
-      .feature-card h3 {
-        margin-bottom: 9px;
-        font-size: 18px;
-      }
-
-      .feature-card p {
-        margin-bottom: 0;
-        color: var(--muted);
-        font-size: 14.5px;
-        line-height: 1.58;
-      }
-
-      .tabs {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 26px;
-      }
-
-      .tab {
-        min-height: 40px;
-        padding: 10px 18px;
-        border: 1px solid rgba(148, 163, 184, 0.14);
-        border-radius: 10px;
-        background: #1e293b;
-        color: var(--muted);
-        cursor: pointer;
-        font: inherit;
-        font-size: 14px;
-        font-weight: 700;
-      }
-
-      .tab.active {
-        border-color: rgba(147, 197, 253, 0.34);
-        background: linear-gradient(180deg, var(--blue), #2563eb);
-        color: #fff;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.24);
-      }
-
-      .showcase-caption {
-        max-width: 620px;
-        margin: 18px auto 0;
-        color: var(--muted);
-        text-align: center;
-        line-height: 1.55;
-      }
-
-      .privacy-panel,
-      .cta {
-        overflow: hidden;
-        border: 1px solid rgba(34, 197, 94, 0.22);
-        border-radius: 22px;
-        background:
-          radial-gradient(circle at 15% 0%, rgba(34, 197, 94, 0.12), transparent 40%),
-          radial-gradient(circle at 90% 100%, rgba(37, 99, 235, 0.12), transparent 42%),
-          var(--panel);
-      }
-
-      .privacy-panel {
-        display: grid;
-        grid-template-columns: 1.1fr 1fr;
-        gap: 42px;
-        align-items: center;
-        padding: 48px;
-      }
-
-      .privacy-panel h2 {
-        margin-bottom: 16px;
-        font-size: clamp(30px, 5vw, 42px);
-        line-height: 1.1;
-      }
-
-      .privacy-panel p {
-        color: var(--muted);
-        line-height: 1.65;
-      }
-
-      .check-list {
-        display: grid;
-        gap: 12px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .check-list li {
-        display: flex;
-        align-items: center;
-        gap: 13px;
-        padding: 14px 16px;
-        border: 1px solid rgba(148, 163, 184, 0.12);
-        border-radius: 12px;
-        background: rgba(11, 18, 32, 0.62);
-        color: #e2e8f0;
-        font-weight: 650;
-      }
-
-      .check-list span {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 30px;
-        height: 30px;
-        flex: 0 0 30px;
-        border-radius: 8px;
-        background: rgba(34, 197, 94, 0.16);
-        color: #4ade80;
-      }
-
-      .stack-list {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px;
-      }
-
-      .stack-list span {
-        padding: 11px 18px;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        background: var(--panel-strong);
-        color: var(--soft);
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 14px;
-      }
-
-      .cta {
-        position: relative;
-        border-color: rgba(59, 130, 246, 0.28);
-        background: linear-gradient(180deg, #0f1d3a, #0b1426);
-        padding: 56px 48px;
-        text-align: center;
-      }
-
-      .cta::before {
-        content: "";
-        position: absolute;
-        top: -120px;
-        left: 50%;
-        width: 480px;
-        height: 320px;
-        transform: translateX(-50%);
-        background: radial-gradient(circle, rgba(37, 99, 235, 0.38), transparent 60%);
-        filter: blur(40px);
-      }
-
-      .cta > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .release-meta {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px 20px;
-        margin-top: 22px;
-        color: #64748b;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 12.5px;
-      }
-
-      footer {
-        border-top: 1px solid rgba(148, 163, 184, 0.1);
-        background: #0b1220;
-      }
-
-      .footer-inner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        padding: 32px 0;
-      }
-
-      .footer-brand {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .footer-brand img {
-        width: 38px;
-        height: 38px;
-      }
-
-      .footer-links {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 22px;
-        color: var(--muted);
-        font-size: 14px;
-      }
-
-      .footer-links a {
-        text-decoration: none;
-      }
-
-      [data-reveal] {
-        opacity: 0;
-        transform: translateY(24px);
-        transition:
-          opacity 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
-          transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-
-      [data-reveal].is-visible {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      @media (max-width: 920px) {
-        .nav-inner {
-          flex-wrap: wrap;
-          gap: 12px 20px;
-          padding: 14px 0;
-        }
-
-        .brand {
-          flex: 1 1 100%;
-        }
-
-        .nav-links {
-          order: 3;
-          flex: 1 1 100%;
-          overflow-x: auto;
-          padding-bottom: 2px;
-        }
-
-        .hero,
-        .privacy-panel {
-          grid-template-columns: 1fr;
-        }
-
-        .hero {
-          min-height: auto;
-          padding-top: 50px;
-        }
-
-        .feature-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      @media (max-width: 640px) {
-        .nav-inner,
-        .section,
-        .footer-inner {
-          width: min(100% - 28px, 1200px);
-        }
-
-        .brand img {
-          width: 138px;
-        }
-
-        .hero {
-          gap: 34px;
-          padding-bottom: 40px;
-        }
-
-        .hero-actions,
-        .quick-stats,
-        .feature-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .button {
-          width: 100%;
-        }
-
-        .section {
-          padding: 54px 0;
-        }
-
-        .privacy-panel,
-        .cta {
-          padding: 30px 22px;
-        }
-
-        .footer-inner {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .footer-links {
-          justify-content: flex-start;
-        }
-      }
-    </style>
-  </head>
-  <body id="top">
-    <header class="site-nav">
-      <div class="nav-inner">
-        <a class="brand" href="#top" aria-label="CallFlow inicio">
-          <img src="./assets/logo/callflow-logo-dark.svg" alt="CallFlow" />
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="./assets/logo/callflow-icon.svg" type="image/svg+xml">
+</head>
+<body>
+<style>/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/17b2f18f-a541-4e18-9802-d8deaf56a344.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/8af33827-a04f-407a-b29e-54d1a83fb7c1.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/f8daef16-2630-4136-bb1d-2d59d12cf4cb.woff2") format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/9290c3c6-1da4-42ce-96fe-3c08420021d6.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/1cb316c7-32e6-438b-b1ca-9aec4ace40f2.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/0821cba8-f2e1-4b13-a671-d0a75ecd1d24.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/9a0bd181-0e58-4b4e-ab32-aa9e275f28b8.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/17b2f18f-a541-4e18-9802-d8deaf56a344.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/8af33827-a04f-407a-b29e-54d1a83fb7c1.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/f8daef16-2630-4136-bb1d-2d59d12cf4cb.woff2") format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/9290c3c6-1da4-42ce-96fe-3c08420021d6.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/1cb316c7-32e6-438b-b1ca-9aec4ace40f2.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/0821cba8-f2e1-4b13-a671-d0a75ecd1d24.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/9a0bd181-0e58-4b4e-ab32-aa9e275f28b8.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/17b2f18f-a541-4e18-9802-d8deaf56a344.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/8af33827-a04f-407a-b29e-54d1a83fb7c1.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/f8daef16-2630-4136-bb1d-2d59d12cf4cb.woff2") format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/9290c3c6-1da4-42ce-96fe-3c08420021d6.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/1cb316c7-32e6-438b-b1ca-9aec4ace40f2.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/0821cba8-f2e1-4b13-a671-d0a75ecd1d24.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/9a0bd181-0e58-4b4e-ab32-aa9e275f28b8.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/17b2f18f-a541-4e18-9802-d8deaf56a344.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/8af33827-a04f-407a-b29e-54d1a83fb7c1.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/f8daef16-2630-4136-bb1d-2d59d12cf4cb.woff2") format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/9290c3c6-1da4-42ce-96fe-3c08420021d6.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/1cb316c7-32e6-438b-b1ca-9aec4ace40f2.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/0821cba8-f2e1-4b13-a671-d0a75ecd1d24.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/9a0bd181-0e58-4b4e-ab32-aa9e275f28b8.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./assets/fonts/17b2f18f-a541-4e18-9802-d8deaf56a344.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./assets/fonts/8af33827-a04f-407a-b29e-54d1a83fb7c1.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./assets/fonts/f8daef16-2630-4136-bb1d-2d59d12cf4cb.woff2") format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./assets/fonts/9290c3c6-1da4-42ce-96fe-3c08420021d6.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./assets/fonts/1cb316c7-32e6-438b-b1ca-9aec4ace40f2.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./assets/fonts/0821cba8-f2e1-4b13-a671-d0a75ecd1d24.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./assets/fonts/9a0bd181-0e58-4b4e-ab32-aa9e275f28b8.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("./assets/fonts/17b2f18f-a541-4e18-9802-d8deaf56a344.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("./assets/fonts/8af33827-a04f-407a-b29e-54d1a83fb7c1.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("./assets/fonts/f8daef16-2630-4136-bb1d-2d59d12cf4cb.woff2") format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("./assets/fonts/9290c3c6-1da4-42ce-96fe-3c08420021d6.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("./assets/fonts/1cb316c7-32e6-438b-b1ca-9aec4ace40f2.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("./assets/fonts/0821cba8-f2e1-4b13-a671-d0a75ecd1d24.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("./assets/fonts/9a0bd181-0e58-4b4e-ab32-aa9e275f28b8.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/947afc17-4ad5-4a6d-8e2c-0d099e9ea33c.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/c8771a54-bdc8-41f7-8790-029148fe1a73.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/5abe392f-8edf-468a-a89f-f023e624dc4f.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/bebc4dbc-a664-4f27-b3c9-fa6895abd0a7.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/849e062e-ce67-4bb8-b77d-8d181b2e82d6.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/b7557b9a-0372-4b65-b42b-a08d93e698c5.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/947afc17-4ad5-4a6d-8e2c-0d099e9ea33c.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/c8771a54-bdc8-41f7-8790-029148fe1a73.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/5abe392f-8edf-468a-a89f-f023e624dc4f.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/bebc4dbc-a664-4f27-b3c9-fa6895abd0a7.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/849e062e-ce67-4bb8-b77d-8d181b2e82d6.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/b7557b9a-0372-4b65-b42b-a08d93e698c5.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/947afc17-4ad5-4a6d-8e2c-0d099e9ea33c.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/c8771a54-bdc8-41f7-8790-029148fe1a73.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/5abe392f-8edf-468a-a89f-f023e624dc4f.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/bebc4dbc-a664-4f27-b3c9-fa6895abd0a7.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/849e062e-ce67-4bb8-b77d-8d181b2e82d6.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/b7557b9a-0372-4b65-b42b-a08d93e698c5.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #0b1120; }
+  ::selection { background: rgba(59,130,246,0.35); color: #f8fafc; }
+  @keyframes cf-floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+  @keyframes cf-floaty2 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(12px); } }
+  @keyframes cf-drift { 0% { transform: translate(0,0) scale(1); } 50% { transform: translate(50px,-36px) scale(1.18); } 100% { transform: translate(0,0) scale(1); } }
+  @keyframes cf-drift2 { 0% { transform: translate(0,0) scale(1); } 50% { transform: translate(-44px,30px) scale(1.12); } 100% { transform: translate(0,0) scale(1); } }
+  @keyframes cf-wave { 0%,100% { transform: scaleY(0.32); } 50% { transform: scaleY(1); } }
+  @keyframes cf-blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+  @keyframes cf-spin { to { transform: rotate(360deg); } }
+  @keyframes cf-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes cf-pulse-glow { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+</style>
+
+<div style="font-family: Inter, 'Segoe UI', system-ui, sans-serif; background: #0b1120; color: #f8fafc; min-height: 100vh; overflow-x: hidden; position: relative;">
+
+  
+
+  <!-- ambient auras -->
+  <div style="position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;">
+    <div style="position: absolute; top: -180px; left: -120px; width: 620px; height: 620px; border-radius: 50%; background: radial-gradient(circle, rgba(37,99,235,0.28), transparent 62%); filter: blur(40px); animation: cf-drift 22s ease-in-out infinite;"></div>
+    <div style="position: absolute; top: 240px; right: -160px; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, rgba(34,211,238,0.18), transparent 62%); filter: blur(46px); animation: cf-drift2 26s ease-in-out infinite;"></div>
+    <div style="position: absolute; bottom: -120px; left: 36%; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,0.16), transparent 64%); filter: blur(48px); animation: cf-drift 30s ease-in-out infinite;"></div>
+  </div>
+
+  <!-- NАV -->
+  <nav style="position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px); background: rgba(11,17,32,0.72); border-bottom: 1px solid rgba(148,163,184,0.12);">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 14px 28px; display: flex; align-items: center; gap: 28px;">
+      <a href="#top" style="display: flex; align-items: center; text-decoration: none; flex-shrink: 0;" aria-label="CallFlow inicio"><img src="./assets/logo/callflow-logo-dark.svg" alt="CallFlow" style="display: block; width: 150px; height: auto;"></a>
+      <div style="display: flex; gap: 26px; margin-left: 10px; flex: 1;">
+        <a href="#features" style="color: #94a3b8; text-decoration: none; font-size: 14.5px; font-weight: 500;">Funciones</a>
+        <a href="#showcase" style="color: #94a3b8; text-decoration: none; font-size: 14.5px; font-weight: 500;">Capturas</a>
+        <a href="#privacy" style="color: #94a3b8; text-decoration: none; font-size: 14.5px; font-weight: 500;">Privacidad</a>
+        <a href="#stack" style="color: #94a3b8; text-decoration: none; font-size: 14.5px; font-weight: 500;">Tecnología</a>
+      </div>
+      <a href="https://github.com/GaboEI/callflow" target="_blank" rel="noopener" style="color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49v-1.7c-2.78.62-3.37-1.22-3.37-1.22-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.34 1.12 2.91.85.09-.66.35-1.12.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"></path></svg>
+        GitHub
+      </a>
+      <div data-cf-lang-switcher style="display: inline-flex; align-items: center; gap: 4px; padding: 3px; border-radius: 9px; background: rgba(30,41,59,0.72); border: 1px solid rgba(148,163,184,0.16);">
+        <button type="button" data-cf-lang="es" style="border: 0; border-radius: 7px; background: transparent; color: #94a3b8; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 6px 8px;">ES</button>
+        <button type="button" data-cf-lang="en" style="border: 0; border-radius: 7px; background: transparent; color: #94a3b8; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 6px 8px;">EN</button>
+        <button type="button" data-cf-lang="ru" style="border: 0; border-radius: 7px; background: transparent; color: #94a3b8; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 6px 8px;">RU</button>
+      </div>
+      <a href="https://github.com/GaboEI/callflow/releases/download/v0.2.0-beta.1/CallFlow.Setup.0.2.0-beta.1.exe" style="text-decoration: none; color: #fff; font-size: 14px; font-weight: 600; padding: 9px 16px; border-radius: 9px; background: linear-gradient(180deg, #3b82f6, #2563eb); box-shadow: 0 10px 24px rgba(37,99,235,0.28); border: 1px solid rgba(147,197,253,0.34); display: inline-flex; align-items: center; gap: 8px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10 4.6v6.9H3V5.5Zm0 13L10 19.4v-6.9H3v6Zm8 1L21 21v-8.5h-9.99v7Zm0-15.9V11.5H21V3l-9.99 1.6Z"></path></svg>
+        Descargar
+      </a>
+    </div>
+  </nav>
+
+  <a id="top"></a>
+
+  <!-- HERO -->
+  <header style="position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 72px 28px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;">
+    <div>
+      <div data-reveal="" style="display: inline-flex; align-items: center; gap: 9px; padding: 6px 13px 6px 9px; border-radius: 100px; background: rgba(30,41,59,0.7); border: 1px solid rgba(148,163,184,0.16); font-size: 12.5px; font-weight: 600; color: #cbd5e1; margin-bottom: 22px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 10px #22c55e; animation: cf-pulse-glow 2s ease-in-out infinite;"></span>
+        App de escritorio · Local-first · v0.2.0-beta.1
+      </div>
+      <h1 data-reveal="" style="font-size: 56px; line-height: 1.04; font-weight: 900; letter-spacing: -0.035em; margin: 0 0 20px;">
+        Tu centro de llamadas,<br><span style="background: linear-gradient(120deg, #60a5fa, #22d3ee 60%, #22c55e); -webkit-background-clip: text; background-clip: text; color: transparent;">en una sola ventana.</span>
+      </h1>
+      <p data-reveal="" style="font-size: 18.5px; line-height: 1.6; color: #94a3b8; margin: 0 0 32px; max-width: 520px;">
+        CallFlow registra llamadas en segundos, copia líneas listas para CRM, genera reportes por hora y gestiona recordatorios — <strong style="color: #e2e8f0; font-weight: 600;">todo local, sin nube ni backend.</strong>
+      </p>
+      <div data-reveal="" style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+        <a href="https://github.com/GaboEI/callflow/releases/download/v0.2.0-beta.1/CallFlow.Setup.0.2.0-beta.1.exe" style="text-decoration: none; color: #fff; font-size: 15.5px; font-weight: 700; padding: 14px 24px; border-radius: 11px; background: linear-gradient(180deg, #3b82f6, #2563eb); box-shadow: 0 14px 34px rgba(37,99,235,0.34); border: 1px solid rgba(147,197,253,0.34); display: inline-flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10 4.6v6.9H3V5.5Zm0 13L10 19.4v-6.9H3v6Zm8 1L21 21v-8.5h-9.99v7Zm0-15.9V11.5H21V3l-9.99 1.6Z"></path></svg>
+          Descargar para Windows
         </a>
-        <nav class="nav-links" aria-label="Secciones de la página">
-          <a href="#features">Funciones</a>
-          <a href="#showcase">Capturas</a>
-          <a href="#privacy">Privacidad</a>
-          <a href="#stack">Tecnología</a>
-        </nav>
-        <a class="nav-action" href="https://github.com/GaboEI/callflow" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/GaboEI/callflow" target="_blank" rel="noopener" style="text-decoration: none; color: #e2e8f0; font-size: 15.5px; font-weight: 600; padding: 14px 22px; border-radius: 11px; background: #1e293b; border: 1px solid rgba(148,163,184,0.18); display: inline-flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49v-1.7c-2.78.62-3.37-1.22-3.37-1.22-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.34 1.12 2.91.85.09-.66.35-1.12.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"></path></svg>
+          Ver en GitHub
+        </a>
       </div>
-    </header>
+      <div data-reveal="" style="display: flex; gap: 22px; margin-top: 26px; font-size: 12.5px; color: #64748b; font-weight: 500; flex-wrap: wrap;">
+        <span style="display: inline-flex; align-items: center; gap: 6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.4"><path d="m5 13 4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>Windows 10 / 11 · NSIS</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.4"><path d="m5 13 4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>Sin telemetría</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.4"><path d="m5 13 4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>Apache 2.0</span>
+      </div>
+    </div>
 
-    <main>
-      <section class="section hero" aria-labelledby="hero-title">
+    <!-- hero mockup -->
+    <div data-reveal="" style="position: relative;">
+      <div style="position: absolute; inset: -8% -6%; background: radial-gradient(circle at 60% 40%, rgba(37,99,235,0.34), transparent 60%); filter: blur(30px); z-index: 0;"></div>
+      <div style="position: relative; z-index: 1; animation: cf-floaty 7s ease-in-out infinite;">
+        <div style="border-radius: 14px; overflow: hidden; background: #0f172a; border: 1px solid rgba(148,163,184,0.18); box-shadow: 0 40px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(148,163,184,0.04);">
+          <div style="display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: #0b1220; border-bottom: 1px solid rgba(148,163,184,0.1);">
+            <span style="width: 11px; height: 11px; border-radius: 50%; background: #ef4444;"></span>
+            <span style="width: 11px; height: 11px; border-radius: 50%; background: #facc15;"></span>
+            <span style="width: 11px; height: 11px; border-radius: 50%; background: #22c55e;"></span>
+            <span style="margin-left: 10px; font-size: 11.5px; color: #64748b; font-family: 'JetBrains Mono', monospace;">CallFlow — Dashboard</span>
+          </div>
+          <img src="./assets/images/dashboard.png" alt="CallFlow dashboard" style="display: block; width: 100%; height: auto;">
+        </div>
+      </div>
+      <!-- floating chips -->
+      <div style="position: absolute; bottom: -22px; left: -26px; z-index: 2; background: #111827; border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 12px 15px; box-shadow: 0 18px 40px rgba(0,0,0,0.5); animation: cf-floaty2 6s ease-in-out infinite;">
+        <div style="font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 3px;">Línea CRM copiada</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #4ade80;">✓ CF-1006 · Voicemail</div>
+      </div>
+      <div style="position: absolute; top: 16px; right: -28px; z-index: 2; background: #111827; border: 1px solid rgba(59,130,246,0.32); border-radius: 12px; padding: 11px 14px; box-shadow: 0 18px 40px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px; animation: cf-floaty 8s ease-in-out infinite;">
+        <div style="display: flex; align-items: flex-end; gap: 3px; height: 26px;">
+          <span style="width: 4px; height: 100%; border-radius: 3px; background: #22d3ee; transform-origin: bottom; animation: cf-wave 1.1s ease-in-out infinite;"></span>
+          <span style="width: 4px; height: 100%; border-radius: 3px; background: #3b82f6; transform-origin: bottom; animation: cf-wave 1.1s ease-in-out 0.15s infinite;"></span>
+          <span style="width: 4px; height: 100%; border-radius: 3px; background: #60a5fa; transform-origin: bottom; animation: cf-wave 1.1s ease-in-out 0.3s infinite;"></span>
+          <span style="width: 4px; height: 100%; border-radius: 3px; background: #22c55e; transform-origin: bottom; animation: cf-wave 1.1s ease-in-out 0.45s infinite;"></span>
+        </div>
         <div>
-          <div class="eyebrow" data-reveal>Beta local-first para Windows</div>
-          <h1 id="hero-title" data-reveal>
-            Tu centro de llamadas,<br />
-            <span class="gradient-text">en una sola ventana.</span>
-          </h1>
-          <p class="lead" data-reveal>
-            CallFlow ayuda a operadores de call center a registrar llamadas rápido, copiar líneas para CRM, generar reportes
-            horarios, gestionar callbacks y mantener scripts Markdown sin depender de una nube o backend.
-          </p>
-          <div class="hero-actions" data-reveal>
-            <a class="button" href="https://github.com/GaboEI/callflow/releases/download/v0.2.0-beta.1/CallFlow.Setup.0.2.0-beta.1.exe">
-              Descargar instalador
-            </a>
-            <a class="button secondary" href="#showcase">Ver capturas</a>
-          </div>
-          <div class="quick-stats" data-reveal>
-            <div class="stat">
-              <strong>Local</strong>
-              <span>Datos en JSON dentro del perfil local de Electron.</span>
-            </div>
-            <div class="stat">
-              <strong>Beta</strong>
-              <span>Instalador NSIS validado en Windows 11.</span>
-            </div>
-            <div class="stat">
-              <strong>Offline</strong>
-              <span>Flujos principales sin cuenta, servidor ni telemetría.</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-window" data-reveal>
-          <div class="window-frame">
-            <div class="window-bar">
-              <span class="dot red"></span>
-              <span class="dot yellow"></span>
-              <span class="dot green"></span>
-              <span class="window-title">CallFlow - Dashboard</span>
-            </div>
-            <img src="./assets/images/dashboard.png" alt="Dashboard de CallFlow con registro rápido de llamadas" />
-          </div>
-        </div>
-      </section>
-
-      <section id="features" class="section" aria-labelledby="features-title">
-        <div class="section-heading" data-reveal>
-          <div class="section-kicker">Funciones reales del MVP</div>
-          <h2 id="features-title">Herramientas compactas para el turno diario</h2>
-          <p>
-            La landing describe el estado actual del producto: flujos locales de operador, reportes, recordatorios,
-            estadísticas y biblioteca de scripts.
-          </p>
-        </div>
-        <div class="feature-grid">
-          <article class="feature-card" data-reveal>
-            <div class="feature-icon">#</div>
-            <h3>Registro rápido de llamadas</h3>
-            <p>ID, tipo de llamada, estados frecuentes, resultado principal y comentario personalizado en un flujo corto.</p>
-          </article>
-          <article class="feature-card" data-reveal>
-            <div class="feature-icon">↗</div>
-            <h3>Copias para CRM y supervisor</h3>
-            <p>La misma llamada genera líneas listas para CRM y bloques horarios para reportes de supervisor.</p>
-          </article>
-          <article class="feature-card" data-reveal>
-            <div class="feature-icon">⌁</div>
-            <h3>Recordatorios de callbacks</h3>
-            <p>Estados pendiente, vencido, completado, eliminado, pospuesto, silenciado y recurrencias locales.</p>
-          </article>
-          <article class="feature-card" data-reveal>
-            <div class="feature-icon">◷</div>
-            <h3>Relojes y pausas</h3>
-            <p>Relojes multizona, reloj de trabajo y seguimiento de pausas para acompañar el turno.</p>
-          </article>
-          <article class="feature-card" data-reveal>
-            <div class="feature-icon">∑</div>
-            <h3>Estadísticas locales</h3>
-            <p>Totales, resultados, actividad por hora, turnos, descansos y estimaciones financieras configurables.</p>
-          </article>
-          <article class="feature-card" data-reveal>
-            <div class="feature-icon">¶</div>
-            <h3>Scripts Markdown</h3>
-            <p>Biblioteca interna con render seguro, búsqueda, fijado, import/export y soporte para texto o PDF.</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="showcase" class="section" aria-labelledby="showcase-title">
-        <div class="section-heading" data-reveal>
-          <div class="section-kicker">Capturas reales</div>
-          <h2 id="showcase-title">Una interfaz, muchos flujos</h2>
-        </div>
-        <div class="tabs" data-reveal role="tablist" aria-label="Capturas de CallFlow">
-          <button class="tab active" type="button" data-shot="0">Dashboard</button>
-          <button class="tab" type="button" data-shot="1">Reportes</button>
-          <button class="tab" type="button" data-shot="2">Recordatorios</button>
-          <button class="tab" type="button" data-shot="3">Estadísticas</button>
-          <button class="tab" type="button" data-shot="4">Scripts</button>
-          <button class="tab" type="button" data-shot="5">Ajustes</button>
-        </div>
-        <div class="product-window" data-reveal>
-          <div class="window-frame">
-            <div class="window-bar">
-              <span class="dot red"></span>
-              <span class="dot yellow"></span>
-              <span class="dot green"></span>
-              <span class="window-title" data-shot-title>CallFlow - Dashboard</span>
-            </div>
-            <img data-shot-img src="./assets/images/dashboard.png" alt="Dashboard de CallFlow" />
-          </div>
-          <p class="showcase-caption" data-shot-caption>
-            Registro rápido, bloques del día y estadísticas en vivo en una sola pantalla.
-          </p>
-        </div>
-      </section>
-
-      <section id="privacy" class="section" aria-labelledby="privacy-title">
-        <div class="privacy-panel" data-reveal>
-          <div>
-            <div class="eyebrow">Privacidad por diseño</div>
-            <h2 id="privacy-title">Tus datos no salen de tu equipo</h2>
-            <p>
-              CallFlow guarda todo en el perfil local de Electron. Sin sincronización en la nube, sin servidor backend y sin
-              pipeline de telemetría en el MVP actual. El usuario decide qué guarda, importa, copia o exporta.
-            </p>
-          </div>
-          <ul class="check-list">
-            <li><span>✓</span> Sin nube ni cuenta requerida</li>
-            <li><span>✓</span> Backups y recuperación locales</li>
-            <li><span>✓</span> contextIsolation y preload mínimo</li>
-          </ul>
-        </div>
-      </section>
-
-      <section id="stack" class="section" aria-labelledby="stack-title">
-        <div class="section-heading" data-reveal>
-          <div class="section-kicker" style="color: var(--violet)">Tecnología</div>
-          <h2 id="stack-title">Honesto y sin sobrecarga</h2>
-          <p>
-            Sin React, Vue, Angular, backend ni base de datos en la nube. Solo HTML, CSS, JavaScript, Electron y módulos
-            compartidos para la lógica de dominio.
-          </p>
-        </div>
-        <div class="stack-list" data-reveal>
-          <span>Electron</span>
-          <span>Node.js</span>
-          <span>HTML · CSS · JS</span>
-          <span>JSON local</span>
-          <span>DOMPurify</span>
-          <span>EasyMDE</span>
-          <span>Electron Builder · NSIS</span>
-        </div>
-      </section>
-
-      <section class="section" aria-labelledby="download-title">
-        <div class="cta" data-reveal>
-          <h2 id="download-title">Descarga la beta para Windows</h2>
-          <p>
-            Instalador NSIS validado en Windows 11. Es una beta, no una build empresarial estable. El instalador no está
-            firmado todavía, por lo que Windows SmartScreen puede mostrar un aviso en el primer arranque.
-          </p>
-          <div class="hero-actions" style="justify-content: center; margin: 26px 0 0">
-            <a class="button" href="https://github.com/GaboEI/callflow/releases/download/v0.2.0-beta.1/CallFlow.Setup.0.2.0-beta.1.exe">
-              Descargar instalador (.exe)
-            </a>
-            <a class="button secondary" href="https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1" target="_blank" rel="noopener">
-              Ver releases
-            </a>
-          </div>
-          <div class="release-meta">
-            <span>v0.2.0-beta.1</span>
-            <span>NSIS x64</span>
-            <span>Windows 10 / 11</span>
-            <span>Apache 2.0</span>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <img src="./assets/logo/callflow-icon.svg" alt="" aria-hidden="true" />
-          <div>
-            <strong>CallFlow</strong>
-            <div style="color: #64748b; font-size: 13px">App local-first para centros de llamadas</div>
-          </div>
-        </div>
-        <div class="footer-links">
-          <a href="https://github.com/GaboEI/callflow" target="_blank" rel="noopener">GitHub</a>
-          <a href="https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1" target="_blank" rel="noopener">Releases</a>
-          <span>© 2026 · Apache 2.0</span>
+          <div style="font-size: 17px; font-weight: 800; line-height: 1;">6</div>
+          <div style="font-size: 10.5px; color: #94a3b8; font-weight: 500;">llamadas hoy</div>
         </div>
       </div>
-    </footer>
+    </div>
+  </header>
 
-    <script>
-      const shots = [
-        {
-          src: "./assets/images/dashboard.png",
-          title: "CallFlow - Dashboard",
-          alt: "Dashboard de CallFlow",
-          caption: "Registro rápido, bloques del día y estadísticas en vivo en una sola pantalla."
-        },
-        {
-          src: "./assets/images/reports.png",
-          title: "CallFlow - Reportes",
-          alt: "Vista de reportes de CallFlow",
-          caption: "Reportes por hora con búsqueda interna, edición y borrado de bloques."
-        },
-        {
-          src: "./assets/images/reminders.png",
-          title: "CallFlow - Recordatorios",
-          alt: "Vista de recordatorios de CallFlow",
-          caption: "Callbacks con estados de pendiente, vencido, posponer, silenciar y recurrencia."
-        },
-        {
-          src: "./assets/images/stats.png",
-          title: "CallFlow - Estadísticas",
-          alt: "Vista de estadísticas de CallFlow",
-          caption: "Totales, resultados, actividad por hora, turnos y ganancia estimada."
-        },
-        {
-          src: "./assets/images/knowledge.png",
-          title: "CallFlow - Scripts",
-          alt: "Biblioteca de scripts de CallFlow",
-          caption: "Biblioteca de scripts Markdown con render seguro, búsqueda y fijado."
-        },
-        {
-          src: "./assets/images/settings.png",
-          title: "CallFlow - Ajustes",
-          alt: "Vista de configuración de CallFlow",
-          caption: "Idioma, zona horaria, formato de reportes, tema y ajustes de finanzas."
-        }
-      ];
+  <!-- marquee strip -->
+  <div style="position: relative; z-index: 1; margin: 26px 0 8px; border-top: 1px solid rgba(148,163,184,0.08); border-bottom: 1px solid rgba(148,163,184,0.08); padding: 18px 0; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);">
+    <div style="display: flex; width: max-content; gap: 48px; animation: cf-marquee 26s linear infinite; color: #475569; font-weight: 700; font-size: 15px; letter-spacing: 0.01em;">
+      <span>Registro de llamadas</span><span style="color:#1e293b">◆</span><span>Copia CRM</span><span style="color:#1e293b">◆</span><span>Reportes por hora</span><span style="color:#1e293b">◆</span><span>Recordatorios</span><span style="color:#1e293b">◆</span><span>Estadísticas</span><span style="color:#1e293b">◆</span><span>Relojes multizona</span><span style="color:#1e293b">◆</span><span>Scripts Markdown</span><span style="color:#1e293b">◆</span>
+      <span>Registro de llamadas</span><span style="color:#1e293b">◆</span><span>Copia CRM</span><span style="color:#1e293b">◆</span><span>Reportes por hora</span><span style="color:#1e293b">◆</span><span>Recordatorios</span><span style="color:#1e293b">◆</span><span>Estadísticas</span><span style="color:#1e293b">◆</span><span>Relojes multizona</span><span style="color:#1e293b">◆</span><span>Scripts Markdown</span><span style="color:#1e293b">◆</span>
+    </div>
+  </div>
 
-      const shotImage = document.querySelector("[data-shot-img]");
-      const shotTitle = document.querySelector("[data-shot-title]");
-      const shotCaption = document.querySelector("[data-shot-caption]");
-      const tabs = document.querySelectorAll("[data-shot]");
+  <!-- STATS -->
+  <section style="position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 54px 28px;">
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;">
+      <div data-reveal="" style="background: linear-gradient(180deg, rgba(96,165,250,0.1), transparent), #111827; border: 1px solid rgba(148,163,184,0.12); border-radius: 14px; padding: 22px 24px;">
+        <div style="font-size: 38px; font-weight: 900; letter-spacing: -0.03em; color: #f8fafc;"><span data-count="9" data-suffix="">0</span></div>
+        <div style="font-size: 13.5px; color: #94a3b8; font-weight: 500; margin-top: 4px;">superficies de trabajo en una app</div>
+      </div>
+      <div data-reveal="" style="background: linear-gradient(180deg, rgba(34,197,94,0.1), transparent), #111827; border: 1px solid rgba(148,163,184,0.12); border-radius: 14px; padding: 22px 24px;">
+        <div style="font-size: 38px; font-weight: 900; letter-spacing: -0.03em; color: #f8fafc;"><span data-count="100" data-suffix="%">0</span></div>
+        <div style="font-size: 13.5px; color: #94a3b8; font-weight: 500; margin-top: 4px;">local y offline · sin servidor</div>
+      </div>
+      <div data-reveal="" style="background: linear-gradient(180deg, rgba(34,211,238,0.1), transparent), #111827; border: 1px solid rgba(148,163,184,0.12); border-radius: 14px; padding: 22px 24px;">
+        <div style="font-size: 38px; font-weight: 900; letter-spacing: -0.03em; color: #f8fafc;"><span data-count="0" data-suffix="">0</span></div>
+        <div style="font-size: 13.5px; color: #94a3b8; font-weight: 500; margin-top: 4px;">telemetría · trackers · nube</div>
+      </div>
+      <div data-reveal="" style="background: linear-gradient(180deg, rgba(139,92,246,0.1), transparent), #111827; border: 1px solid rgba(148,163,184,0.12); border-radius: 14px; padding: 22px 24px;">
+        <div style="font-size: 38px; font-weight: 900; letter-spacing: -0.03em; color: #f8fafc;"><span data-count="6" data-suffix="">0</span></div>
+        <div style="font-size: 13.5px; color: #94a3b8; font-weight: 500; margin-top: 4px;">archivos JSON locales versionados</div>
+      </div>
+    </div>
+  </section>
 
-      tabs.forEach((tab) => {
-        tab.addEventListener("click", () => {
-          const shot = shots[Number(tab.dataset.shot)] || shots[0];
-          tabs.forEach((item) => item.classList.toggle("active", item === tab));
-          if (shotTitle) shotTitle.textContent = shot.title;
-          if (shotCaption) shotCaption.textContent = shot.caption;
-          if (shotImage) {
-            shotImage.style.opacity = "0";
-            setTimeout(() => {
-              shotImage.src = shot.src;
-              shotImage.alt = shot.alt;
-              shotImage.style.opacity = "1";
-            }, 120);
-          }
-        });
-      });
+  <!-- FEATURES -->
+  <section id="features" style="position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 40px 28px 20px;">
+    <div data-reveal="" style="text-align: center; margin-bottom: 44px;">
+      <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #3b82f6; margin-bottom: 12px;">Funciones</div>
+      <h2 style="font-size: 40px; font-weight: 900; letter-spacing: -0.03em; margin: 0 0 14px;">Menos fricción en cada turno</h2>
+      <p style="font-size: 17px; color: #94a3b8; max-width: 580px; margin: 0 auto; line-height: 1.6;">Un único lugar para registrar, reportar, recordar y consultar — pensado para trabajar lado a lado con tu CRM.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;">
 
-      const revealItems = document.querySelectorAll("[data-reveal]");
-      if ("IntersectionObserver" in window) {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (!entry.isIntersecting) return;
-              entry.target.classList.add("is-visible");
-              observer.unobserve(entry.target);
-            });
-          },
-          { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
-        );
-        revealItems.forEach((item) => observer.observe(item));
+      <div data-reveal="" data-tilt="" style="background: #111827; border: 1px solid rgba(148,163,184,0.12); border-radius: 16px; padding: 26px; transition: transform 0.4s cubic-bezier(.2,.8,.2,1), border-color 0.3s, box-shadow 0.3s;">
+        <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(59,130,246,0.14); border: 1px solid rgba(59,130,246,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 18px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-3 7h5l-3 7"></path><path d="M6.5 6.5a13 13 0 0 0 0 11M3.5 4a17 17 0 0 0 0 16"></path></svg>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 9px;">Registro rápido de llamadas</h3>
+        <p style="font-size: 14.5px; color: #94a3b8; line-height: 1.55; margin: 0;">Tipo de llamada, estado frecuente, comentario y resultado en un formulario compacto, sin perder el ritmo del turno.</p>
+      </div>
+
+      <div data-reveal="" data-tilt="" style="background: #111827; border: 1px solid rgba(148,163,184,0.12); border-radius: 16px; padding: 26px; transition: transform 0.4s cubic-bezier(.2,.8,.2,1), border-color 0.3s, box-shadow 0.3s;">
+        <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(34,197,94,0.14); border: 1px solid rgba(34,197,94,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 18px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 9px;">Copia CRM lista al instante</h3>
+        <p style="font-size: 14.5px; color: #94a3b8; line-height: 1.55; margin: 0;">La misma llamada genera la línea para tu CRM y la línea para el reporte del supervisor, listas para pegar.</p>
+      </div>
+
+      <div data-reveal="" data-tilt="" style="background: #111827; border: 1px solid rgba(148,163,184,0.12); border-radius: 16px; padding: 26px; transition: transform 0.4s cubic-bezier(.2,.8,.2,1), border-color 0.3s, box-shadow 0.3s;">
+        <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(34,211,238,0.14); border: 1px solid rgba(34,211,238,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 18px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><rect x="7" y="11" width="3" height="6"></rect><rect x="12" y="7" width="3" height="10"></rect><rect x="17" y="13" width="3" height="4"></rect></svg>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 9px;">Reportes por hora</h3>
+        <p style="font-size: 14.5px; color: #94a3b8; line-height: 1.55; margin: 0;">Navegación por bloques horarios, búsqueda dentro del reporte, edición y borrado de bloques para entregar a tiempo.</p>
+      </div>
+
+      <div data-reveal="" data-tilt="" style="background: #111827; border: 1px solid rgba(148,163,184,0.12); border-radius: 16px; padding: 26px; transition: transform 0.4s cubic-bezier(.2,.8,.2,1), border-color 0.3s, box-shadow 0.3s;">
+        <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(245,204,21,0.14); border: 1px solid rgba(245,204,21,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 18px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 9px;">Recordatorios y callbacks</h3>
+        <p style="font-size: 14.5px; color: #94a3b8; line-height: 1.55; margin: 0;">Estados de pendiente, vencido, completado, posponer, silenciar y recurrencia — para no perder una devolución.</p>
+      </div>
+
+      <div data-reveal="" data-tilt="" style="background: #111827; border: 1px solid rgba(148,163,184,0.12); border-radius: 16px; padding: 26px; transition: transform 0.4s cubic-bezier(.2,.8,.2,1), border-color 0.3s, box-shadow 0.3s;">
+        <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(139,92,246,0.14); border: 1px solid rgba(139,92,246,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 18px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 9px;">Estadísticas, turnos y relojes</h3>
+        <p style="font-size: 14.5px; color: #94a3b8; line-height: 1.55; margin: 0;">Totales, resultados, actividad por hora, temporizadores de trabajo y pausa, relojes multizona y ganancia estimada.</p>
+      </div>
+
+      <div data-reveal="" data-tilt="" style="background: #111827; border: 1px solid rgba(148,163,184,0.12); border-radius: 16px; padding: 26px; transition: transform 0.4s cubic-bezier(.2,.8,.2,1), border-color 0.3s, box-shadow 0.3s;">
+        <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(236,72,153,0.13); border: 1px solid rgba(236,72,153,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 18px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5A2.5 2.5 0 0 1 4.5 2H20v18H4.5A2.5 2.5 0 0 0 2 22.5z"></path><path d="M2 4.5A2.5 2.5 0 0 0 4.5 7H20"></path></svg>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 9px;">Biblioteca de scripts Markdown</h3>
+        <p style="font-size: 14.5px; color: #94a3b8; line-height: 1.55; margin: 0;">Render seguro con DOMPurify, búsqueda, fijado, import/export y manejo de documentos en texto plano o PDF.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SHOWCASE -->
+  <section id="showcase" style="position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 60px 28px;">
+    <div data-reveal="" style="text-align: center; margin-bottom: 34px;">
+      <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #22d3ee; margin-bottom: 12px;">Capturas reales</div>
+      <h2 style="font-size: 40px; font-weight: 900; letter-spacing: -0.03em; margin: 0;">Una interfaz, muchos flujos</h2>
+    </div>
+    <div data-reveal="" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 26px;">
+      <button data-tab="" type="button" style="cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 10px; background: #1e293b; color: #94a3b8; border: 1px solid rgba(148,163,184,0.14);">Dashboard</button>
+      <button data-tab="" type="button" style="cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 10px; background: #1e293b; color: #94a3b8; border: 1px solid rgba(148,163,184,0.14);">Reportes</button>
+      <button data-tab="" type="button" style="cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 10px; background: #1e293b; color: #94a3b8; border: 1px solid rgba(148,163,184,0.14);">Recordatorios</button>
+      <button data-tab="" type="button" style="cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 10px; background: #1e293b; color: #94a3b8; border: 1px solid rgba(148,163,184,0.14);">Estadísticas</button>
+      <button data-tab="" type="button" style="cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 10px; background: #1e293b; color: #94a3b8; border: 1px solid rgba(148,163,184,0.14);">Scripts</button>
+      <button data-tab="" type="button" style="cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 10px; background: #1e293b; color: #94a3b8; border: 1px solid rgba(148,163,184,0.14);">Ajustes</button>
+    </div>
+    <div data-reveal="" style="position: relative;">
+      <div style="position: absolute; inset: -3% 8%; background: radial-gradient(circle at 50% 30%, rgba(37,99,235,0.22), transparent 62%); filter: blur(34px); z-index: 0;"></div>
+      <div style="position: relative; z-index: 1; max-width: 940px; margin: 0 auto; border-radius: 14px; overflow: hidden; background: #0f172a; border: 1px solid rgba(148,163,184,0.18); box-shadow: 0 40px 90px rgba(0,0,0,0.5);">
+        <div style="display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: #0b1220; border-bottom: 1px solid rgba(148,163,184,0.1);">
+          <span style="width: 11px; height: 11px; border-radius: 50%; background: #ef4444;"></span>
+          <span style="width: 11px; height: 11px; border-radius: 50%; background: #facc15;"></span>
+          <span style="width: 11px; height: 11px; border-radius: 50%; background: #22c55e;"></span>
+          <span data-shot-title="" style="margin-left: 10px; font-size: 11.5px; color: #64748b; font-family: 'JetBrains Mono', monospace;">CallFlow — Dashboard</span>
+        </div>
+        <div style="position: relative; background: #0b1120;">
+          <img data-shot-img="" src="./assets/images/dashboard.png" alt="CallFlow" style="display: block; width: 100%; height: auto; transition: opacity 0.25s;">
+        </div>
+      </div>
+      <p data-shot-caption="" style="text-align: center; color: #94a3b8; font-size: 14.5px; margin: 18px auto 0; max-width: 560px; line-height: 1.55;">Registro rápido, bloques del día y estadísticas en vivo en una sola pantalla.</p>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section id="privacy" style="position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 50px 28px;">
+    <div data-reveal="" style="border-radius: 22px; overflow: hidden; border: 1px solid rgba(34,197,94,0.2); background: radial-gradient(circle at 15% 0%, rgba(34,197,94,0.12), transparent 40%), radial-gradient(circle at 90% 100%, rgba(37,99,235,0.12), transparent 42%), #0f172a; padding: 50px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 44px; align-items: center;">
+      <div>
+        <div style="display: inline-flex; align-items: center; gap: 9px; padding: 7px 14px; border-radius: 100px; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); font-size: 12.5px; font-weight: 700; color: #4ade80; margin-bottom: 20px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg>
+          Privacidad por diseño
+        </div>
+        <h2 style="font-size: 36px; font-weight: 900; letter-spacing: -0.03em; margin: 0 0 16px; line-height: 1.1;">Tus datos no salen<br>de tu equipo</h2>
+        <p style="font-size: 16.5px; color: #94a3b8; line-height: 1.6; margin: 0;">CallFlow guarda todo en el perfil local de Electron. Sin sincronización en la nube, sin servidor backend y sin pipeline de telemetría en el MVP actual. Tú decides qué guardas, importas o exportas.</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 13px; padding: 14px 16px; background: rgba(11,18,32,0.6); border: 1px solid rgba(148,163,184,0.12); border-radius: 12px;">
+          <span style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px; background: rgba(34,197,94,0.16); display: flex; align-items: center; justify-content: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.4"><path d="m5 13 4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+          <span style="font-size: 14.5px; font-weight: 600; color: #e2e8f0;">Sin nube ni cuenta requerida</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 13px; padding: 14px 16px; background: rgba(11,18,32,0.6); border: 1px solid rgba(148,163,184,0.12); border-radius: 12px;">
+          <span style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px; background: rgba(34,197,94,0.16); display: flex; align-items: center; justify-content: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.4"><path d="m5 13 4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+          <span style="font-size: 14.5px; font-weight: 600; color: #e2e8f0;">Backups y recuperación locales</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 13px; padding: 14px 16px; background: rgba(11,18,32,0.6); border: 1px solid rgba(148,163,184,0.12); border-radius: 12px;">
+          <span style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px; background: rgba(34,197,94,0.16); display: flex; align-items: center; justify-content: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.4"><path d="m5 13 4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+          <span style="font-size: 14.5px; font-weight: 600; color: #e2e8f0;">contextIsolation + preload mínimo</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STACK -->
+  <section id="stack" style="position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 40px 28px 20px;">
+    <div data-reveal="" style="text-align: center; margin-bottom: 34px;">
+      <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #8b5cf6; margin-bottom: 12px;">Tecnología</div>
+      <h2 style="font-size: 36px; font-weight: 900; letter-spacing: -0.03em; margin: 0 0 12px;">Honesto y sin sobrecarga</h2>
+      <p style="font-size: 16px; color: #94a3b8; max-width: 540px; margin: 0 auto; line-height: 1.6;">Sin React, Vue, Angular, backend ni base de datos en la nube. Solo lo necesario, bien separado entre proceso principal y renderer.</p>
+    </div>
+    <div data-reveal="" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: #cbd5e1; padding: 11px 18px; border-radius: 100px; background: #111827; border: 1px solid rgba(148,163,184,0.16);">Electron</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: #cbd5e1; padding: 11px 18px; border-radius: 100px; background: #111827; border: 1px solid rgba(148,163,184,0.16);">Node.js</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: #cbd5e1; padding: 11px 18px; border-radius: 100px; background: #111827; border: 1px solid rgba(148,163,184,0.16);">HTML · CSS · JS</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: #cbd5e1; padding: 11px 18px; border-radius: 100px; background: #111827; border: 1px solid rgba(148,163,184,0.16);">JSON local</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: #cbd5e1; padding: 11px 18px; border-radius: 100px; background: #111827; border: 1px solid rgba(148,163,184,0.16);">DOMPurify</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: #cbd5e1; padding: 11px 18px; border-radius: 100px; background: #111827; border: 1px solid rgba(148,163,184,0.16);">EasyMDE</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: #cbd5e1; padding: 11px 18px; border-radius: 100px; background: #111827; border: 1px solid rgba(148,163,184,0.16);">Electron Builder · NSIS</span>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD CTA -->
+  <section style="position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 60px 28px 80px;">
+    <div data-reveal="" style="position: relative; border-radius: 24px; overflow: hidden; border: 1px solid rgba(59,130,246,0.28); background: linear-gradient(180deg, #0f1d3a, #0b1426); padding: 56px 48px; text-align: center;">
+      <div style="position: absolute; top: -120px; left: 50%; transform: translateX(-50%); width: 480px; height: 320px; background: radial-gradient(circle, rgba(37,99,235,0.4), transparent 60%); filter: blur(40px); pointer-events: none;"></div>
+      <div style="position: relative; z-index: 1;">
+        <h2 style="font-size: 42px; font-weight: 900; letter-spacing: -0.035em; margin: 0 0 16px;">Descarga la beta para Windows</h2>
+        <p style="font-size: 17px; color: #94a3b8; max-width: 560px; margin: 0 auto 30px; line-height: 1.6;">Instalador NSIS validado en Windows 11. Es una beta, no una build empresarial estable — el instalador no está firmado todavía, SmartScreen puede mostrar un aviso en el primer arranque.</p>
+        <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px;">
+          <a href="https://github.com/GaboEI/callflow/releases/download/v0.2.0-beta.1/CallFlow.Setup.0.2.0-beta.1.exe" style="text-decoration: none; color: #fff; font-size: 16px; font-weight: 700; padding: 15px 28px; border-radius: 12px; background: linear-gradient(180deg, #3b82f6, #2563eb); box-shadow: 0 16px 38px rgba(37,99,235,0.4); border: 1px solid rgba(147,197,253,0.34); display: inline-flex; align-items: center; gap: 11px;">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10 4.6v6.9H3V5.5Zm0 13L10 19.4v-6.9H3v6Zm8 1L21 21v-8.5h-9.99v7Zm0-15.9V11.5H21V3l-9.99 1.6Z"></path></svg>
+            Descargar instalador (.exe)
+          </a>
+          <a href="https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1" target="_blank" rel="noopener" style="text-decoration: none; color: #e2e8f0; font-size: 16px; font-weight: 600; padding: 15px 26px; border-radius: 12px; background: rgba(30,41,59,0.8); border: 1px solid rgba(148,163,184,0.2); display: inline-flex; align-items: center; gap: 10px;">
+            Ver todas las releases
+          </a>
+        </div>
+        <div style="display: inline-flex; gap: 20px; flex-wrap: wrap; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #64748b;">
+          <span>v0.2.0-beta.1</span><span style="color:#1e293b">|</span><span>NSIS x64</span><span style="color:#1e293b">|</span><span>Windows 10 / 11</span><span style="color:#1e293b">|</span><span>Apache 2.0</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="position: relative; z-index: 1; border-top: 1px solid rgba(148,163,184,0.1); background: #0b1220;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 32px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px;">
+      <div style="display: flex; align-items: center; gap: 11px;">
+        <img src="./assets/logo/callflow-icon.svg" alt="" aria-hidden="true" style="width: 34px; height: 34px; display: block; border-radius: 9px;">
+        <div>
+          <div style="font-weight: 800; font-size: 16px;">Call<span style="color: #3b82f6;">Flow</span></div>
+          <div style="font-size: 12px; color: #64748b;">App local-first para centros de llamadas</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 24px; align-items: center;">
+        <a href="https://github.com/GaboEI/callflow" target="_blank" rel="noopener" style="color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500;">GitHub</a>
+        <a href="https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1" target="_blank" rel="noopener" style="color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500;">Releases</a>
+        <span style="color: #475569; font-size: 13px;">© 2025 · Apache 2.0</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+<script>
+(function () {
+  const shots = [
+    { label: "Dashboard", src: "./assets/images/dashboard.png", title: "CallFlow — Dashboard", caption: "Registro rápido, bloques del día y estadísticas en vivo en una sola pantalla." },
+    { label: "Reportes", src: "./assets/images/reports.png", title: "CallFlow — Reports", caption: "Reportes por hora con búsqueda interna, edición y borrado de bloques." },
+    { label: "Recordatorios", src: "./assets/images/reminders.png", title: "CallFlow — Reminders", caption: "Callbacks con estados de pendiente, vencido, posponer, silenciar y recurrencia." },
+    { label: "Estadísticas", src: "./assets/images/stats.png", title: "CallFlow — Stats", caption: "Totales, resultados, actividad por hora, turnos y ganancia estimada." },
+    { label: "Scripts", src: "./assets/images/knowledge.png", title: "CallFlow — Scripts", caption: "Biblioteca de scripts Markdown con render seguro, búsqueda y fijado." },
+    { label: "Ajustes", src: "./assets/images/settings.png", title: "CallFlow — Settings", caption: "Idioma, zona horaria, formato de reportes, tema y ajustes de finanzas." }
+  ];
+
+  function pickShot(index) {
+    const item = shots[index] || shots[0];
+    const img = document.querySelector("[data-shot-img]");
+    const title = document.querySelector("[data-shot-title]");
+    const caption = document.querySelector("[data-shot-caption]");
+    if (img) {
+      img.style.opacity = "0";
+      setTimeout(() => {
+        img.src = item.src;
+        img.style.opacity = "1";
+      }, 130);
+    }
+    if (title) title.textContent = item.title;
+    if (caption) caption.textContent = item.caption;
+    document.querySelectorAll("[data-tab]").forEach((tab, tabIndex) => {
+      if (tabIndex === index) {
+        tab.style.background = "linear-gradient(180deg, #3b82f6, #2563eb)";
+        tab.style.color = "#ffffff";
+        tab.style.borderColor = "rgba(147,197,253,0.34)";
+        tab.style.boxShadow = "0 8px 20px rgba(37,99,235,0.24)";
       } else {
-        revealItems.forEach((item) => item.classList.add("is-visible"));
+        tab.style.background = "#1e293b";
+        tab.style.color = "#94a3b8";
+        tab.style.borderColor = "rgba(148,163,184,0.14)";
+        tab.style.boxShadow = "none";
       }
-    </script>
-  </body>
-</html>
+    });
+  }
+
+  function bindOriginalInteractions() {
+    document.querySelectorAll("[data-tab]").forEach((button, index) => {
+      button.addEventListener("click", () => pickShot(index));
+    });
+    pickShot(0);
+
+    const reveals = document.querySelectorAll("[data-reveal]");
+    reveals.forEach((el) => {
+      el.style.opacity = "0";
+      el.style.transform = "translateY(26px)";
+      el.style.transition = "opacity 0.7s cubic-bezier(.2,.8,.2,1), transform 0.7s cubic-bezier(.2,.8,.2,1)";
+    });
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const siblingIndex = Array.from(el.parentElement ? el.parentElement.children : []).indexOf(el);
+        el.style.transitionDelay = Math.min(siblingIndex * 60, 240) + "ms";
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+        revealObserver.unobserve(el);
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    reveals.forEach((el) => revealObserver.observe(el));
+
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const target = parseInt(el.getAttribute("data-count"), 10) || 0;
+        const suffix = el.getAttribute("data-suffix") || "";
+        const duration = 1100;
+        const start = performance.now();
+        const tick = (now) => {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.round(target * eased) + suffix;
+          if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+        counterObserver.unobserve(el);
+      });
+    }, { threshold: 0.6 });
+    document.querySelectorAll("[data-count]").forEach((el) => counterObserver.observe(el));
+
+    document.querySelectorAll("[data-tilt]").forEach((card) => {
+      card.addEventListener("mouseenter", () => {
+        card.style.transform = "translateY(-6px)";
+        card.style.borderColor = "rgba(59,130,246,0.4)";
+        card.style.boxShadow = "0 22px 50px rgba(0,0,0,0.4)";
+      });
+      card.addEventListener("mouseleave", () => {
+        card.style.transform = "translateY(0)";
+        card.style.borderColor = "rgba(148,163,184,0.12)";
+        card.style.boxShadow = "none";
+      });
+    });
+  }
+
+  const translations = {
+    en: {
+      "Funciones": "Features",
+      "Capturas": "Screenshots",
+      "Privacidad": "Privacy",
+      "Tecnología": "Technology",
+      "Descargar": "Download",
+      "App de escritorio · Local-first · v0.2.0-beta.1": "Desktop app · Local-first · v0.2.0-beta.1",
+      "Tu centro de llamadas,": "Your call center,",
+      "en una sola ventana.": "in one window.",
+      "CallFlow registra llamadas en segundos, copia líneas listas para CRM, genera reportes por hora y gestiona recordatorios —": "CallFlow logs calls in seconds, copies CRM-ready lines, generates hourly reports, and manages reminders —",
+      "todo local, sin nube ni backend.": "all local, with no cloud or backend.",
+      "Descargar para Windows": "Download for Windows",
+      "Ver en GitHub": "View on GitHub",
+      "Sin telemetría": "No telemetry",
+      "Línea CRM copiada": "CRM line copied",
+      "llamadas hoy": "calls today",
+      "Registro de llamadas": "Call logging",
+      "Copia CRM": "CRM copy",
+      "Reportes por hora": "Hourly reports",
+      "Recordatorios": "Reminders",
+      "Estadísticas": "Stats",
+      "Relojes multizona": "Multi-zone clocks",
+      "Scripts Markdown": "Markdown scripts",
+      "superficies de trabajo en una app": "work surfaces in one app",
+      "local y offline · sin servidor": "local and offline · no server",
+      "telemetría · trackers · nube": "telemetry · trackers · cloud",
+      "archivos JSON locales versionados": "versioned local JSON files",
+      "Menos fricción en cada turno": "Less friction in every shift",
+      "Un único lugar para registrar, reportar, recordar y consultar — pensado para trabajar lado a lado con tu CRM.": "One place to log, report, remember, and consult — designed to work side by side with your CRM.",
+      "Registro rápido de llamadas": "Fast call logging",
+      "Tipo de llamada, estado frecuente, comentario y resultado en un formulario compacto, sin perder el ritmo del turno.": "Call type, frequent status, comment, and outcome in a compact form without slowing the shift.",
+      "Copia CRM lista al instante": "CRM copy ready instantly",
+      "La misma llamada genera la línea para tu CRM y la línea para el reporte del supervisor, listas para pegar.": "The same call creates the CRM line and supervisor report line, both ready to paste.",
+      "Navegación por bloques horarios, búsqueda dentro del reporte, edición y borrado de bloques para entregar a tiempo.": "Hourly block navigation, in-report search, editing, and block deletion for timely reporting.",
+      "Recordatorios y callbacks": "Reminders and callbacks",
+      "Estados de pendiente, vencido, completado, posponer, silenciar y recurrencia — para no perder una devolución.": "Pending, overdue, completed, snooze, mute, and recurring states so callbacks are not missed.",
+      "Estadísticas, turnos y relojes": "Stats, shifts, and clocks",
+      "Totales, resultados, actividad por hora, temporizadores de trabajo y pausa, relojes multizona y ganancia estimada.": "Totals, outcomes, hourly activity, work and break timers, multi-zone clocks, and estimated earnings.",
+      "Biblioteca de scripts Markdown": "Markdown script library",
+      "Render seguro con DOMPurify, búsqueda, fijado, import/export y manejo de documentos en texto plano o PDF.": "Safe rendering with DOMPurify, search, pinning, import/export, and plain-text or PDF document handling.",
+      "Capturas reales": "Real screenshots",
+      "Una interfaz, muchos flujos": "One interface, many workflows",
+      "Dashboard": "Dashboard",
+      "Reportes": "Reports",
+      "Ajustes": "Settings",
+      "Registro rápido, bloques del día y estadísticas en vivo en una sola pantalla.": "Fast logging, daily blocks, and live stats in one screen.",
+      "Reportes por hora con búsqueda interna, edición y borrado de bloques.": "Hourly reports with internal search, editing, and block deletion.",
+      "Callbacks con estados de pendiente, vencido, posponer, silenciar y recurrencia.": "Callbacks with pending, overdue, snooze, mute, and recurrence states.",
+      "Totales, resultados, actividad por hora, turnos y ganancia estimada.": "Totals, outcomes, hourly activity, shifts, and estimated earnings.",
+      "Biblioteca de scripts Markdown con render seguro, búsqueda y fijado.": "Markdown script library with safe rendering, search, and pinning.",
+      "Idioma, zona horaria, formato de reportes, tema y ajustes de finanzas.": "Language, timezone, report formatting, theme, and finance settings.",
+      "Privacidad por diseño": "Privacy by design",
+      "Tus datos no salen": "Your data stays",
+      "de tu equipo": "on your computer",
+      "CallFlow guarda todo en el perfil local de Electron. Sin sincronización en la nube, sin servidor backend y sin pipeline de telemetría en el MVP actual. Tú decides qué guardas, importas o exportas.": "CallFlow stores everything in Electron's local profile. No cloud sync, no backend server, and no telemetry pipeline in the current MVP. You decide what you store, import, or export.",
+      "Sin nube ni cuenta requerida": "No cloud or account required",
+      "Backups y recuperación locales": "Local backups and recovery",
+      "contextIsolation + preload mínimo": "contextIsolation + minimal preload",
+      "Honesto y sin sobrecarga": "Honest and lightweight",
+      "Sin React, Vue, Angular, backend ni base de datos en la nube. Solo lo necesario, bien separado entre proceso principal y renderer.": "No React, Vue, Angular, backend, or cloud database. Only what is needed, clearly separated between main process and renderer.",
+      "Descarga la beta para Windows": "Download the Windows beta",
+      "Instalador NSIS validado en Windows 11. Es una beta, no una build empresarial estable — el instalador no está firmado todavía, SmartScreen puede mostrar un aviso en el primer arranque.": "NSIS installer validated on Windows 11. This is a beta, not a stable enterprise build — the installer is not signed yet, so SmartScreen may show a warning on first launch.",
+      "Descargar instalador (.exe)": "Download installer (.exe)",
+      "Ver todas las releases": "View all releases",
+      "App local-first para centros de llamadas": "Local-first app for call centers"
+    },
+    ru: {
+      "Funciones": "Функции",
+      "Capturas": "Скриншоты",
+      "Privacidad": "Приватность",
+      "Tecnología": "Технологии",
+      "Descargar": "Скачать",
+      "App de escritorio · Local-first · v0.2.0-beta.1": "Десктопное приложение · Local-first · v0.2.0-beta.1",
+      "Tu centro de llamadas,": "Ваш колл-центр,",
+      "en una sola ventana.": "в одном окне.",
+      "CallFlow registra llamadas en segundos, copia líneas listas para CRM, genera reportes por hora y gestiona recordatorios —": "CallFlow регистрирует звонки за секунды, копирует строки для CRM, формирует почасовые отчеты и управляет напоминаниями —",
+      "todo local, sin nube ni backend.": "все локально, без облака и backend.",
+      "Descargar para Windows": "Скачать для Windows",
+      "Ver en GitHub": "Открыть GitHub",
+      "Sin telemetría": "Без телеметрии",
+      "Línea CRM copiada": "Строка CRM скопирована",
+      "llamadas hoy": "звонков сегодня",
+      "Registro de llamadas": "Регистрация звонков",
+      "Copia CRM": "Копия для CRM",
+      "Reportes por hora": "Почасовые отчеты",
+      "Recordatorios": "Напоминания",
+      "Estadísticas": "Статистика",
+      "Relojes multizona": "Часы разных зон",
+      "Scripts Markdown": "Скрипты Markdown",
+      "superficies de trabajo en una app": "рабочие разделы в одном приложении",
+      "local y offline · sin servidor": "локально и offline · без сервера",
+      "telemetría · trackers · nube": "телеметрия · трекеры · облако",
+      "archivos JSON locales versionados": "локальные JSON-файлы с версиями",
+      "Menos fricción en cada turno": "Меньше рутины в каждой смене",
+      "Un único lugar para registrar, reportar, recordar y consultar — pensado para trabajar lado a lado con tu CRM.": "Единое место для регистрации, отчетов, напоминаний и справки — рядом с вашей CRM.",
+      "Registro rápido de llamadas": "Быстрая регистрация звонков",
+      "Tipo de llamada, estado frecuente, comentario y resultado en un formulario compacto, sin perder el ritmo del turno.": "Тип звонка, частый статус, комментарий и результат в компактной форме без потери темпа.",
+      "Copia CRM lista al instante": "Строка для CRM сразу готова",
+      "La misma llamada genera la línea para tu CRM y la línea para el reporte del supervisor, listas para pegar.": "Один звонок создает строку для CRM и строку для отчета супервизору, готовые к вставке.",
+      "Navegación por bloques horarios, búsqueda dentro del reporte, edición y borrado de bloques para entregar a tiempo.": "Почасовые блоки, поиск в отчете, редактирование и удаление блоков для своевременной сдачи.",
+      "Recordatorios y callbacks": "Напоминания и callbacks",
+      "Estados de pendiente, vencido, completado, posponer, silenciar y recurrencia — para no perder una devolución.": "Статусы ожидания, просрочки, выполнения, отложить, отключить звук и повтор — чтобы не потерять обратный звонок.",
+      "Estadísticas, turnos y relojes": "Статистика, смены и часы",
+      "Totales, resultados, actividad por hora, temporizadores de trabajo y pausa, relojes multizona y ganancia estimada.": "Итоги, результаты, активность по часам, таймеры работы и пауз, часы разных зон и расчет дохода.",
+      "Biblioteca de scripts Markdown": "Библиотека скриптов Markdown",
+      "Render seguro con DOMPurify, búsqueda, fijado, import/export y manejo de documentos en texto plano o PDF.": "Безопасный рендеринг через DOMPurify, поиск, закрепление, импорт/экспорт и документы TXT или PDF.",
+      "Capturas reales": "Реальные скриншоты",
+      "Una interfaz, muchos flujos": "Один интерфейс, много сценариев",
+      "Dashboard": "Панель",
+      "Reportes": "Отчеты",
+      "Ajustes": "Настройки",
+      "Registro rápido, bloques del día y estadísticas en vivo en una sola pantalla.": "Быстрая регистрация, дневные блоки и живая статистика на одном экране.",
+      "Reportes por hora con búsqueda interna, edición y borrado de bloques.": "Почасовые отчеты с поиском, редактированием и удалением блоков.",
+      "Callbacks con estados de pendiente, vencido, posponer, silenciar y recurrencia.": "Callbacks со статусами ожидания, просрочки, отложения, отключения звука и повтора.",
+      "Totales, resultados, actividad por hora, turnos y ganancia estimada.": "Итоги, результаты, активность по часам, смены и расчет дохода.",
+      "Biblioteca de scripts Markdown con render seguro, búsqueda y fijado.": "Библиотека Markdown-скриптов с безопасным рендерингом, поиском и закреплением.",
+      "Idioma, zona horaria, formato de reportes, tema y ajustes de finanzas.": "Язык, часовой пояс, формат отчетов, тема и финансовые настройки.",
+      "Privacidad por diseño": "Приватность по дизайну",
+      "Tus datos no salen": "Ваши данные остаются",
+      "de tu equipo": "на вашем компьютере",
+      "CallFlow guarda todo en el perfil local de Electron. Sin sincronización en la nube, sin servidor backend y sin pipeline de telemetría en el MVP actual. Tú decides qué guardas, importas o exportas.": "CallFlow хранит все в локальном профиле Electron. В текущем MVP нет облачной синхронизации, backend-сервера и телеметрии. Вы сами решаете, что хранить, импортировать и экспортировать.",
+      "Sin nube ni cuenta requerida": "Без облака и аккаунта",
+      "Backups y recuperación locales": "Локальные бэкапы и восстановление",
+      "contextIsolation + preload mínimo": "contextIsolation + минимальный preload",
+      "Honesto y sin sobrecarga": "Честно и без перегруза",
+      "Sin React, Vue, Angular, backend ni base de datos en la nube. Solo lo necesario, bien separado entre proceso principal y renderer.": "Без React, Vue, Angular, backend и облачной базы данных. Только необходимое, с четким разделением main process и renderer.",
+      "Descarga la beta para Windows": "Скачать beta для Windows",
+      "Instalador NSIS validado en Windows 11. Es una beta, no una build empresarial estable — el instalador no está firmado todavía, SmartScreen puede mostrar un aviso en el primer arranque.": "NSIS-инсталлятор проверен на Windows 11. Это beta, а не стабильная корпоративная сборка — инсталлятор пока не подписан, поэтому SmartScreen может показать предупреждение при первом запуске.",
+      "Descargar instalador (.exe)": "Скачать инсталлятор (.exe)",
+      "Ver todas las releases": "Все релизы",
+      "App local-first para centros de llamadas": "Local-first приложение для колл-центров"
+    }
+  };
+
+  const esTexts = Object.keys(translations.en);
+  const reverse = { es: {} };
+  Object.entries(translations).forEach(([lang, table]) => {
+    reverse[lang] = {};
+    Object.entries(table).forEach(([es, value]) => {
+      reverse[lang][value] = es;
+    });
+  });
+
+  function normalized(value) {
+    return String(value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function baseText(value) {
+    const text = normalized(value);
+    if (esTexts.includes(text)) return text;
+    for (const lang of Object.keys(reverse)) {
+      if (reverse[lang][text]) return reverse[lang][text];
+    }
+    return '';
+  }
+
+  function translateTextNodes(lang) {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const parent = node.parentElement;
+        if (!parent || ['SCRIPT', 'STYLE'].includes(parent.tagName)) return NodeFilter.FILTER_REJECT;
+        return normalized(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach((node) => {
+      const key = node.__cfI18nKey || baseText(node.nodeValue);
+      if (!key) return;
+      node.__cfI18nKey = key;
+      const next = lang === 'es' ? key : translations[lang][key];
+      if (!next) return;
+      const leading = String(node.nodeValue).match(/^\s*/)[0];
+      const trailing = String(node.nodeValue).match(/\s*$/)[0];
+      node.nodeValue = leading + next + trailing;
+    });
+  }
+
+  function updateButtons(lang) {
+    document.querySelectorAll('[data-cf-lang]').forEach((button) => {
+      const active = button.dataset.cfLang === lang;
+      button.style.background = active ? 'linear-gradient(180deg, #3b82f6, #2563eb)' : 'transparent';
+      button.style.color = active ? '#ffffff' : '#94a3b8';
+    });
+  }
+
+  function applyLanguage(lang) {
+    const selected = translations[lang] ? lang : 'es';
+    document.documentElement.lang = selected;
+    localStorage.setItem('callflowLandingLanguage', selected);
+    translateTextNodes(selected);
+    updateButtons(selected);
+  }
+
+  window.CallFlowLandingI18n = { applyLanguage };
+
+  function bindLanguageSwitcher() {
+    bindOriginalInteractions();
+    document.querySelectorAll('[data-cf-lang]').forEach((button) => {
+      button.addEventListener('click', () => applyLanguage(button.dataset.cfLang));
+    });
+    document.querySelectorAll('[data-tab]').forEach((button) => {
+      button.addEventListener('click', () => setTimeout(() => applyLanguage(localStorage.getItem('callflowLandingLanguage') || 'es'), 160));
+    });
+    applyLanguage(localStorage.getItem('callflowLandingLanguage') || 'es');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindLanguageSwitcher);
+  } else {
+    setTimeout(bindLanguageSwitcher, 0);
+  }
+})();
+</script>
+
+</body></html>
