@@ -71,6 +71,48 @@ test("daily numbering mode uses padded sequence instead of hash", () => {
   );
 });
 
+test("daily sequencing preserves valid existing numbers and fills the lowest free gaps", () => {
+  const calls = [
+    { id: "kept-2", date: "18.06", createdAt: "2026-06-18T10:00:00.000Z", dailySequence: 2 },
+    { id: "missing-earlier", date: "18.06", createdAt: "2026-06-18T09:00:00.000Z", dailySequence: null },
+    { id: "kept-4", date: "18.06", createdAt: "2026-06-18T11:00:00.000Z", dailySequence: 4 },
+    { id: "other-day", date: "19.06", createdAt: "2026-06-19T09:00:00.000Z", dailySequence: null }
+  ];
+
+  reports.ensureDailySequences(calls);
+
+  assert.deepEqual(
+    calls.map((call) => [call.id, call.dailySequence]),
+    [
+      ["kept-2", 2],
+      ["missing-earlier", 1],
+      ["kept-4", 4],
+      ["other-day", 1]
+    ]
+  );
+});
+
+test("daily sequencing repairs duplicate and invalid values in stable order", () => {
+  const calls = [
+    { id: "kept-1", date: "18.06", createdAt: "2026-06-18T09:00:00.000Z", dailySequence: 1 },
+    { id: "duplicate-later", date: "18.06", createdAt: "2026-06-18T10:00:00.000Z", dailySequence: 1 },
+    { id: "same-time-b", date: "18.06", createdAt: "2026-06-18T11:00:00.000Z", dailySequence: 0 },
+    { id: "same-time-a", date: "18.06", createdAt: "2026-06-18T11:00:00.000Z", dailySequence: "bad" }
+  ];
+
+  reports.ensureDailySequences(calls);
+
+  assert.deepEqual(
+    calls.map((call) => [call.id, call.dailySequence]),
+    [
+      ["kept-1", 1],
+      ["duplicate-later", 2],
+      ["same-time-b", 4],
+      ["same-time-a", 3]
+    ]
+  );
+});
+
 test("supervisor report keeps calls on consecutive lines", () => {
   const calls = [
     {
