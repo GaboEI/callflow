@@ -117,6 +117,19 @@ Versioned data:
 
 The `storage/` directory remains in the repository only as a placeholder and is not used for runtime user data.
 
+## Audit Notes
+
+The v1.0 hardening review accepted several reported items as intentional or low-risk design choices:
+
+- `daysBetweenIso()` compares date-only values after timezone-specific dates have already been resolved, so the shared UTC anchor avoids DST drift instead of introducing it.
+- Statistics avoid double-counting primary outcomes by separating calls with `primaryOutcome` from legacy description-only calls.
+- The 50k clipboard IPC limit is a defensive payload cap, not a user data limit.
+- Knowledge document import runs through async main-process file reads with size and type validation before content is returned to the renderer.
+- `logger` falls back to `console.error` when file logging itself fails because there is no safer local sink at that point.
+- `logger.rotate()` is accepted as a low-risk non-atomic log rotation path for this release; logs are diagnostic data, not user records.
+
+The main remaining coverage gap is direct test coverage for `app.js` and larger `views/*.js` modules. Future refactors should extract pure orchestration and view helpers before adding broad UI tests.
+
 ## Compact Layout Note
 
 The compact layout is optimized for call center work next to CRM, Telegram, or other operator tools. Wider dashboard-style layouts can still be reached by resizing or maximizing the window.
