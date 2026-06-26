@@ -118,6 +118,20 @@ test("exports and imports a full backup bundle", async () => {
   assert.equal((await service.read("calls"))[0].callId, "A1");
 });
 
+test("rejects invalid backup json with a clear error code before pre-import backup", async () => {
+  const { root, service } = await createTestStorage();
+  const backupPath = path.join(root, "invalid.callflow-backup.json");
+  const fullBackupDir = path.join(root, "userData", "backups", "full");
+
+  await fs.writeFile(backupPath, "{not-json", "utf8");
+
+  await assert.rejects(
+    service.importBackup(backupPath),
+    (error) => error.code === "BACKUP_INVALID_JSON"
+  );
+  await assert.rejects(fs.stat(fullBackupDir), /ENOENT/);
+});
+
 test("clears the local data directory on request", async () => {
   const { root, service } = await createTestStorage();
   const dataDir = path.join(root, "userData");

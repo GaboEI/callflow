@@ -226,19 +226,29 @@
       importInProgress = true;
       closeImportBackupModal();
       const language = state.settings?.language || "es";
+      const importBackupErrorMessage = (error) => {
+        const messages = {
+          BACKUP_INVALID_JSON: "backupInvalidJson",
+          BACKUP_TOO_LARGE: "backupTooLarge"
+        };
+        return i18n.t(messages[error?.code] || "actionFailed", language);
+      };
       try {
-        await runAction(async () => {
-          const result = await window.callflow.importBackup();
-          if (result.canceled) return;
-          const data = await storage.readAll();
-          Object.assign(state, data);
-          state.settings = normalizeSettings(state.settings);
-          normalizeRuntimeData();
-          applySettingsToForms();
-          i18n.applyI18n(state.settings.language);
-          renderApp();
-          setStatusMessage(i18n.t("saved", language), "success");
-        });
+        await runAction(
+          async () => {
+            const result = await window.callflow.importBackup();
+            if (result.canceled) return;
+            const data = await storage.readAll();
+            Object.assign(state, data);
+            state.settings = normalizeSettings(state.settings);
+            normalizeRuntimeData();
+            applySettingsToForms();
+            i18n.applyI18n(state.settings.language);
+            renderApp();
+            setStatusMessage(i18n.t("saved", language), "success");
+          },
+          { userMessage: importBackupErrorMessage }
+        );
       } finally {
         importInProgress = false;
       }

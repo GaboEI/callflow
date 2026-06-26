@@ -353,7 +353,16 @@ function createStorageService({ dataDir, defaultConfigPath, backupLimit = CALL_B
       error.code = "BACKUP_TOO_LARGE";
       throw error;
     }
-    const bundle = validateBackupBundle(JSON.parse(await fs.readFile(filePath, "utf8")));
+    let parsed;
+    try {
+      parsed = JSON.parse(await fs.readFile(filePath, "utf8"));
+    } catch (error) {
+      const invalidJson = new Error("Backup file is not valid JSON");
+      invalidJson.code = "BACKUP_INVALID_JSON";
+      invalidJson.cause = error;
+      throw invalidJson;
+    }
+    const bundle = validateBackupBundle(parsed);
     await writeFullBackup("pre-import");
     const defaults = await loadDefaultConfig();
     const settings = schema.normalizeData("settings", bundle.data.settings, { defaults });
