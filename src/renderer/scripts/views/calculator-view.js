@@ -20,10 +20,10 @@
     const expression = normalizeExpression(rawValue);
     if (!expression) return 0;
     if (isPendingExpression(expression)) return null;
-    const safeExpression = expression
-      .replace(/Math\.PI/g, "")
-      .replace(/Math\.sqrt/g, "");
-    if (!/^[\d+\-*/().\s]+$/.test(safeExpression)) throw new Error("Invalid expression");
+    const validationExpression = expression
+      .replace(/Math\.PI/g, "1")
+      .replace(/Math\.sqrt/g, "1");
+    if (!/^[\d+\-*/().\s]+$/.test(validationExpression)) throw new Error("Invalid expression");
     return Function(`"use strict"; return (${expression});`)();
   }
 
