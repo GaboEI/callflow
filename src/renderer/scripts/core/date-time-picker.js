@@ -1,48 +1,123 @@
 (function () {
+  function parseIsoDateParts(value) {
+    const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return null;
+    const year = Number(match[1]);
+    const month = Number(match[2]) - 1;
+    const day = Number(match[3]);
+    if (month < 0 || month > 11 || day < 1 || day > 31) return null;
+    return { year, month, day };
+  }
+
+  function parseTimeParts(value) {
+    const match = String(value || "").match(/^(\d{2}):(\d{2})$/);
+    if (!match) return null;
+    const hour = Number(match[1]);
+    const minute = Number(match[2]);
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+    return { hour, minute };
+  }
+
+  function isoFromParts(year, month, day) {
+    return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  function isoTime(value) {
+    const parts = parseIsoDateParts(value);
+    return parts ? Date.UTC(parts.year, parts.month, parts.day) : null;
+  }
+
+  function compareIso(a, b) {
+    const aTime = isoTime(a);
+    const bTime = isoTime(b);
+    if (aTime === null || bTime === null) return 0;
+    return aTime - bTime;
+  }
+
+  function orderedRange(from, to) {
+    if (!from && !to) return { from: "", to: "" };
+    const start = from || to;
+    const end = to || from;
+    return compareIso(start, end) <= 0 ? { from: start, to: end } : { from: end, to: start };
+  }
+
+  function monthName(month, language, localeForLanguage) {
+    const label = new Intl.DateTimeFormat(localeForLanguage(language), { month: "long" })
+      .format(new Date(Date.UTC(2026, month, 1)));
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  }
+
+  function weekdayLabels(language, localeForLanguage) {
+    const monday = new Date(Date.UTC(2026, 5, 15));
+    return Array.from({ length: 7 }, (_item, index) =>
+      new Intl.DateTimeFormat(localeForLanguage(language), { weekday: "short" })
+        .format(new Date(monday.getTime() + index * 86400000))
+        .slice(0, 2)
+    );
+  }
+
+  function sameIsoDay(parts, year, month, day) {
+    return parts && parts.year === year && parts.month === month && parts.day === day;
+  }
+
+  function sameIsoValue(value, year, month, day) {
+    const parts = parseIsoDateParts(value);
+    return sameIsoDay(parts, year, month, day);
+  }
+
+  function isInRange(value, from, to) {
+    if (!value || !from || !to) return false;
+    return compareIso(value, from) >= 0 && compareIso(value, to) <= 0;
+  }
+
+  function displayDate(value, language, localeForLanguage) {
+    const parts = parseIsoDateParts(value);
+    if (!parts) return "";
+    return new Intl.DateTimeFormat(localeForLanguage(language), {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    }).format(new Date(Date.UTC(parts.year, parts.month, parts.day)));
+  }
+
+  function displayRange(from, to, language, localeForLanguage, fallbackLabel = "Date range") {
+    const range = orderedRange(from, to);
+    if (!range.from && !range.to) return fallbackLabel;
+    if (range.from === range.to) return displayDate(range.from, language, localeForLanguage);
+    return `${displayDate(range.from, language, localeForLanguage)} - ${displayDate(range.to, language, localeForLanguage)}`;
+  }
+
+  function datePickerDays(year, month) {
+    const firstDay = new Date(Date.UTC(year, month, 1)).getUTCDay();
+    const leadingDays = (firstDay + 6) % 7;
+    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const daysInPreviousMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    const cells = [];
+
+    for (let index = leadingDays - 1; index >= 0; index -= 1) {
+      cells.push({ year, month: month - 1, day: daysInPreviousMonth - index, muted: true });
+    }
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      cells.push({ year, month, day, muted: false });
+    }
+    while (cells.length % 7 !== 0 || cells.length < 42) {
+      const nextDay = cells.filter((cell) => cell.month === month + 1).length + 1;
+      cells.push({ year, month: month + 1, day: nextDay, muted: true });
+    }
+
+    return cells.map((cell) => {
+      const normalized = new Date(Date.UTC(cell.year, cell.month, cell.day));
+      return {
+        year: normalized.getUTCFullYear(),
+        month: normalized.getUTCMonth(),
+        day: normalized.getUTCDate(),
+        muted: cell.muted
+      };
+    });
+  }
+
   function createDateTimePicker(context) {
     const { $, $$, state, validators: V, localeForLanguage, escapeHtml, activeTimezones } = context;
-
-    function parseIsoDateParts(value) {
-      const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (!match) return null;
-      const year = Number(match[1]);
-      const month = Number(match[2]) - 1;
-      const day = Number(match[3]);
-      if (month < 0 || month > 11 || day < 1 || day > 31) return null;
-      return { year, month, day };
-    }
-
-    function parseTimeParts(value) {
-      const match = String(value || "").match(/^(\d{2}):(\d{2})$/);
-      if (!match) return null;
-      const hour = Number(match[1]);
-      const minute = Number(match[2]);
-      if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
-      return { hour, minute };
-    }
-
-    function isoFromParts(year, month, day) {
-      return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    }
-
-    function isoTime(value) {
-      const parts = parseIsoDateParts(value);
-      return parts ? Date.UTC(parts.year, parts.month, parts.day) : null;
-    }
-
-    function compareIso(a, b) {
-      const aTime = isoTime(a);
-      const bTime = isoTime(b);
-      if (aTime === null || bTime === null) return 0;
-      return aTime - bTime;
-    }
-
-    function orderedRange(from, to) {
-      if (!from && !to) return { from: "", to: "" };
-      const start = from || to;
-      const end = to || from;
-      return compareIso(start, end) <= 0 ? { from: start, to: end } : { from: end, to: start };
-    }
 
     function inputTimezone(input) {
       const form = input?.form;
@@ -75,35 +150,20 @@
       input.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    function monthName(month) {
-      const language = state.settings?.language || "es";
-      const label = new Intl.DateTimeFormat(localeForLanguage(language), { month: "long" })
-        .format(new Date(Date.UTC(2026, month, 1)));
-      return label.charAt(0).toUpperCase() + label.slice(1);
+    function activeLanguage() {
+      return state.settings?.language || "es";
     }
 
-    function weekdayLabels() {
-      const language = state.settings?.language || "es";
-      const monday = new Date(Date.UTC(2026, 5, 15));
-      return Array.from({ length: 7 }, (_item, index) =>
-        new Intl.DateTimeFormat(localeForLanguage(language), { weekday: "short" })
-          .format(new Date(monday.getTime() + index * 86400000))
-          .slice(0, 2)
-      );
+    function localizedMonthName(month) {
+      return monthName(month, activeLanguage(), localeForLanguage);
     }
 
-    function sameIsoDay(parts, year, month, day) {
-      return parts && parts.year === year && parts.month === month && parts.day === day;
+    function localizedWeekdayLabels() {
+      return weekdayLabels(activeLanguage(), localeForLanguage);
     }
 
-    function sameIsoValue(value, year, month, day) {
-      const parts = parseIsoDateParts(value);
-      return sameIsoDay(parts, year, month, day);
-    }
-
-    function isInRange(value, from, to) {
-      if (!value || !from || !to) return false;
-      return compareIso(value, from) >= 0 && compareIso(value, to) <= 0;
+    function localizedDisplayRange(from, to) {
+      return displayRange(from, to, activeLanguage(), localeForLanguage, pickerText("dateRange"));
     }
 
     function pickerText(key) {
@@ -144,53 +204,6 @@
         }
       };
       return (labels[language] || labels.es)[key] || key;
-    }
-
-    function displayDate(value) {
-      const parts = parseIsoDateParts(value);
-      if (!parts) return "";
-      const language = state.settings?.language || "es";
-      return new Intl.DateTimeFormat(localeForLanguage(language), {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      }).format(new Date(Date.UTC(parts.year, parts.month, parts.day)));
-    }
-
-    function displayRange(from, to) {
-      const range = orderedRange(from, to);
-      if (!range.from && !range.to) return pickerText("dateRange");
-      if (range.from === range.to) return displayDate(range.from);
-      return `${displayDate(range.from)} - ${displayDate(range.to)}`;
-    }
-
-    function datePickerDays(year, month) {
-      const firstDay = new Date(Date.UTC(year, month, 1)).getUTCDay();
-      const leadingDays = (firstDay + 6) % 7;
-      const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-      const daysInPreviousMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-      const cells = [];
-
-      for (let index = leadingDays - 1; index >= 0; index -= 1) {
-        cells.push({ year, month: month - 1, day: daysInPreviousMonth - index, muted: true });
-      }
-      for (let day = 1; day <= daysInMonth; day += 1) {
-        cells.push({ year, month, day, muted: false });
-      }
-      while (cells.length % 7 !== 0 || cells.length < 42) {
-        const nextDay = cells.filter((cell) => cell.month === month + 1).length + 1;
-        cells.push({ year, month: month + 1, day: nextDay, muted: true });
-      }
-
-      return cells.map((cell) => {
-        const normalized = new Date(Date.UTC(cell.year, cell.month, cell.day));
-        return {
-          year: normalized.getUTCFullYear(),
-          month: normalized.getUTCMonth(),
-          day: normalized.getUTCDate(),
-          muted: cell.muted
-        };
-      });
     }
 
     function findAssociatedTimeInput(input) {
@@ -242,9 +255,9 @@
         const selected = parseIsoDateParts(input.value);
         const today = parseIsoDateParts(V.isoDateInTimezone(new Date(), inputTimezone(input)));
         const selectedRange = pickerState.mode === "range" ? rangeState() : null;
-        const weekdays = weekdayLabels().map((day) => `<span>${escapeHtml(day)}</span>`).join("");
+        const weekdays = localizedWeekdayLabels().map((day) => `<span>${escapeHtml(day)}</span>`).join("");
         const monthOptions = Array.from({ length: 12 }, (_item, month) =>
-          `<option value="${month}" ${pickerState.month === month ? "selected" : ""}>${escapeHtml(monthName(month))}</option>`
+          `<option value="${month}" ${pickerState.month === month ? "selected" : ""}>${escapeHtml(localizedMonthName(month))}</option>`
         ).join("");
         const days = datePickerDays(pickerState.year, pickerState.month)
           .map((cell) => {
@@ -275,7 +288,7 @@
           <div class="cf-picker-calendar">${days}</div>
           ${pickerState.mode === "range" ? `
             <div class="cf-picker-range-footer">
-              <strong>${escapeHtml(displayRange(selectedRange.from, selectedRange.to))}</strong>
+              <strong>${escapeHtml(localizedDisplayRange(selectedRange.from, selectedRange.to))}</strong>
               <div class="cf-picker-range-actions">
                 <button type="button" class="cf-picker-cancel" data-cf-picker-cancel-range aria-label="${escapeHtml(pickerText("cancel"))}">×</button>
                 <button type="button" class="cf-picker-apply" data-cf-picker-apply-range aria-label="${escapeHtml(pickerText("apply"))}">✓</button>
@@ -576,7 +589,7 @@
       if (active && hasRange) {
         button.innerHTML = `
           <span class="cf-date-range-caption">${escapeHtml(pickerText("dateRange"))}</span>
-          <strong data-cf-range-label>${escapeHtml(displayRange(fromInput.value, toInput.value))}</strong>
+          <strong data-cf-range-label>${escapeHtml(localizedDisplayRange(fromInput.value, toInput.value))}</strong>
         `;
       } else {
         button.innerHTML = button.dataset.cfRangeDefaultHtml || escapeHtml(pickerText("range"));
@@ -625,9 +638,29 @@
     };
   }
 
-  window.CallFlowDateTimePicker = { createDateTimePicker };
+  const api = {
+    createDateTimePicker,
+    compareIso,
+    datePickerDays,
+    displayDate,
+    displayRange,
+    isInRange,
+    isoFromParts,
+    isoTime,
+    monthName,
+    orderedRange,
+    parseIsoDateParts,
+    parseTimeParts,
+    sameIsoDay,
+    sameIsoValue,
+    weekdayLabels
+  };
+
+  if (typeof window !== "undefined") {
+    window.CallFlowDateTimePicker = api;
+  }
 
   if (typeof module !== "undefined") {
-    module.exports = window.CallFlowDateTimePicker;
+    module.exports = api;
   }
 })();
