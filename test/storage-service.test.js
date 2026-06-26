@@ -38,6 +38,18 @@ test("does not create a calls backup for the first write", async () => {
   assert.deepEqual((await service.read("calls")).map((call) => call.id), ["first"]);
 });
 
+test("writes json through the durable write path and preserves readable data", async () => {
+  const { root, service } = await createTestStorage();
+  const settingsPath = path.join(root, "userData", "settings.json");
+
+  await service.write("settings", { language: "en", operatorName: "Agent" });
+
+  const stored = JSON.parse(await fs.readFile(settingsPath, "utf8"));
+  assert.equal(stored.schemaVersion, schema.CURRENT_SCHEMA_VERSION);
+  assert.equal(stored.data.language, "en");
+  assert.equal((await service.read("settings")).operatorName, "Agent");
+});
+
 test("creates a calls backup before overwriting existing calls", async () => {
   const { root, service } = await createTestStorage();
 
