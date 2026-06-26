@@ -1,4 +1,32 @@
 (function () {
+  function normalizeExpression(rawValue) {
+    return String(rawValue || "")
+      .replace(/,/g, ".")
+      .replace(/(\d+(?:\.\d+)?)%/g, "($1/100)")
+      .replace(/\bpi\b/gi, "Math.PI")
+      .replace(/π/g, "Math.PI")
+      .replace(/\bsqrt\(/gi, "Math.sqrt(")
+      .trim();
+  }
+
+  function isPendingExpression(expression) {
+    if (!expression) return false;
+    const openParens = (expression.match(/\(/g) || []).length;
+    const closeParens = (expression.match(/\)/g) || []).length;
+    return /[+\-*/.(]$/.test(expression) || /\*\*$/.test(expression) || openParens > closeParens;
+  }
+
+  function evaluateExpression(rawValue) {
+    const expression = normalizeExpression(rawValue);
+    if (!expression) return 0;
+    if (isPendingExpression(expression)) return null;
+    const validationExpression = expression
+      .replace(/Math\.PI/g, "1")
+      .replace(/Math\.sqrt/g, "1");
+    if (!/^[\d+\-*/().\s]+$/.test(validationExpression)) throw new Error("Invalid expression");
+    return Function(`"use strict"; return (${expression});`)();
+  }
+
   function createCalculatorView(context) {
     const { $, escapeHtml, i18n, normalizeSettings, runAction, setStatusMessage, state, storage, timers, validators: V } = context;
 
@@ -55,34 +83,6 @@
     function currencyFormat(value, config = financeSettings()) {
       const amount = Math.round(numberValue(value) * 100) / 100;
       return `${config.currency || "USD"} ${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-    }
-
-    function normalizeExpression(rawValue) {
-      return String(rawValue || "")
-        .replace(/,/g, ".")
-        .replace(/(\d+(?:\.\d+)?)%/g, "($1/100)")
-        .replace(/π/g, "Math.PI")
-        .replace(/\bpi\b/gi, "Math.PI")
-        .replace(/\bsqrt\(/gi, "Math.sqrt(")
-        .trim();
-    }
-
-    function isPendingExpression(expression) {
-      if (!expression) return false;
-      const openParens = (expression.match(/\(/g) || []).length;
-      const closeParens = (expression.match(/\)/g) || []).length;
-      return /[+\-*/.(]$/.test(expression) || /\*\*$/.test(expression) || openParens > closeParens;
-    }
-
-    function evaluateExpression(rawValue) {
-      const expression = normalizeExpression(rawValue);
-      if (!expression) return 0;
-      if (isPendingExpression(expression)) return null;
-      const safeExpression = expression
-        .replace(/Math\.PI/g, "")
-        .replace(/Math\.sqrt/g, "");
-      if (!/^[\d+\-*/().\s]+$/.test(safeExpression)) throw new Error("Invalid expression");
-      return Function(`"use strict"; return (${expression});`)();
     }
 
     function renderKeypad(containerId) {
@@ -573,5 +573,13 @@
     };
   }
 
-  window.CallFlowCalculatorView = { createCalculatorView };
+  const api = { createCalculatorView, normalizeExpression, isPendingExpression, evaluateExpression };
+
+  if (typeof window !== "undefined") {
+    window.CallFlowCalculatorView = api;
+  }
+
+  if (typeof module !== "undefined") {
+    module.exports = api;
+  }
 })();

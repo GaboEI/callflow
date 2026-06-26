@@ -130,6 +130,8 @@ The v1.0 hardening review accepted several reported items as intentional or low-
 
 The main remaining coverage gap is direct test coverage for `app.js` and larger `views/*.js` modules. Future refactors should extract pure orchestration and view helpers before adding broad UI tests.
 
+The calculator expression engine is intentionally covered as pure renderer logic. It still uses `Function()` after normalization and whitelist validation; a future hardening pass should replace it with a small parser such as shunting-yard to remove dynamic evaluation completely.
+
 ## Compact Layout Note
 
 The compact layout is optimized for call center work next to CRM, Telegram, or other operator tools. Wider dashboard-style layouts can still be reached by resizing or maximizing the window.
