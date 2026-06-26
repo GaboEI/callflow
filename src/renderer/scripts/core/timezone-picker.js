@@ -1,4 +1,34 @@
 (function () {
+  function buildOptions(timezones, language, timezoneOption) {
+    const seen = new Set();
+    return ["local", ...timezones]
+      .filter((timezone) => {
+        if (seen.has(timezone)) return false;
+        seen.add(timezone);
+        return true;
+      })
+      .map((timezone) => timezoneOption(timezone, language));
+  }
+
+  function filterOptions(options, searchQuery, normalizeTimezoneSearch, highlightedTimezoneIndex = -1) {
+    const normalizedQuery = normalizeTimezoneSearch(searchQuery);
+    const compactOffsetQuery = normalizedQuery.replace(":00", "");
+    const filteredTimezoneOptions = options
+      .filter((option) => {
+        if (!normalizedQuery) return true;
+        return option.searchText.includes(normalizedQuery) || option.searchText.includes(compactOffsetQuery);
+      })
+      .slice(0, 80);
+    const nextHighlightedTimezoneIndex = highlightedTimezoneIndex >= filteredTimezoneOptions.length
+      ? (filteredTimezoneOptions.length ? 0 : -1)
+      : highlightedTimezoneIndex;
+
+    return {
+      filteredTimezoneOptions,
+      highlightedTimezoneIndex: nextHighlightedTimezoneIndex
+    };
+  }
+
   function createTimezonePicker(context) {
     const { $, state, timezones, timezonesCore, i18n, escapeHtml, activeFormLanguage } = context;
     const normalizeTimezoneSearch = timezonesCore.normalizeTimezoneSearch;
@@ -22,22 +52,20 @@
       };
     }
 
-    function buildOptions(language) {
-      return [timezoneOption("local", language), ...timezones.map((timezone) => timezoneOption(timezone, language))];
+    function pickerOptions(language) {
+      return buildOptions(timezones, language, timezoneOption);
     }
 
-    function filterOptions(pickerId, language) {
+    function filterPickerOptions(pickerId, language) {
       const current = pickerState(pickerId);
-      const normalizedQuery = normalizeTimezoneSearch(current.searchQuery);
-      const compactOffsetQuery = normalizedQuery.replace(":00", "");
-      const options = buildOptions(language).filter((option) => {
-        if (!normalizedQuery) return true;
-        return option.searchText.includes(normalizedQuery) || option.searchText.includes(compactOffsetQuery);
-      });
-      current.filteredTimezoneOptions = options.slice(0, 80);
-      if (current.highlightedTimezoneIndex >= current.filteredTimezoneOptions.length) {
-        current.highlightedTimezoneIndex = current.filteredTimezoneOptions.length ? 0 : -1;
-      }
+      const result = filterOptions(
+        pickerOptions(language),
+        current.searchQuery,
+        normalizeTimezoneSearch,
+        current.highlightedTimezoneIndex
+      );
+      current.filteredTimezoneOptions = result.filteredTimezoneOptions;
+      current.highlightedTimezoneIndex = result.highlightedTimezoneIndex;
     }
 
     function render(pickerId, language) {
@@ -68,7 +96,7 @@
     function open(pickerId) {
       const current = pickerState(pickerId);
       current.isTimezoneDropdownOpen = true;
-      filterOptions(pickerId, activeFormLanguage());
+      filterPickerOptions(pickerId, activeFormLanguage());
       render(pickerId, activeFormLanguage());
     }
 
@@ -94,7 +122,7 @@
         if (!pickerForm || !pickerForm.timezone || !current) return;
         current.selectedTimezoneValue = pickerForm.timezone.value || current.selectedTimezoneValue || "local";
         current.searchQuery = "";
-        filterOptions(pickerId, language);
+        filterPickerOptions(pickerId, language);
         render(pickerId, language);
       });
     }
@@ -107,7 +135,7 @@
       current.isTimezoneDropdownOpen = false;
       current.highlightedTimezoneIndex = -1;
       pickerForm.timezone.value = value;
-      filterOptions(pickerId, pickerForm.language.value);
+      filterPickerOptions(pickerId, pickerForm.language.value);
       render(pickerId, pickerForm.language.value);
     }
 
@@ -117,7 +145,7 @@
       current.searchQuery = input.value;
       current.isTimezoneDropdownOpen = true;
       current.highlightedTimezoneIndex = 0;
-      filterOptions(pickerId, activeFormLanguage());
+      filterPickerOptions(pickerId, activeFormLanguage());
       render(pickerId, activeFormLanguage());
     }
 
@@ -163,7 +191,7 @@
 
     return {
       close,
-      filterOptions,
+      filterOptions: filterPickerOptions,
       form,
       handleSearchInput,
       handleSearchKeydown,
@@ -176,9 +204,13 @@
     };
   }
 
-  window.CallFlowTimezonePicker = { createTimezonePicker };
+  const api = { createTimezonePicker, buildOptions, filterOptions };
+
+  if (typeof window !== "undefined") {
+    window.CallFlowTimezonePicker = api;
+  }
 
   if (typeof module !== "undefined") {
-    module.exports = window.CallFlowTimezonePicker;
+    module.exports = api;
   }
 })();

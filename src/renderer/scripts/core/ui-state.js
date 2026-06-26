@@ -103,9 +103,13 @@
     };
   }
 
-  window.CallFlowUiState = { createInitialState };
+  const api = { createInitialState };
+
+  if (typeof window !== "undefined") {
+    window.CallFlowUiState = api;
+  }
 
   if (typeof module !== "undefined") {
-    module.exports = window.CallFlowUiState;
+    module.exports = api;
   }
 })();
