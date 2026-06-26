@@ -147,8 +147,27 @@
     return !Number.isNaN(date.getTime());
   }
 
+  function randomUuid() {
+    const runtimeCrypto = typeof globalThis !== "undefined" ? globalThis.crypto : null;
+    if (runtimeCrypto && typeof runtimeCrypto.randomUUID === "function") {
+      return runtimeCrypto.randomUUID();
+    }
+    if (typeof require === "function") {
+      try {
+        const nodeCrypto = require("node:crypto");
+        if (nodeCrypto && typeof nodeCrypto.randomUUID === "function") {
+          return nodeCrypto.randomUUID();
+        }
+      } catch (_error) {
+        return null;
+      }
+    }
+    return null;
+  }
+
   function randomId(prefix) {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    const uuid = randomUuid();
+    if (uuid) return uuid;
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
 
@@ -505,6 +524,7 @@
     timeInTimezone,
     zonedDateTimeToUtc,
     reminderDueDate,
+    randomId,
     normalizeSettings,
     normalizeCall,
     normalizeReminder,

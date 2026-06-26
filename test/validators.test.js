@@ -32,6 +32,13 @@ test("exposes the shared plain object helper", () => {
   assert.equal(validators.isPlainObject(null), false);
 });
 
+test("generates random ids with crypto randomUUID when available", () => {
+  assert.match(
+    validators.randomId("note"),
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  );
+});
+
 test("bounds text normalization work without exact pre-slice truncation", () => {
   assert.equal(validators.text(`${" ".repeat(5000)}Keep me`, 7), "Keep me");
   assert.equal(validators.multilineText(`${"\r\n".repeat(4000)}Done`, 4), "\n\n\n\n");
