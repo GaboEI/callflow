@@ -26,6 +26,12 @@ test("normalizes malformed settings into production-safe defaults", () => {
   assert.equal(result.clockFormat, "24h");
 });
 
+test("exposes the shared plain object helper", () => {
+  assert.equal(validators.isPlainObject({}), true);
+  assert.equal(validators.isPlainObject([]), false);
+  assert.equal(validators.isPlainObject(null), false);
+});
+
 test("bounds text normalization work without exact pre-slice truncation", () => {
   assert.equal(validators.text(`${" ".repeat(5000)}Keep me`, 7), "Keep me");
   assert.equal(validators.multilineText(`${"\r\n".repeat(4000)}Done`, 4), "\n\n\n\n");

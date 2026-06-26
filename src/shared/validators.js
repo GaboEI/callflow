@@ -494,6 +494,7 @@
   const api = {
     LIMITS,
     MAX_ACTIVE_TIMEZONES,
+    isPlainObject,
     text,
     multilineText,
     uniqueItems,

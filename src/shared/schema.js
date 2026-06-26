@@ -5,10 +5,7 @@
 
   const CURRENT_SCHEMA_VERSION = 1;
   const SCHEMA_KEYS = ["settings", "calls", "reminders", "knowledgeBase", "workTimer"];
-
-  function isPlainObject(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
-  }
+  const isPlainObject = validators.isPlainObject;
 
   function clone(value) {
     if (value === undefined) return undefined;
