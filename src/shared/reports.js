@@ -121,11 +121,29 @@
     }, {});
 
     Object.values(groups).forEach((items) => {
-      items
-        .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")))
-        .forEach((call, index) => {
-          if (!call.dailySequence) call.dailySequence = index + 1;
-        });
+      const usedSequences = new Set();
+      const needsRepair = [];
+      const ordered = [...items].sort((a, b) =>
+        String(a.createdAt || "").localeCompare(String(b.createdAt || "")) ||
+        String(a.id || "").localeCompare(String(b.id || ""))
+      );
+
+      ordered.forEach((call) => {
+        const sequence = Number(call.dailySequence);
+        if (Number.isInteger(sequence) && sequence > 0 && !usedSequences.has(sequence)) {
+          call.dailySequence = sequence;
+          usedSequences.add(sequence);
+          return;
+        }
+        needsRepair.push(call);
+      });
+
+      let nextSequence = 1;
+      needsRepair.forEach((call) => {
+        while (usedSequences.has(nextSequence)) nextSequence += 1;
+        call.dailySequence = nextSequence;
+        usedSequences.add(nextSequence);
+      });
     });
 
     return calls;

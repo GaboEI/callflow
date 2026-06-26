@@ -26,6 +26,25 @@ test("normalizes malformed settings into production-safe defaults", () => {
   assert.equal(result.clockFormat, "24h");
 });
 
+test("exposes the shared plain object helper", () => {
+  assert.equal(validators.isPlainObject({}), true);
+  assert.equal(validators.isPlainObject([]), false);
+  assert.equal(validators.isPlainObject(null), false);
+});
+
+test("generates random ids with crypto randomUUID when available", () => {
+  assert.match(
+    validators.randomId("note"),
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  );
+});
+
+test("bounds text normalization work without exact pre-slice truncation", () => {
+  assert.equal(validators.text(`${" ".repeat(5000)}Keep me`, 7), "Keep me");
+  assert.equal(validators.multilineText(`${"\r\n".repeat(4000)}Done`, 4), "\n\n\n\n");
+  assert.equal(validators.text("A".repeat(2 * 1024 * 1024), 120), "A".repeat(120));
+});
+
 test("validates practical reminder payloads and rejects invalid dates", () => {
   assert.equal(
     validators.validateReminderPayload({
@@ -203,7 +222,7 @@ test("normalizes plain text and embedded PDF documents without losing their type
   const pdf = validators.normalizeNote({
     title: "Policy",
     documentType: "pdf",
-    pdfData: Buffer.from("%PDF-test").toString("base64"),
+    pdfData: ` \n${Buffer.from("%PDF-test").toString("base64")}@#$`,
     pinned: true,
     originalName: "policy.pdf"
   });

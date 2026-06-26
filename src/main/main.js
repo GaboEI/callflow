@@ -173,27 +173,37 @@ function sendReminderNotification(reminder, phase, settings) {
   notification.show();
 }
 
+function pruneNotificationThrottle(activeReminderIds) {
+  for (const key of notificationThrottle.keys()) {
+    const reminderId = String(key).split(":")[0];
+    if (!activeReminderIds.has(reminderId)) {
+      notificationThrottle.delete(key);
+    }
+  }
+}
+
 async function checkReminderNotifications() {
   const settings = await loadSettings();
   const reminders = await getStorage().read("reminders");
   const now = new Date();
   const beforeMs = Math.max(0, Number(settings.notifyBeforeMinutes) || 0) * 60 * 1000;
+  const activeReminders = reminders.filter(isValidReminder);
+  const activeReminderIds = new Set(activeReminders.map((reminder) => reminder.id));
+  pruneNotificationThrottle(activeReminderIds);
 
-  reminders
-    .filter(isValidReminder)
-    .forEach((reminder) => {
-      if (isReminderSuppressed(reminder, now)) return;
-      const due = reminderDueDate(reminder);
-      const diff = due - now;
-      if (beforeMs > 0 && diff > 0 && diff <= beforeMs) {
-        sendReminderAlarm(reminder, "early");
-        sendReminderNotification(reminder, "early", settings);
-      }
-      if (settings.notifyAtExactTime !== false && diff <= 0) {
-        sendReminderAlarm(reminder, diff < -60 * 1000 ? "overdue" : "exact");
-        sendReminderNotification(reminder, diff < -60 * 1000 ? "overdue" : "exact", settings);
-      }
-    });
+  activeReminders.forEach((reminder) => {
+    if (isReminderSuppressed(reminder, now)) return;
+    const due = reminderDueDate(reminder);
+    const diff = due - now;
+    if (beforeMs > 0 && diff > 0 && diff <= beforeMs) {
+      sendReminderAlarm(reminder, "early");
+      sendReminderNotification(reminder, "early", settings);
+    }
+    if (settings.notifyAtExactTime !== false && diff <= 0) {
+      sendReminderAlarm(reminder, diff < -60 * 1000 ? "overdue" : "exact");
+      sendReminderNotification(reminder, diff < -60 * 1000 ? "overdue" : "exact", settings);
+    }
+  });
 }
 
 function startReminderNotifications() {

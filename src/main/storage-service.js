@@ -122,13 +122,38 @@ function createStorageService({ dataDir, defaultConfigPath, backupLimit = CALL_B
     }
   }
 
+  async function syncDirectory(dirPath) {
+    let dirHandle = null;
+    try {
+      dirHandle = await fs.open(dirPath, "r");
+      await dirHandle.sync();
+    } catch (_error) {
+      // Directory fsync is not supported on every platform/filesystem.
+    } finally {
+      if (dirHandle) await dirHandle.close().catch(() => null);
+    }
+  }
+
   async function writeJson(filePath, value) {
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    const dirPath = path.dirname(filePath);
+    await fs.mkdir(dirPath, { recursive: true });
     const json = `${JSON.stringify(value, null, 2)}\n`;
     JSON.parse(json);
     const tempPath = `${filePath}.tmp-${process.pid}-${Date.now()}`;
-    await fs.writeFile(tempPath, json, "utf8");
-    await fs.rename(tempPath, filePath);
+    let handle = null;
+    try {
+      handle = await fs.open(tempPath, "w");
+      await handle.writeFile(json, "utf8");
+      await handle.sync();
+      await handle.close();
+      handle = null;
+      await fs.rename(tempPath, filePath);
+      await syncDirectory(dirPath);
+    } catch (error) {
+      if (handle) await handle.close().catch(() => null);
+      await fs.rm(tempPath, { force: true }).catch(() => null);
+      throw error;
+    }
     return value;
   }
 
@@ -328,7 +353,16 @@ function createStorageService({ dataDir, defaultConfigPath, backupLimit = CALL_B
       error.code = "BACKUP_TOO_LARGE";
       throw error;
     }
-    const bundle = validateBackupBundle(JSON.parse(await fs.readFile(filePath, "utf8")));
+    let parsed;
+    try {
+      parsed = JSON.parse(await fs.readFile(filePath, "utf8"));
+    } catch (error) {
+      const invalidJson = new Error("Backup file is not valid JSON");
+      invalidJson.code = "BACKUP_INVALID_JSON";
+      invalidJson.cause = error;
+      throw invalidJson;
+    }
+    const bundle = validateBackupBundle(parsed);
     await writeFullBackup("pre-import");
     const defaults = await loadDefaultConfig();
     const settings = schema.normalizeData("settings", bundle.data.settings, { defaults });

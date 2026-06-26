@@ -38,6 +38,18 @@ test("does not create a calls backup for the first write", async () => {
   assert.deepEqual((await service.read("calls")).map((call) => call.id), ["first"]);
 });
 
+test("writes json through the durable write path and preserves readable data", async () => {
+  const { root, service } = await createTestStorage();
+  const settingsPath = path.join(root, "userData", "settings.json");
+
+  await service.write("settings", { language: "en", operatorName: "Agent" });
+
+  const stored = JSON.parse(await fs.readFile(settingsPath, "utf8"));
+  assert.equal(stored.schemaVersion, schema.CURRENT_SCHEMA_VERSION);
+  assert.equal(stored.data.language, "en");
+  assert.equal((await service.read("settings")).operatorName, "Agent");
+});
+
 test("creates a calls backup before overwriting existing calls", async () => {
   const { root, service } = await createTestStorage();
 
@@ -104,6 +116,20 @@ test("exports and imports a full backup bundle", async () => {
   assert.equal(imported.knowledgeBase[0].documentType, "pdf");
   assert.equal(imported.knowledgeBase[0].pdfData, "JVBERi0=");
   assert.equal((await service.read("calls"))[0].callId, "A1");
+});
+
+test("rejects invalid backup json with a clear error code before pre-import backup", async () => {
+  const { root, service } = await createTestStorage();
+  const backupPath = path.join(root, "invalid.callflow-backup.json");
+  const fullBackupDir = path.join(root, "userData", "backups", "full");
+
+  await fs.writeFile(backupPath, "{not-json", "utf8");
+
+  await assert.rejects(
+    service.importBackup(backupPath),
+    (error) => error.code === "BACKUP_INVALID_JSON"
+  );
+  await assert.rejects(fs.stat(fullBackupDir), /ENOENT/);
 });
 
 test("clears the local data directory on request", async () => {

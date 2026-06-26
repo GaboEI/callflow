@@ -11,6 +11,7 @@
     reportHeader: 300
   };
   const MAX_ACTIVE_TIMEZONES = 10;
+  const NORMALIZATION_PRE_SLICE_BUFFER = 1024 * 1024;
 
   const repeatValues = new Set(["once", "daily", "weekdays", "weekly", "monthly"]);
   const languages = new Set(["es", "en", "ru"]);
@@ -24,12 +25,18 @@
     return value !== null && typeof value === "object" && !Array.isArray(value);
   }
 
+  function boundedString(value, max, buffer = NORMALIZATION_PRE_SLICE_BUFFER) {
+    const source = String(value || "");
+    const limit = max + buffer;
+    return source.length > limit ? source.slice(0, limit) : source;
+  }
+
   function text(value, max = LIMITS.mediumText) {
-    return String(value || "").replace(/\s+/g, " ").trim().slice(0, max);
+    return boundedString(value, max).replace(/\s+/g, " ").trim().slice(0, max);
   }
 
   function multilineText(value, max = LIMITS.noteContent) {
-    return String(value || "").replace(/\r\n/g, "\n").slice(0, max);
+    return boundedString(value, max).replace(/\r\n/g, "\n").slice(0, max);
   }
 
   function uniqueItems(value, maxItemLength = LIMITS.shortText) {
@@ -140,8 +147,27 @@
     return !Number.isNaN(date.getTime());
   }
 
+  function randomUuid() {
+    const runtimeCrypto = typeof globalThis !== "undefined" ? globalThis.crypto : null;
+    if (runtimeCrypto && typeof runtimeCrypto.randomUUID === "function") {
+      return runtimeCrypto.randomUUID();
+    }
+    if (typeof require === "function") {
+      try {
+        const nodeCrypto = require("node:crypto");
+        if (nodeCrypto && typeof nodeCrypto.randomUUID === "function") {
+          return nodeCrypto.randomUUID();
+        }
+      } catch (_error) {
+        return null;
+      }
+    }
+    return null;
+  }
+
   function randomId(prefix) {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    const uuid = randomUuid();
+    if (uuid) return uuid;
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
 
@@ -358,7 +384,7 @@
       : "txt";
     const documentType = ["markdown", "txt", "pdf"].includes(note.documentType) ? note.documentType : inferredType;
     const pdfData = documentType === "pdf"
-      ? String(note.pdfData || "").replace(/\s/g, "").replace(/[^a-zA-Z0-9+/=]/g, "").slice(0, LIMITS.pdfData)
+      ? boundedString(note.pdfData, LIMITS.pdfData).replace(/\s/g, "").replace(/[^a-zA-Z0-9+/=]/g, "").slice(0, LIMITS.pdfData)
       : "";
     return {
       ...note,
@@ -487,6 +513,7 @@
   const api = {
     LIMITS,
     MAX_ACTIVE_TIMEZONES,
+    isPlainObject,
     text,
     multilineText,
     uniqueItems,
@@ -497,6 +524,7 @@
     timeInTimezone,
     zonedDateTimeToUtc,
     reminderDueDate,
+    randomId,
     normalizeSettings,
     normalizeCall,
     normalizeReminder,
