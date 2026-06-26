@@ -3,8 +3,8 @@
     return String(rawValue || "")
       .replace(/,/g, ".")
       .replace(/(\d+(?:\.\d+)?)%/g, "($1/100)")
-      .replace(/π/g, "Math.PI")
       .replace(/\bpi\b/gi, "Math.PI")
+      .replace(/π/g, "Math.PI")
       .replace(/\bsqrt\(/gi, "Math.sqrt(")
       .trim();
   }
