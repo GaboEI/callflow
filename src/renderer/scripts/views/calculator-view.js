@@ -1,4 +1,20 @@
 (function () {
+  function financeForWork(workMs, hourlyRate) {
+    const hours = Math.max(0, Number(workMs) || 0) / 3600000;
+    return hours * (Number.isFinite(Number(hourlyRate)) ? Number(hourlyRate) : 0);
+  }
+
+  function financeSettings(settings = {}) {
+    return {
+      currency: "USD",
+      hourlyRate: 0,
+      paidBreaks: false,
+      movementTypes: [],
+      transactions: [],
+      ...(settings.financial || {})
+    };
+  }
+
   function normalizeExpression(rawValue) {
     return String(rawValue || "")
       .replace(/,/g, ".")
@@ -63,17 +79,6 @@
 
     function t(key) {
       return i18n.t(key, state.settings.language || "es");
-    }
-
-    function financeSettings() {
-      return {
-        currency: "USD",
-        hourlyRate: 0,
-        paidBreaks: false,
-        movementTypes: [],
-        transactions: [],
-        ...(state.settings?.financial || {})
-      };
     }
 
     function numberValue(value) {
@@ -157,9 +162,8 @@
     }
 
     function estimatedFinance(workMs = timers.currentWorkElapsed(state.workTimer)) {
-      const config = financeSettings();
-      const hours = Math.max(0, workMs || 0) / 3600000;
-      return hours * numberValue(config.hourlyRate);
+      const config = financeSettings(state.settings);
+      return financeForWork(workMs, config.hourlyRate);
     }
 
     function isoDate(date) {
@@ -214,11 +218,11 @@
     function transactionsInRange(start, end) {
       const startIso = isoDate(start);
       const endIso = isoDate(end);
-      return financeSettings().transactions.filter((item) => item.date >= startIso && item.date <= endIso);
+      return financeSettings(state.settings).transactions.filter((item) => item.date >= startIso && item.date <= endIso);
     }
 
     function dailyAmount(date) {
-      const config = financeSettings();
+      const config = financeSettings(state.settings);
       const key = isoDate(date);
       const workMs = numberValue(timers.dailyWorkEntries(state.workTimer)[key]);
       const paidBreakMs = config.paidBreaks ? breakMsForDate(key) : 0;
@@ -268,7 +272,7 @@
       const chart = $("#monthlyFinanceChart");
       const total = $("#monthlyFinanceTotal");
       if (!chart || !total) return;
-      const config = financeSettings();
+      const config = financeSettings(state.settings);
       const series = financeSeries();
       const totalAmount = series.reduce((sum, item) => sum + item.value, 0);
       total.textContent = currencyFormat(totalAmount, config);
@@ -317,7 +321,7 @@
     }
 
     function renderFinanceForm() {
-      const config = financeSettings();
+      const config = financeSettings(state.settings);
       const bounds = visibleBounds();
       const workMs = Object.entries(timers.dailyWorkEntries(state.workTimer)).reduce((sum, [date, duration]) => {
         const parsed = dateFromIso(date);
@@ -367,7 +371,7 @@
     async function saveFinanceTransaction(event) {
       event.preventDefault();
       const form = event.currentTarget;
-      const config = financeSettings();
+      const config = financeSettings(state.settings);
       const movementType = config.movementTypes.find((item) => item.id === form.type.value) || config.movementTypes[0];
       const transaction = {
         id: crypto.randomUUID ? crypto.randomUUID() : `finance-${Date.now()}`,
@@ -392,7 +396,7 @@
     }
 
     async function deleteFinanceTransaction(id) {
-      const config = financeSettings();
+      const config = financeSettings(state.settings);
       const financial = { ...config, transactions: config.transactions.filter((item) => item.id !== id) };
       state.settings = normalizeSettings({ ...state.settings, financial });
       await runAction(async () => {
@@ -405,7 +409,7 @@
     async function addFinanceMovementType(event) {
       event.preventDefault();
       const form = event.currentTarget;
-      const config = financeSettings();
+      const config = financeSettings(state.settings);
       const label = String(form.label.value || "").trim();
       if (!label) return;
       const type = {
@@ -427,7 +431,7 @@
     }
 
     async function deleteFinanceMovementType(id) {
-      const config = financeSettings();
+      const config = financeSettings(state.settings);
       if (config.movementTypes.length <= 1) {
         setStatusMessage("Debe quedar al menos un tipo de movimiento", "warning");
         return;
@@ -573,7 +577,7 @@
     };
   }
 
-  const api = { createCalculatorView, normalizeExpression, isPendingExpression, evaluateExpression };
+  const api = { createCalculatorView, evaluateExpression, financeForWork, financeSettings, isPendingExpression, normalizeExpression };
 
   if (typeof window !== "undefined") {
     window.CallFlowCalculatorView = api;
