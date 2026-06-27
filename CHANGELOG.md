@@ -2,6 +2,30 @@
 
 This file summarizes the public-facing state of the project. The full historical changelog remains in `docs/04_changelog.md`.
 
+## v0.3.0
+
+### Added
+
+- Stable release notes for `v0.3.0`.
+- GitHub Actions release workflow for tagged Windows builds.
+
+### Changed
+
+- Version bumped to `0.3.0` across the repo.
+- Public docs now present CallFlow as a stable release line instead of a beta snapshot.
+- The v1.0 roadmap now uses `v0.3.0` as the stable baseline.
+
+### Fixed
+
+- Durable JSON writes now use fsync on the file and parent directory.
+- Invalid backup JSON now surfaces a clear error instead of crashing import.
+- Daily numbering, reminder date handling, calculator evaluation, and renderer helper logic were hardened.
+
+### Known limitations
+
+- AI Chat remains a placeholder.
+- Final v1.0 polish, legal finalization, and release candidate work remain tracked in the roadmap.
+
 ## v0.2.0-beta.1
 
 ### Added

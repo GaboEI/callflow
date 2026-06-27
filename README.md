@@ -2,16 +2,16 @@
 
 ![CI](https://img.shields.io/github/actions/workflow/status/GaboEI/callflow/ci.yml?branch=main&label=CI)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
-![Version](https://img.shields.io/badge/version-0.2.0--beta.1-2ea44f.svg)
+![Version](https://img.shields.io/badge/version-0.3.0-2ea44f.svg)
 ![Windows target](https://img.shields.io/badge/target-Windows%20%7C%20NSIS-0078d6.svg)
 ![Electron](https://img.shields.io/badge/runtime-Electron-47848f.svg)
 ![Local-first](https://img.shields.io/badge/storage-local--first%20offline-2e8b57.svg)
 
-CallFlow is a local-first Electron desktop beta app for call-center operators. It helps agents register calls quickly, copy CRM-ready lines, generate hourly supervisor reports, manage callbacks and reminders, keep shift timers and multizone clocks visible, and maintain a Markdown script library without requiring a backend.
+CallFlow is a local-first Electron desktop app for call-center operators. It helps agents register calls quickly, copy CRM-ready lines, generate hourly supervisor reports, manage callbacks and reminders, keep shift timers and multizone clocks visible, and maintain a Markdown script library without requiring a backend.
 
 The project is intentionally compact and honest: it shows the product state as it exists today, not the features planned for a later release.
 
-CallFlow is currently in beta. Core local workflows are functional, the Windows installer builds successfully, and active testing is being performed on Windows 11. Some UX, documentation, legal text, and release polish are still being refined.
+CallFlow is now on its stable `0.3.0` line. Core local workflows are functional, the Windows installer builds successfully, and active testing continues on Windows 11 while v1.0 polish work is tracked in the roadmap.
 
 ## Product page
 
@@ -19,17 +19,17 @@ CallFlow is currently in beta. Core local workflows are functional, the Windows 
 >
 > [https://gaboei.github.io/callflow/](https://gaboei.github.io/callflow/)
 >
-> The public page presents the current beta feature set and download path. It is a static GitHub Pages site, not a separate web app or backend service.
+> The public page presents the current release feature set and download path. It is a static GitHub Pages site, not a separate web app or backend service.
 
 ## Windows download
 
 > **Download for Windows**
 >
-> [![Download installer](https://img.shields.io/badge/Download_installer-Windows_NSIS-0a66ff.svg?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/GaboEI/callflow/releases/download/v0.2.0-beta.1/CallFlow.Setup.0.2.0-beta.1.exe)
+> [![Download installer](https://img.shields.io/badge/Download_installer-Windows_NSIS-0a66ff.svg?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/GaboEI/callflow/releases/download/v0.3.0/CallFlow.Setup.0.3.0.exe)
 >
-> [![Open Releases](https://img.shields.io/badge/Open_Releases-GitHub-24292f.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1)
+> [![Open Releases](https://img.shields.io/badge/Open_Releases-GitHub-24292f.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/GaboEI/callflow/releases/tag/v0.3.0)
 >
-> **Status:** The current Windows beta installer is available from GitHub Releases. Version 0.2.0-beta.1 is an NSIS installer validated on Windows 11. This is a beta release, not a stable enterprise build. The installer is currently unsigned — Windows SmartScreen may show a warning on first run.
+> **Status:** The current Windows installer is available from GitHub Releases. Version 0.3.0 is an NSIS installer validated on Windows 11. The installer is currently unsigned — Windows SmartScreen may show a warning on first run.
 
 ## Screenshots
 
@@ -205,18 +205,18 @@ These targets are configured for Windows packaging. `dist:win` is the primary x6
 
 ## Download Windows installer
 
-The current Windows beta installer is available from [GitHub Releases](https://github.com/GaboEI/callflow/releases/tag/v0.2.0-beta.1).
+The current Windows installer is available from [GitHub Releases](https://github.com/GaboEI/callflow/releases/tag/v0.3.0).
 
-- **Version:** 0.2.0-beta.1
+- **Version:** 0.3.0
 - **Installer:** NSIS `.exe` (x64)
 - **Status:** beta, validated on Windows 11
 - **Signing:** currently unsigned — Windows SmartScreen may show a warning until official code signing is configured
 
-This is not a stable enterprise release yet. See [release notes](docs/releases/v0.2.0-beta.1.md) for details.
+This is a stable release. See [release notes](docs/releases/v0.3.0.md) for details.
 
 ## Project status
 
-Current version: `0.2.0-beta.1`
+Current version: `0.3.0`
 
 What is implemented now:
 
@@ -239,7 +239,7 @@ What is still not a finished product surface:
 - AI Chat is still a placeholder
 - cloud sync is not implemented
 - a backend server is not part of the MVP
-- installer beta terms are included for v0.2.0-beta.1; privacy and terms drafts remain under review before any stable public release
+- installer terms are included for v0.3.0; privacy and terms drafts remain under review before v1.0
 
 ## Repository layout
 
@@ -260,9 +260,9 @@ scripts/      Build and validation helpers
 - [Case study](docs/00_case_study.md)
 - [v1.0.0 release notes (draft)](docs/releases/v1.0.0.md)
 - [v1.0.0 Windows QA (template)](docs/qa/windows-qa-results-v1.0.0.md)
-- [Windows QA results (v0.2.0-beta.1)](docs/qa/windows-qa-results-v0.2.0-beta.1.md)
+- [Historical Windows QA results (v0.2.0-beta.1)](docs/qa/windows-qa-results-v0.2.0-beta.1.md)
 - [Windows QA results (v0.1.16)](docs/qa/windows-qa-results-v0.1.16.md)
-- [Beta release notes](docs/releases/v0.2.0-beta.1.md)
+- [Historical beta release notes](docs/releases/v0.2.0-beta.1.md)
 - [Previous alpha release notes](docs/releases/v0.1.16-alpha.md)
 - [Windows QA checklist](docs/windows-qa.md)
 - [Changelog](CHANGELOG.md)
@@ -283,27 +283,27 @@ scripts/      Build and validation helpers
 
 ## Roadmap to 1.0 Stable
 
-CallFlow `v0.2.0-beta.1` is the frozen Official Beta baseline. No new beta features will be added except critical hotfixes.
+CallFlow `v0.3.0` is the frozen stable baseline. No new features will be added on this line except critical hotfixes.
 
 Work toward `v1.0.0` will focus on visual polish, AI engine implementation, final QA, and stable release documentation. See [Roadmap to v1.0 Stable](docs/roadmap/v1.0-stable.md) for scope, versioning plan, and exit criteria.
 
 ## Limitations
 
-- This is still a beta-stage desktop app, not a full enterprise call-center platform.
+- This is a stable desktop app, not a full enterprise call-center platform.
 - No cloud features are available.
 - The AI surface is only a placeholder.
-- Installer beta terms are included for v0.2.0-beta.1. Privacy and terms drafts remain under review before any stable public release.
+- Installer terms are included for v0.3.0. Privacy and terms drafts remain under review before any future release candidate work.
 
 ## En español
 
-CallFlow es una app de escritorio local en etapa beta para centros de llamadas. Sirve para registrar llamadas rápido, copiar líneas para CRM, generar reportes horarios, administrar recordatorios, ver estadísticas y mantener scripts internos en Markdown. Todo se guarda localmente en el equipo, sin backend ni sincronización en la nube.
+CallFlow es una app de escritorio local estable para centros de llamadas. Sirve para registrar llamadas rápido, copiar líneas para CRM, generar reportes horarios, administrar recordatorios, ver estadísticas y mantener scripts internos en Markdown. Todo se guarda localmente en el equipo, sin backend ni sincronización en la nube.
 
 Estado actual:
 
 - el registro de llamadas, reportes, recordatorios, estadísticas, reloj multizona y biblioteca de scripts ya están implementados
 - Chat IA existe solo como una sección de interfaz, no como un asistente conectado
 - los datos se guardan en el perfil local de Electron
-- el objetivo principal sigue siendo el empaquetado y pulido para Windows beta
+- el objetivo principal sigue siendo el empaquetado y pulido para Windows y la ruta a 1.0
 
 ## License
 

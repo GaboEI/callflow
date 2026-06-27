@@ -1,6 +1,6 @@
 {
   "name": "callflow",
-  "version": "0.2.0-beta.1",
+  "version": "0.3.0",
   "description": "Local-first Electron desktop beta app for call-center call logging, hourly reports, reminders, scripts, and shift tracking.",
   "main": "src/main/main.js",
   "scripts": {

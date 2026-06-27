@@ -189,10 +189,10 @@
       }
       try {
         const diagnostics = await window.callflow.getDiagnostics();
-        if (versionOutput) versionOutput.textContent = diagnostics.appVersion || "0.2.0-beta.1";
+        if (versionOutput) versionOutput.textContent = diagnostics.appVersion || "0.3.0";
         if (dataDirOutput) dataDirOutput.textContent = diagnostics.dataDir || i18n.t("notAvailable", language);
       } catch (_error) {
-        if (versionOutput) versionOutput.textContent = "0.2.0-beta.1";
+        if (versionOutput) versionOutput.textContent = "0.3.0";
         if (dataDirOutput) dataDirOutput.textContent = i18n.t("notAvailable", language);
       }
     }
