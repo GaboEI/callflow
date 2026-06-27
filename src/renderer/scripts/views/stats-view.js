@@ -1,4 +1,62 @@
 (function () {
+  function addDays(isoDate, days) {
+    const [year, month, day] = isoDate.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+  }
+
+  function startOfWeek(isoDate) {
+    const [year, month, day] = isoDate.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const weekday = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() - weekday + 1);
+    return date.toISOString().slice(0, 10);
+  }
+
+  function cycleStartForDate(isoDate, cycleDay) {
+    const day = Math.min(28, Math.max(1, Number(cycleDay) || 1));
+    const [year, month, currentDay] = isoDate.split("-").map(Number);
+    const cycleMonth = currentDay >= day ? month - 1 : month - 2;
+    return new Date(Date.UTC(year, cycleMonth, day)).toISOString().slice(0, 10);
+  }
+
+  function callHourKey(call, callHourInTimezone) {
+    return String(callHourInTimezone(call)).padStart(2, "0");
+  }
+
+  function outcomeCategory(call, settings = {}) {
+    if (call.primaryOutcome && call.primaryOutcome.category) return call.primaryOutcome.category;
+    const description = String(call.description || "").toLowerCase();
+    if (settings.successLabel && description.includes(String(settings.successLabel).toLowerCase())) return "success";
+    if (settings.rejectionLabel && description.includes(String(settings.rejectionLabel).toLowerCase())) return "rejection";
+    return "neutral";
+  }
+
+  function isNoAnswerCall(call, settings = {}) {
+    const known = ["sin_respuesta", "no_answer", "нет_ответа"];
+    const configured = (settings.frequentStatuses || []).filter((status) =>
+      known.includes(String(status || "").toLowerCase())
+    );
+    const labels = configured.length ? configured : known;
+    const description = String(call.description || "").toLowerCase();
+    const raw = String(call.rawDescription || "").toLowerCase();
+    return labels.some((label) => description.includes(String(label).toLowerCase()) || raw === String(label).toLowerCase());
+  }
+
+  function summarizeCalls(calls, settings = {}, outcomeFn = outcomeCategory) {
+    const total = calls.length;
+    const success = calls.filter((call) => outcomeFn(call, settings) === "success").length;
+    const rejections = calls.filter((call) => outcomeFn(call, settings) === "rejection").length;
+    const callback = calls.filter((call) => outcomeFn(call, settings) === "callback").length;
+    const successRate = total ? Math.round((success / total) * 1000) / 10 : 0;
+    return { total, success, rejections, callback, successRate };
+  }
+
+  function formattedDuration(ms, timers) {
+    return timers.formatDuration(ms || 0);
+  }
+
   function createStatsView(context) {
     const {
       $$,
@@ -31,19 +89,6 @@
       return i18n.t(key, language());
     }
 
-    function addDays(isoDate, days) {
-      const date = new Date(`${isoDate}T00:00:00`);
-      date.setDate(date.getDate() + days);
-      return date.toISOString().slice(0, 10);
-    }
-
-    function startOfWeek(isoDate) {
-      const date = new Date(`${isoDate}T00:00:00`);
-      const day = date.getDay() || 7;
-      date.setDate(date.getDate() - day + 1);
-      return date.toISOString().slice(0, 10);
-    }
-
     function statsTimezone() {
       return state.settings.statsTimezone || state.settings.timezone || "local";
     }
@@ -64,13 +109,6 @@
       return Number(call.hour) || 0;
     }
 
-    function cycleStartForDate(isoDate) {
-      const day = Math.min(28, Math.max(1, Number(state.settings.statsCycleStartDay) || 1));
-      const [year, month, currentDay] = isoDate.split("-").map(Number);
-      const cycleMonth = currentDay >= day ? month - 1 : month - 2;
-      return new Date(Date.UTC(year, cycleMonth, day)).toISOString().slice(0, 10);
-    }
-
     function statsRangeBounds() {
       const today = isoDateInStatsTimezone();
       const allCalls = activeCalls();
@@ -81,7 +119,7 @@
         return { from: date, to: date };
       }
       if (state.statsRange.preset === "week") return { from: startOfWeek(today), to: today };
-      if (state.statsRange.preset === "month") return { from: cycleStartForDate(today), to: today };
+      if (state.statsRange.preset === "month") return { from: cycleStartForDate(today, state.settings.statsCycleStartDay), to: today };
       if (state.statsRange.preset === "last7") return { from: addDays(today, -6), to: today };
       if (state.statsRange.preset === "last30") return { from: addDays(today, -29), to: today };
       if (state.statsRange.preset === "all") {
@@ -110,38 +148,6 @@
       });
     }
 
-    function callHourKey(call) {
-      return String(callHourInStatsTimezone(call)).padStart(2, "0");
-    }
-
-    function outcomeCategory(call) {
-      if (call.primaryOutcome && call.primaryOutcome.category) return call.primaryOutcome.category;
-      const description = String(call.description || "").toLowerCase();
-      if (state.settings.successLabel && description.includes(String(state.settings.successLabel).toLowerCase())) return "success";
-      if (state.settings.rejectionLabel && description.includes(String(state.settings.rejectionLabel).toLowerCase())) return "rejection";
-      return "neutral";
-    }
-
-    function isNoAnswerCall(call) {
-      const known = ["sin_respuesta", "no_answer", "нет_ответа"];
-      const configured = (state.settings.frequentStatuses || []).filter((status) =>
-        known.includes(String(status || "").toLowerCase())
-      );
-      const labels = configured.length ? configured : known;
-      const description = String(call.description || "").toLowerCase();
-      const raw = String(call.rawDescription || "").toLowerCase();
-      return labels.some((label) => description.includes(String(label).toLowerCase()) || raw === String(label).toLowerCase());
-    }
-
-    function summarizeCalls(calls) {
-      const total = calls.length;
-      const success = calls.filter((call) => outcomeCategory(call) === "success").length;
-      const rejections = calls.filter((call) => outcomeCategory(call) === "rejection").length;
-      const callback = calls.filter((call) => outcomeCategory(call) === "callback").length;
-      const successRate = total ? Math.round((success / total) * 1000) / 10 : 0;
-      return { total, success, rejections, callback, successRate };
-    }
-
     function facetLabel(facet) {
       if (!facet) return "";
       if (facet.kind === "type") return facet.value;
@@ -165,10 +171,6 @@
         button.setAttribute("aria-pressed", active ? "true" : "false");
       });
       $("#statsRangeLabel").textContent = `${displayIsoDate(range.from)} - ${displayIsoDate(range.to)} · ${statsTimezone()} · ${t("statsCycleStartDay")} ${state.settings.statsCycleStartDay || 1}`;
-    }
-
-    function formattedDuration(ms) {
-      return timers.formatDuration(ms || 0);
     }
 
     function workMsForRange(range = statsRangeBounds()) {
@@ -197,12 +199,7 @@
       const range = statsRangeBounds();
       const workMs = workMsForRange(range);
       const breakMs = breakMsForRange(range);
-      return {
-        workMs,
-        breakMs,
-        work: formattedDuration(workMs),
-        breaks: formattedDuration(breakMs)
-      };
+      return { workMs, breakMs, work: formattedDuration(workMs, timers), breaks: formattedDuration(breakMs, timers) };
     }
 
     function paidMsForRange(time) {
@@ -523,21 +520,21 @@
       const activeHour = state.selectedStatsHour || state.hoveredStatsHour;
       const activeFacet = state.selectedStatsFacet || state.hoveredStatsFacet;
       const dayCalls = activeDay ? calls.filter((call) => callIsoDateInStatsTimezone(call) === activeDay) : [];
-      const hourCalls = activeHour ? calls.filter((call) => callHourKey(call) === activeHour) : [];
+      const hourCalls = activeHour ? calls.filter((call) => callHourKey(call, callHourInStatsTimezone) === activeHour) : [];
       const facetCalls = activeFacet
         ? calls.filter((call) => {
             if (activeFacet.kind === "type") return String(call.callType || "").trim() === activeFacet.value;
             if (activeFacet.kind === "outcome") {
               if (activeFacet.value === "noAnswer") {
-                return isNoAnswerCall(call);
+                return isNoAnswerCall(call, state.settings);
               }
-              return outcomeCategory(call) === activeFacet.value;
+              return outcomeCategory(call, state.settings) === activeFacet.value;
             }
             return false;
           })
         : [];
       const detailCalls = activeDay ? dayCalls : activeHour ? hourCalls : activeFacet ? facetCalls : [];
-      const summary = summarizeCalls(detailCalls);
+      const summary = summarizeCalls(detailCalls, state.settings, outcomeCategory);
       const blocks = Object.entries(analysis.byHour)
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([hour, count]) => `${hour}:00 ${count}`)
@@ -754,5 +751,18 @@
     return { bindEvents, handleDocumentClick, render };
   }
 
-  window.CallFlowStatsView = { createStatsView };
+  const api = {
+    addDays,
+    callHourKey,
+    createStatsView,
+    cycleStartForDate,
+    formattedDuration,
+    isNoAnswerCall,
+    outcomeCategory,
+    startOfWeek,
+    summarizeCalls
+  };
+
+  if (typeof window !== "undefined") window.CallFlowStatsView = api;
+  if (typeof module !== "undefined") module.exports = api;
 })();
