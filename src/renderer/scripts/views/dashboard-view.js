@@ -1,4 +1,67 @@
 (function () {
+  function activeOutcomeLabelSet(outcomePresets, category, uniqueItems) {
+    const presetsForCategory = outcomePresets?.[category] || { items: [] };
+    return new Set(uniqueItems(presetsForCategory.items || []).map((label) => String(label).toLowerCase()));
+  }
+
+  function mostUsedOutcomeLabel(calls, category, outcomePresets, uniqueItems) {
+    const activeLabels = activeOutcomeLabelSet(outcomePresets, category, uniqueItems);
+    const counts = calls.reduce((result, call) => {
+      if (!call.primaryOutcome || call.primaryOutcome.category !== category || !call.primaryOutcome.label) return result;
+      if (!activeLabels.has(String(call.primaryOutcome.label).toLowerCase())) return result;
+      result[call.primaryOutcome.label] = (result[call.primaryOutcome.label] || 0) + 1;
+      return result;
+    }, {});
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+  }
+
+  function defaultOutcomeLabel(calls, category, outcomePresets, uniqueItems) {
+    const presetsForCategory = outcomePresets?.[category] || { items: [] };
+    const activeLabels = uniqueItems(presetsForCategory.items || []);
+    const activeDefault = activeLabels.includes(presetsForCategory.default) ? presetsForCategory.default : "";
+    return mostUsedOutcomeLabel(calls, category, outcomePresets, uniqueItems) || activeDefault || activeLabels[0] || "";
+  }
+
+  function callProductivityCategory(call, outcomeLabelSetForCategory) {
+    const category = call.primaryOutcome?.category;
+    if (["success", "callback", "rejection"].includes(category)) return category;
+    const description = String(call.description || "").toLowerCase();
+    const matchesActiveOutcome = (outcomeCategory) => {
+      const labels = outcomeLabelSetForCategory(outcomeCategory);
+      if (!labels) return false;
+      if (typeof labels.has === "function") {
+        for (const label of labels) {
+          const normalized = String(label || "").toLowerCase();
+          if (normalized && description.includes(normalized)) return true;
+        }
+        return false;
+      }
+      return labels.some((label) => {
+        const normalized = String(label || "").toLowerCase();
+        return normalized && description.includes(normalized);
+      });
+    };
+    if (matchesActiveOutcome("success")) return "success";
+    if (matchesActiveOutcome("rejection")) return "rejection";
+    if (matchesActiveOutcome("callback")) return "callback";
+    return "neutral";
+  }
+
+  function blockProductivity(calls, callProductivityCategoryFn = () => "neutral") {
+    const metrics = calls.reduce(
+      (result, call) => {
+        result.total += 1;
+        result[callProductivityCategoryFn(call)] += 1;
+        return result;
+      },
+      { total: 0, success: 0, callback: 0, rejection: 0, neutral: 0 }
+    );
+    const outcomeScore = metrics.success * 5 + metrics.callback * 2 + metrics.neutral * 0.5 - metrics.rejection * 3;
+    const qualityRatio = metrics.total ? (metrics.success * 3 + metrics.callback - metrics.rejection * 2) / metrics.total : 0;
+    const volumeSignal = Math.min(metrics.total * 0.2, 2);
+    return { ...metrics, score: Number((outcomeScore + qualityRatio + volumeSignal).toFixed(3)) };
+  }
+
   function createDashboardView(context) {
     const {
       $,
@@ -112,37 +175,18 @@
       input.focus();
     }
 
-    function activeOutcomeLabels(category) {
-      const presetsForCategory = state.settings.outcomePresets[category] || { items: [] };
-      return uniqueItems(presetsForCategory.items || []);
+    function activeOutcomeLabelSetView(category) {
+      return activeOutcomeLabelSet(state.settings.outcomePresets, category, uniqueItems);
     }
 
-    function activeOutcomeLabelSet(category) {
-      return new Set(activeOutcomeLabels(category).map((label) => String(label).toLowerCase()));
-    }
-
-    function mostUsedOutcomeLabel(category) {
-      const activeLabels = activeOutcomeLabelSet(category);
-      const counts = state.calls.reduce((result, call) => {
-        if (!call.primaryOutcome || call.primaryOutcome.category !== category || !call.primaryOutcome.label) return result;
-        if (!activeLabels.has(String(call.primaryOutcome.label).toLowerCase())) return result;
-        result[call.primaryOutcome.label] = (result[call.primaryOutcome.label] || 0) + 1;
-        return result;
-      }, {});
-      return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
-    }
-
-    function defaultOutcomeLabel(category) {
-      const presetsForCategory = state.settings.outcomePresets[category] || { items: [] };
-      const activeLabels = activeOutcomeLabels(category);
-      const activeDefault = activeLabels.includes(presetsForCategory.default) ? presetsForCategory.default : "";
-      return mostUsedOutcomeLabel(category) || activeDefault || activeLabels[0] || "";
+    function defaultOutcomeLabelView(category) {
+      return defaultOutcomeLabel(state.calls, category, state.settings.outcomePresets, uniqueItems);
     }
 
     function selectedOutcomeLabel(category) {
       return state.selectedPrimaryOutcome && state.selectedPrimaryOutcome.category === category
         ? state.selectedPrimaryOutcome.label
-        : defaultOutcomeLabel(category);
+        : defaultOutcomeLabelView(category);
     }
 
     function callbackOutcomePayload() {
@@ -419,45 +463,8 @@
       label.textContent = `${i18n.t("capturedCallTime", state.settings.language || "es")}: ${stamp.date} ${stamp.time}`;
     }
 
-    function callProductivityCategory(call) {
-      const category = call.primaryOutcome?.category;
-      if (["success", "callback", "rejection"].includes(category)) return category;
-
-      const description = String(call.description || "").toLowerCase();
-      const matchesActiveOutcome = (outcomeCategory) =>
-        activeOutcomeLabels(outcomeCategory).some((label) => {
-          const normalized = String(label || "").toLowerCase();
-          return normalized && description.includes(normalized);
-        });
-
-      if (matchesActiveOutcome("success")) return "success";
-      if (matchesActiveOutcome("rejection")) return "rejection";
-      if (matchesActiveOutcome("callback")) return "callback";
-      return "neutral";
-    }
-
-    function blockProductivity(calls) {
-      const metrics = calls.reduce(
-        (result, call) => {
-          result.total += 1;
-          result[callProductivityCategory(call)] += 1;
-          return result;
-        },
-        { total: 0, success: 0, callback: 0, rejection: 0, neutral: 0 }
-      );
-      const outcomeScore =
-        metrics.success * 5 +
-        metrics.callback * 2 +
-        metrics.neutral * 0.5 -
-        metrics.rejection * 3;
-      const qualityRatio = metrics.total
-        ? (metrics.success * 3 + metrics.callback - metrics.rejection * 2) / metrics.total
-        : 0;
-      const volumeSignal = Math.min(metrics.total * 0.2, 2);
-      return {
-        ...metrics,
-        score: Number((outcomeScore + qualityRatio + volumeSignal).toFixed(3))
-      };
+    function blockProductivityView(calls) {
+      return blockProductivity(calls, (call) => callProductivityCategory(call, activeOutcomeLabelSetView));
     }
 
     function uniqueScore(score, entries) {
@@ -471,7 +478,7 @@
       const currentBlock = reports.blockFromHour(reports.formatCallTimestamp(new Date(), state.settings).hour);
       const scoredClosedEntries = entries
         .filter(([block]) => block !== currentBlock)
-        .map(([block, calls]) => ({ block, productivity: blockProductivity(calls) }));
+        .map(([block, calls]) => ({ block, productivity: blockProductivityView(calls) }));
       const scores = scoredClosedEntries.map((entry) => entry.productivity.score);
       const maxScore = scores.length ? Math.max(...scores) : 0;
       const minScore = scores.length ? Math.min(...scores) : 0;
@@ -482,7 +489,7 @@
         ? entries
           .map(([block, calls]) => {
             const current = block === currentBlock;
-            const productivity = current ? null : blockProductivity(calls);
+            const productivity = current ? null : blockProductivityView(calls);
             const best = !current && shouldMarkBest && productivity.score === maxScore;
             const worst = !current && shouldMarkWorst && productivity.score === minScore;
             const title = current
@@ -671,7 +678,7 @@
       if (outcomeToggle) {
         const category = outcomeToggle.dataset.outcomeToggle;
         if (state.selectedPrimaryOutcome?.category !== category) {
-          selectPrimaryOutcome(category, defaultOutcomeLabel(category));
+          selectPrimaryOutcome(category, defaultOutcomeLabelView(category));
         }
         state.openOutcomeMenu = state.openOutcomeMenu === category ? null : category;
         renderOutcomeControls();
@@ -758,13 +765,23 @@
       renderLastCall();
     }
 
-    return {
-      bindEvents,
-      handleDocumentClick,
-      render,
-      renderStats
-    };
+      return {
+        bindEvents,
+        handleDocumentClick,
+        render,
+        renderStats
+      };
   }
 
-  window.CallFlowDashboardView = { createDashboardView };
+  const api = {
+    activeOutcomeLabelSet,
+    blockProductivity,
+    callProductivityCategory,
+    createDashboardView,
+    defaultOutcomeLabel,
+    mostUsedOutcomeLabel
+  };
+
+  if (typeof window !== "undefined") window.CallFlowDashboardView = api;
+  if (typeof module !== "undefined") module.exports = api;
 })();

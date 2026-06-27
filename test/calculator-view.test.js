@@ -3,6 +3,8 @@ const assert = require("node:assert/strict");
 
 const {
   evaluateExpression,
+  financeForWork,
+  financeSettings,
   isPendingExpression,
   normalizeExpression
 } = require("../src/renderer/scripts/views/calculator-view");
@@ -44,5 +46,23 @@ test("calculator rejects unsafe expression input", () => {
     "require('fs')"
   ].forEach((expression) => {
     assert.throws(() => evaluateExpression(expression), /Invalid expression/);
+  });
+});
+
+test("calculator finance helpers compute work value from time and rate", () => {
+  assert.equal(financeForWork(0, 10), 0);
+  assert.equal(financeForWork(3_600_000, 10), 10);
+  assert.equal(financeForWork(1_800_000, 12), 6);
+  assert.equal(financeForWork(-1, 10), 0);
+  assert.equal(financeForWork(3_600_000, 0), 0);
+});
+
+test("calculator finance settings merges defaults with financial state", () => {
+  assert.deepEqual(financeSettings({ financial: { hourlyRate: 25, paidBreaks: true } }), {
+    currency: "USD",
+    hourlyRate: 25,
+    paidBreaks: true,
+    movementTypes: [],
+    transactions: []
   });
 });
