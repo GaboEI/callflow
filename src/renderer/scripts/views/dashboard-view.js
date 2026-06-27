@@ -26,11 +26,21 @@
     const category = call.primaryOutcome?.category;
     if (["success", "callback", "rejection"].includes(category)) return category;
     const description = String(call.description || "").toLowerCase();
-    const matchesActiveOutcome = (outcomeCategory) =>
-      outcomeLabelSetForCategory(outcomeCategory).some((label) => {
+    const matchesActiveOutcome = (outcomeCategory) => {
+      const labels = outcomeLabelSetForCategory(outcomeCategory);
+      if (!labels) return false;
+      if (typeof labels.has === "function") {
+        for (const label of labels) {
+          const normalized = String(label || "").toLowerCase();
+          if (normalized && description.includes(normalized)) return true;
+        }
+        return false;
+      }
+      return labels.some((label) => {
         const normalized = String(label || "").toLowerCase();
         return normalized && description.includes(normalized);
       });
+    };
     if (matchesActiveOutcome("success")) return "success";
     if (matchesActiveOutcome("rejection")) return "rejection";
     if (matchesActiveOutcome("callback")) return "callback";

@@ -585,7 +585,7 @@
       $("#cancelReminderEdit").addEventListener("click", cancelEdit);
       $("#toggleReminderForm").addEventListener("click", () => setFormCollapsed(true));
       $("#showReminderForm").addEventListener("click", () => setFormCollapsed(false));
-      document.querySelector(".reminder-chips").addEventListener("click", (event) => {
+      document.querySelector(".reminder-chips")?.addEventListener("click", (event) => {
         const chip = event.target.closest(".reminder-chip");
         if (chip) setReminderFilter(chip.dataset.filter);
       });
