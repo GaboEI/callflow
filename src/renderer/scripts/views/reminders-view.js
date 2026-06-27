@@ -1,4 +1,84 @@
 (function () {
+  function compactDuration(ms) {
+    const units = [
+      ["mes", "meses", 30 * 24 * 60 * 60 * 1000],
+      ["sem", "sems", 7 * 24 * 60 * 60 * 1000],
+      ["d", "d", 24 * 60 * 60 * 1000],
+      ["h", "h", 60 * 60 * 1000],
+      ["min", "min", 60 * 1000],
+      ["s", "s", 1000]
+    ];
+    let remaining = Math.max(0, Math.floor(ms));
+    const parts = [];
+    for (const [singular, plural, size] of units) {
+      const value = Math.floor(remaining / size);
+      if (!value && parts.length === 0 && size > 60 * 1000) continue;
+      if (value || parts.length) {
+        if (!value && parts.length) continue;
+        parts.push(`${value}${value === 1 ? singular : plural}`);
+        remaining -= value * size;
+      }
+      if (parts.length >= 2) break;
+    }
+    return parts.length ? parts.join(" ") : "0s";
+  }
+
+  function reminderDueDate(reminder, validators, settings) {
+    return validators.reminderDueDate(reminder, settings) || new Date(8640000000000000);
+  }
+
+  function sortedReminders(reminders, dueDateFn = (reminder) => reminderDueDate(reminder, {}, {})) {
+    return [...reminders].sort((a, b) => {
+      const dueDiff = dueDateFn(a) - dueDateFn(b);
+      if (dueDiff !== 0) return dueDiff;
+      return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+    });
+  }
+
+  function alarmPhaseLabel(phase, t) {
+    if (phase === "early") return t("alarmEarly");
+    if (phase === "overdue") return t("alarmOverdue");
+    return t("alarmNow");
+  }
+
+  function reminderStatusKey(reminder, today, validators, settings) {
+    if (reminder.status === "deleted") return "deleted";
+    if (!validators.reminderDueDate(reminder, settings) && reminder.status !== "completed") return "invalid";
+    if (reminder.status === "completed") return "completed";
+    if (reminder.status === "overdue") return "overdue";
+    if (reminder.status === "invalid") return "invalid";
+    if (today && reminder.dueAt) return String(reminder.dueAt) < String(today) ? "overdue" : "pending";
+    return "pending";
+  }
+
+  function reminderRepeatLabel(reminder, t) {
+    const repeat = reminder.repeat || "once";
+    const labels = {
+      once: t("repeatOnce"),
+      daily: t("repeatDaily"),
+      weekdays: t("repeatWeekdays"),
+      weekly: t("repeatWeekly"),
+      monthly: t("repeatMonthly")
+    };
+    return labels[repeat] || labels.once;
+  }
+
+  function reminderStatusLabel(reminder, t, today, validators, settings) {
+    const key = reminderStatusKey(reminder, today, validators, settings);
+    const labels = {
+      completed: t("reminderCompleted"),
+      overdue: t("reminderOverdue"),
+      invalid: t("reminderInvalid"),
+      pending: t("reminderPending"),
+      deleted: t("reminderDeletedLabel")
+    };
+    return labels[key];
+  }
+
+  function nextRecurringReminder(reminder, recurrence, options) {
+    return recurrence.nextRecurringReminder(reminder, options);
+  }
+
   function createRemindersView(context) {
     const {
       $,
@@ -21,41 +101,6 @@
       validators: V
     } = context;
 
-    function reminderDueDate(reminder) {
-      return V.reminderDueDate(reminder, state.settings) || new Date(8640000000000000);
-    }
-
-    function sortedReminders(reminders) {
-      return [...reminders].sort((a, b) => {
-        const dueDiff = reminderDueDate(a) - reminderDueDate(b);
-        if (dueDiff !== 0) return dueDiff;
-        return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
-      });
-    }
-
-    function compactDuration(ms) {
-      const units = [
-        ["mes", "meses", 30 * 24 * 60 * 60 * 1000],
-        ["sem", "sems", 7 * 24 * 60 * 60 * 1000],
-        ["d", "d", 24 * 60 * 60 * 1000],
-        ["h", "h", 60 * 60 * 1000],
-        ["min", "min", 60 * 1000],
-        ["s", "s", 1000]
-      ];
-      let remaining = Math.max(0, Math.floor(ms));
-      const parts = [];
-      for (const [singular, plural, size] of units) {
-        const value = Math.floor(remaining / size);
-        if (!value && parts.length === 0 && size > 60 * 1000) continue;
-        if (value || parts.length) {
-          parts.push(`${value}${value === 1 ? singular : plural}`);
-          remaining -= value * size;
-        }
-        if (parts.length >= 2) break;
-      }
-      return parts.length ? parts.join(" ") : "0s";
-    }
-
     function reminderCountdownLabel(reminder) {
       if (reminder.status === "completed") return "Completado";
       if (reminder.status === "deleted") {
@@ -70,43 +115,18 @@
         }
         return i18n.t("reminderDeletedLabel", state.settings.language || "es");
       }
-      const due = reminderDueDate(reminder);
+      const due = reminderDueDate(reminder, V, state.settings);
       const diff = due - new Date();
       if (diff < 0) return `Vencido hace ${compactDuration(Math.abs(diff))}`;
       return `Faltan ${compactDuration(diff)}`;
     }
 
-    function reminderStatusKey(reminder) {
-      if (reminder.status === "deleted") return "deleted";
-      if (!V.reminderDueDate(reminder, state.settings) && reminder.status !== "completed") return "invalid";
-      if (reminder.status === "completed") return "completed";
-      if (reminder.status === "overdue") return "overdue";
-      if (reminder.status === "invalid") return "invalid";
-      return "pending";
+    function reminderStatusLabelView(reminder) {
+      return reminderStatusLabel(reminder, (key) => i18n.t(key, state.settings.language || "es"), new Date(), V, state.settings);
     }
 
-    function reminderStatusLabel(reminder) {
-      const key = reminderStatusKey(reminder);
-      const labels = {
-        completed: i18n.t("reminderCompleted", state.settings.language || "es"),
-        overdue: i18n.t("reminderOverdue", state.settings.language || "es"),
-        invalid: i18n.t("reminderInvalid", state.settings.language || "es"),
-        pending: i18n.t("reminderPending", state.settings.language || "es"),
-        deleted: i18n.t("reminderDeletedLabel", state.settings.language || "es")
-      };
-      return labels[key];
-    }
-
-    function reminderRepeatLabel(reminder) {
-      const repeat = reminder.repeat || "once";
-      const labels = {
-        once: i18n.t("repeatOnce", state.settings.language || "es"),
-        daily: i18n.t("repeatDaily", state.settings.language || "es"),
-        weekdays: i18n.t("repeatWeekdays", state.settings.language || "es"),
-        weekly: i18n.t("repeatWeekly", state.settings.language || "es"),
-        monthly: i18n.t("repeatMonthly", state.settings.language || "es")
-      };
-      return labels[repeat] || labels.once;
+    function reminderRepeatLabelView(reminder) {
+      return reminderRepeatLabel(reminder, (key) => i18n.t(key, state.settings.language || "es"));
     }
 
     function reminderTimezoneLabel(reminder) {
@@ -147,21 +167,21 @@
       renderReminderRangeFields(filter);
       const reminders = sortedReminders(window.CallFlowReminders.filterReminders(state.reminders, filter, state.settings, {
         range: state.reminderRange
-      }));
+      }), (reminder) => reminderDueDate(reminder, V, state.settings));
       $("#reminderList").innerHTML = reminders.length
         ? reminders
           .map((reminder) => `
-            <article class="list-item reminder-item reminder-${reminderStatusKey(reminder)}">
+            <article class="list-item reminder-item reminder-${reminderStatusKey(reminder, new Date(), V, state.settings)}">
               <div class="reminder-main">
                 <p class="reminder-title">${escapeHtml(reminder.note)}</p>
                 <div class="reminder-details">
                   <span>${escapeHtml(reminder.date)} ${escapeHtml(reminder.time)}</span>
                   <span class="reminder-timezone">${escapeHtml(reminderTimezoneLabel(reminder))}</span>
-                  <span>${escapeHtml(reminderRepeatLabel(reminder))}</span>
+                  <span>${escapeHtml(reminderRepeatLabelView(reminder))}</span>
                 </div>
               </div>
               <div class="reminder-meta">
-                <span class="reminder-state">${escapeHtml(reminderStatusLabel(reminder))}</span>
+                <span class="reminder-state">${escapeHtml(reminderStatusLabelView(reminder))}</span>
                 <span class="reminder-countdown">${escapeHtml(reminderCountdownLabel(reminder))}</span>
               </div>
               ${
@@ -174,7 +194,7 @@
               }
               <div class="reminder-actions">
                 ${
-                  reminderStatusKey(reminder) === "deleted"
+                  reminderStatusKey(reminder, new Date(), V, state.settings) === "deleted"
                     ? `
                         <button type="button" data-restore-reminder="${reminder.id}">${escapeHtml(i18n.t("restoreReminder", state.settings.language || "es"))}</button>
                         <button type="button" class="icon-button danger ghost-danger" data-permanent-delete-reminder="${reminder.id}" title="${escapeHtml(i18n.t("permanentDeleteReminder", state.settings.language || "es"))}">🗑</button>
@@ -182,7 +202,7 @@
                     : `
                         <button type="button" class="icon-button" data-edit-reminder="${reminder.id}" title="${escapeHtml(i18n.t("editReminder", state.settings.language || "es"))}">✎</button>
                         ${
-                          reminderStatusKey(reminder) === "completed"
+                          reminderStatusKey(reminder, new Date(), V, state.settings) === "completed"
                             ? `<span class="tag reminder-completed-label">${escapeHtml(i18n.t("reminderCompleted", state.settings.language || "es"))}</span>`
                             : `<button type="button" data-complete-reminder="${reminder.id}">${escapeHtml(i18n.t("completeReminder", state.settings.language || "es"))}</button>`
                         }
@@ -381,12 +401,6 @@
       return state.reminders.find((reminder) => reminder.id === state.activeAlarmReminderId) || null;
     }
 
-    function alarmPhaseLabel(phase) {
-      if (phase === "early") return i18n.t("alarmEarly", state.settings.language || "es");
-      if (phase === "overdue") return i18n.t("alarmOverdue", state.settings.language || "es");
-      return i18n.t("alarmNow", state.settings.language || "es");
-    }
-
     function renderAlarm() {
       const overlay = $("#reminderAlarmOverlay");
       if (!overlay) return;
@@ -397,7 +411,7 @@
         return;
       }
       overlay.classList.remove("hidden");
-      $("#reminderAlarmPhase").textContent = alarmPhaseLabel(state.activeAlarmPhase);
+      $("#reminderAlarmPhase").textContent = alarmPhaseLabel(state.activeAlarmPhase, (key) => i18n.t(key, state.settings.language || "es"));
       $("#reminderAlarmTitle").textContent = i18n.t("alarmTitle", state.settings.language || "es");
       $("#reminderAlarmMeta").textContent = [
         reminder.date,
@@ -471,8 +485,8 @@
       if (reminderId) editReminder(reminderId);
     }
 
-    function nextRecurringReminder(reminder) {
-      return recurrence.nextRecurringReminder(reminder, {
+    function nextRecurringReminderView(reminder) {
+      return nextRecurringReminder(reminder, recurrence, {
         createId: () => crypto.randomUUID(),
         now: new Date(),
         resolveTimezone: () => V.resolveTimezone(state.settings),
@@ -482,7 +496,7 @@
 
     async function completeReminder(id) {
       const current = state.reminders.find((reminder) => reminder.id === id);
-      const next = current ? nextRecurringReminder(current) : null;
+      const next = current ? nextRecurringReminderView(current) : null;
       if (state.activeAlarmReminderId === id) clearAlarm();
       const nextReminders = state.reminders.map((reminder) =>
         reminder.id === id ? { ...reminder, status: "completed", completedAt: new Date().toISOString() } : reminder
@@ -559,7 +573,7 @@
     }
 
     function bindEvents() {
-      $("#previewReminderSound").addEventListener("click", () => {
+      $("#reminderSoundTest").addEventListener("click", () => {
         playReminderSound($("#settingsForm select[name='reminderSound']").value);
       });
       $("#completeReminderAlarm").addEventListener("click", completeActiveAlarm);
@@ -598,5 +612,23 @@
     };
   }
 
-  window.CallFlowRemindersView = { createRemindersView };
+  const api = {
+    alarmPhaseLabel,
+    compactDuration,
+    createRemindersView,
+    nextRecurringReminder,
+    reminderDueDate,
+    reminderRepeatLabel,
+    reminderStatusKey,
+    reminderStatusLabel,
+    sortedReminders
+  };
+
+  if (typeof window !== "undefined") {
+    window.CallFlowRemindersView = api;
+  }
+
+  if (typeof module !== "undefined") {
+    module.exports = api;
+  }
 })();
