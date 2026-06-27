@@ -1,4 +1,104 @@
 (function () {
+  function reportRangeBounds(reportRange, isoDateOffset, compareIsoDate) {
+    if (reportRange.preset === "yesterday") {
+      const date = isoDateOffset(1);
+      return { from: date, to: date };
+    }
+
+    if (reportRange.preset === "last7") {
+      return { from: isoDateOffset(6), to: isoDateOffset(0) };
+    }
+
+    if (reportRange.preset === "last30") {
+      return { from: isoDateOffset(29), to: isoDateOffset(0) };
+    }
+
+    if (reportRange.preset === "custom") {
+      const from = reportRange.from || isoDateOffset(0);
+      const to = reportRange.to || from;
+      return compareIsoDate(from, to) <= 0 ? { from, to } : { from: to, to: from };
+    }
+
+    const today = isoDateOffset(0);
+    return { from: today, to: today };
+  }
+
+  function reportBlockKey(isoDate, block) {
+    return `${isoDate}|${block}`;
+  }
+
+  function callsForReportBlockKey(key, groupsByDate) {
+    const [isoDate, block] = key.split("|");
+    return (groupsByDate[isoDate] && groupsByDate[isoDate][block]) || [];
+  }
+
+  function highlightedReportText(text, query, escapeHtml, escapeRegExp, initialMatches = 0, activeIndex = 0) {
+    if (!query.trim()) return { html: escapeHtml(text), matches: initialMatches };
+
+    const pattern = new RegExp(escapeRegExp(query), "gi");
+    let cursor = 0;
+    let html = "";
+    let match;
+    let matches = initialMatches;
+
+    while ((match = pattern.exec(text)) !== null) {
+      const active = matches === activeIndex;
+      html += escapeHtml(text.slice(cursor, match.index));
+      html += `<mark class="report-match${active ? " active" : ""}" data-report-match="${matches}">${escapeHtml(match[0])}</mark>`;
+      cursor = match.index + match[0].length;
+      matches += 1;
+      if (match.index === pattern.lastIndex) pattern.lastIndex += 1;
+    }
+
+    return { html: html + escapeHtml(text.slice(cursor)), matches };
+  }
+
+  function buildPlainSupervisorReport(block, calls, operatorName, buildCallLine) {
+    const operator = String(operatorName || "OPERADOR").toUpperCase();
+    const lines = calls.map((call) => buildCallLine(call)).join("\n");
+    return [`REPORTE ${operator} DE ${block}`, "", lines].join("\n");
+  }
+
+  function reportExportBaseName(operatorName, isoDateOffset) {
+    const operator = String(operatorName || "operador")
+      .trim()
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, "-")
+      .replace(/^-+|-+$/g, "");
+    return `${operator || "operador"}-report-${isoDateOffset(0)}`;
+  }
+
+  function reportGroupsForRangeData({
+    activeCalls,
+    callIsoDate,
+    compareIsoDate,
+    isoDateOffset,
+    reportRange,
+    reportTrashMode,
+    stateCalls,
+    ensureDailySequences,
+    blockFromHour
+  }) {
+    const range = reportRangeBounds(reportRange, isoDateOffset, compareIsoDate);
+    const sourceCalls = reportTrashMode ? stateCalls.filter((call) => call.reportDeletedAt) : activeCalls();
+    const calls = ensureDailySequences(sourceCalls)
+      .filter((call) => {
+        if (reportTrashMode) return true;
+        const isoDate = callIsoDate(call);
+        return compareIsoDate(isoDate, range.from) >= 0 && compareIsoDate(isoDate, range.to) <= 0;
+      })
+      .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+
+    return calls.reduce((groups, call) => {
+      const isoDate = callIsoDate(call);
+      const block = call.block || blockFromHour(call.hour || 0);
+      groups[isoDate] = groups[isoDate] || {};
+      groups[isoDate][block] = groups[isoDate][block] || [];
+      groups[isoDate][block].push(call);
+      return groups;
+    }, {});
+  }
+
   function createReportsView(context) {
     const {
       $$,
@@ -22,37 +122,13 @@
       return state.reportRange.preset === "trash";
     }
 
-    function reportRangeBounds() {
-      if (state.reportRange.preset === "yesterday") {
-        const date = isoDateOffset(1);
-        return { from: date, to: date };
-      }
-
-      if (state.reportRange.preset === "last7") {
-        return { from: isoDateOffset(6), to: isoDateOffset(0) };
-      }
-
-      if (state.reportRange.preset === "last30") {
-        return { from: isoDateOffset(29), to: isoDateOffset(0) };
-      }
-
-      if (state.reportRange.preset === "custom") {
-        const from = state.reportRange.from || isoDateOffset(0);
-        const to = state.reportRange.to || from;
-        return compareIsoDate(from, to) <= 0 ? { from, to } : { from: to, to: from };
-      }
-
-      const today = isoDateOffset(0);
-      return { from: today, to: today };
-    }
-
     function syncRangeInputs() {
       const fromInput = $("#reportDateFrom");
       const toInput = $("#reportDateTo");
       const rangeFields = $$(".report-range-field");
       if (!fromInput || !toInput) return;
 
-      const range = reportRangeBounds();
+      const range = reportRangeBounds(state.reportRange, isoDateOffset, compareIsoDate);
       fromInput.value = range.from;
       toInput.value = range.to;
       rangeFields.forEach((field) => field.classList.toggle("hidden", state.reportRange.preset !== "custom"));
@@ -63,31 +139,18 @@
       });
     }
 
-    function reportBlockKey(isoDate, block) {
-      return `${isoDate}|${block}`;
-    }
-
     function reportGroupsForRange() {
-      const range = reportRangeBounds();
-      const sourceCalls = reportTrashMode()
-        ? state.calls.filter((call) => call.reportDeletedAt)
-        : activeCalls();
-      const calls = window.CallFlowReports.ensureDailySequences(sourceCalls)
-        .filter((call) => {
-          if (reportTrashMode()) return true;
-          const isoDate = callIsoDate(call);
-          return compareIsoDate(isoDate, range.from) >= 0 && compareIsoDate(isoDate, range.to) <= 0;
-        })
-        .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
-
-      return calls.reduce((groups, call) => {
-        const isoDate = callIsoDate(call);
-        const block = call.block || window.CallFlowReports.blockFromHour(call.hour || 0);
-        groups[isoDate] = groups[isoDate] || {};
-        groups[isoDate][block] = groups[isoDate][block] || [];
-        groups[isoDate][block].push(call);
-        return groups;
-      }, {});
+      return reportGroupsForRangeData({
+        activeCalls,
+        callIsoDate,
+        compareIsoDate,
+        isoDateOffset,
+        reportRange: state.reportRange,
+        reportTrashMode: reportTrashMode(),
+        stateCalls: state.calls,
+        ensureDailySequences: window.CallFlowReports.ensureDailySequences,
+        blockFromHour: window.CallFlowReports.blockFromHour
+      });
     }
 
     function reportBlockActions(key, isEditing) {
@@ -109,29 +172,6 @@
         <button type="button" data-edit-report-block="${escapeHtml(key)}" data-i18n="editBlock">${i18n.t("editBlock", language)}</button>
         <button type="button" class="danger ghost-danger" data-delete-report-block="${escapeHtml(key)}" data-i18n="deleteBlock">${i18n.t("deleteBlock", language)}</button>
       `;
-    }
-
-    function highlightedReportText(text) {
-      const query = state.reportSearch.query.trim();
-      if (!query) return escapeHtml(text);
-
-      const pattern = new RegExp(escapeRegExp(query), "gi");
-      let cursor = 0;
-      let html = "";
-      let match;
-
-      while ((match = pattern.exec(text)) !== null) {
-        const matchIndex = state.reportSearch.matches;
-        const active = matchIndex === state.reportSearch.activeIndex;
-        html += escapeHtml(text.slice(cursor, match.index));
-        html += `<mark class="report-match${active ? " active" : ""}" data-report-match="${matchIndex}">${escapeHtml(match[0])}</mark>`;
-        cursor = match.index + match[0].length;
-        state.reportSearch.matches += 1;
-
-        if (match.index === pattern.lastIndex) pattern.lastIndex += 1;
-      }
-
-      return html + escapeHtml(text.slice(cursor));
     }
 
     function renderSearchStatus() {
@@ -190,6 +230,8 @@
       const isEditing = state.editingReportBlockKey === key;
       const lines = calls.map((call) => window.CallFlowReports.buildCallLine(call, state.settings)).join("\n");
       const trash = reportTrashMode();
+      const highlighted = highlightedReportText(lines, state.reportSearch.query, escapeHtml, escapeRegExp, state.reportSearch.matches, state.reportSearch.activeIndex);
+      state.reportSearch.matches = highlighted.matches;
 
       return `
         <article class="report-item${trash ? " report-item-trash" : ""}">
@@ -206,7 +248,7 @@
           ${
             isEditing
               ? `<textarea class="report-editor" data-report-editor="${escapeHtml(key)}" rows="7">${escapeHtml(lines)}</textarea>`
-              : `<code>${highlightedReportText(lines)}</code>`
+              : `<code>${highlighted.html}</code>`
           }
         </article>
       `;
@@ -245,19 +287,14 @@
       renderSelectionControls();
     }
 
-    function buildPlainSupervisorReport(block, calls) {
-      const operator = (state.settings.operatorName || "OPERADOR").toUpperCase();
-      const lines = calls.map((call) => window.CallFlowReports.buildCallLine(call, state.settings)).join("\n");
-      return [`REPORTE ${operator} DE ${block}`, "", lines].join("\n");
+    function buildPlainSupervisorReportView(block, calls) {
+      return buildPlainSupervisorReport(block, calls, state.settings.operatorName, (call) =>
+        window.CallFlowReports.buildCallLine(call, state.settings)
+      );
     }
 
-    function reportExportBaseName() {
-      const operator = String(state.settings.operatorName || "operador")
-        .trim()
-        .toLowerCase()
-        .replace(/[^\p{L}\p{N}]+/gu, "-")
-        .replace(/^-+|-+$/g, "");
-      return `${operator || "operador"}-report-${isoDateOffset(0)}`;
+    function reportExportBaseNameView() {
+      return reportExportBaseName(state.settings.operatorName, isoDateOffset);
     }
 
     function selectedReportTexts(format = "md") {
@@ -265,11 +302,11 @@
       return [...state.selectedBlocks]
         .sort()
         .map((key) => {
-          const [isoDate, block] = key.split("|");
-          const calls = groupsByDate[isoDate] && groupsByDate[isoDate][block];
-          if (!calls) return "";
+          const calls = callsForReportBlockKey(key, groupsByDate);
+          const [, block] = key.split("|");
+          if (!calls.length) return "";
           return format === "txt"
-            ? buildPlainSupervisorReport(block, calls)
+            ? buildPlainSupervisorReportView(block, calls)
             : window.CallFlowReports.buildSupervisorReport(block, calls, state.settings);
         })
         .filter(Boolean);
@@ -291,7 +328,7 @@
       await runAction(
         () =>
           window.callflow.exportNote({
-            fileName: reportExportBaseName(),
+            fileName: reportExportBaseNameView(),
             content: reports.join("\n\n"),
             extension
           }),
@@ -469,14 +506,20 @@
       renderReportBlocks();
     }
 
-    return {
-      bindEvents,
-      handleDocumentChange,
-      handleDocumentClick,
-      render,
-      renderReportBlocks
-    };
+    return { bindEvents, handleDocumentChange, handleDocumentClick, render, renderReportBlocks };
   }
 
-  window.CallFlowReportsView = { createReportsView };
+  const api = {
+    buildPlainSupervisorReport,
+    callsForReportBlockKey,
+    createReportsView,
+    highlightedReportText,
+    reportBlockKey,
+    reportExportBaseName,
+    reportGroupsForRange: reportGroupsForRangeData,
+    reportRangeBounds
+  };
+
+  if (typeof window !== "undefined") window.CallFlowReportsView = api;
+  if (typeof module !== "undefined") module.exports = api;
 })();
