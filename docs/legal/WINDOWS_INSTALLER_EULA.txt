@@ -1,5 +1,5 @@
-CallFlow Beta License Agreement
-Version: 0.2.0-beta.1
+CallFlow License Agreement
+Version: 0.3.0
 
 IMPORTANT: Please read this agreement before installing CallFlow.
 
@@ -10,9 +10,9 @@ It helps agents register calls, generate reports, manage reminders,
 track work time, and maintain internal scripts — all stored locally
 on the user's computer without requiring a backend server or cloud service.
 
-2. Beta status
+2. Release status
 
-This is a beta release. Core workflows are functional and have been
+This is a stable release. Core workflows are functional and have been
 validated, but the software is provided as-is without warranty of any kind.
 Some features, documentation, and legal text may be refined in future versions.
 
