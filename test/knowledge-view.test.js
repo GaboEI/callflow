@@ -56,3 +56,10 @@ test("knowledge-view maps import errors to translated messages", () => {
 test("knowledge-view plain text export strips task syntax", () => {
   assert.equal(knowledgeView.markdownToPlainText("- [ ] tarea\n\n**bold** texto"), "tarea\nbold texto");
 });
+
+test("knowledge-view plain text export preserves fenced code content and leading numbers", () => {
+  assert.equal(
+    knowledgeView.markdownToPlainText("```js\nconsole.log(2026)\n```\n\n2026 renewal offer"),
+    "console.log(2026)\n2026 renewal offer"
+  );
+});

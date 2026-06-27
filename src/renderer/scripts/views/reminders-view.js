@@ -47,7 +47,13 @@
     if (reminder.status === "completed") return "completed";
     if (reminder.status === "overdue") return "overdue";
     if (reminder.status === "invalid") return "invalid";
-    if (today && reminder.dueAt) return String(reminder.dueAt) < String(today) ? "overdue" : "pending";
+    if (today && reminder.dueAt) {
+      const dueTime = new Date(reminder.dueAt).getTime();
+      const todayTime = today instanceof Date ? today.getTime() : new Date(today).getTime();
+      if (Number.isFinite(dueTime) && Number.isFinite(todayTime)) {
+        return dueTime < todayTime ? "overdue" : "pending";
+      }
+    }
     return "pending";
   }
 
@@ -573,7 +579,7 @@
     }
 
     function bindEvents() {
-      $("#reminderSoundTest").addEventListener("click", () => {
+      $("#previewReminderSound").addEventListener("click", () => {
         playReminderSound($("#settingsForm select[name='reminderSound']").value);
       });
       $("#completeReminderAlarm").addEventListener("click", completeActiveAlarm);

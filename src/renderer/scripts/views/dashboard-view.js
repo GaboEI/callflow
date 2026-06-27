@@ -765,12 +765,12 @@
       renderLastCall();
     }
 
-    return {
-      bindEvents,
-      handleDocumentClick,
-      render,
-      renderStats
-    };
+      return {
+        bindEvents,
+        handleDocumentClick,
+        render,
+        renderStats
+      };
   }
 
   const api = {

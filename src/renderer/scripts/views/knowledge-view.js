@@ -50,7 +50,7 @@
 
   function markdownToPlainText(content) {
     const text = String(content || "")
-      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/```[^\n]*\n([\s\S]*?)```/g, (_match, code) => `\n${code.trimEnd()}\n`)
       .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
       .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
       .replace(/[*_~`|]/g, "");
@@ -59,7 +59,8 @@
       .map((line) =>
         line
           .replace(/^\s*-\s+\[[ xX]\]\s*/g, "- ")
-          .replace(/^[#>*+\-\d.\s]+/g, "")
+          .replace(/^\s*\d+\.\s+/g, "")
+          .replace(/^[#>*+\-]+\s*/g, "")
           .replace(/\s+/g, " ")
           .trim()
       )

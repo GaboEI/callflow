@@ -23,6 +23,18 @@ test("reminders-view status helpers classify pending overdue and completed remin
   assert.equal(remindersView.reminderStatusKey({ status: "deleted", dueAt: "2026-06-27T08:00:00Z" }, "2026-06-27T09:00:00Z", validators, {}), "deleted");
 });
 
+test("reminders-view status helper compares due times using actual dates", () => {
+  const validators = { reminderDueDate: () => new Date("2026-06-27T10:00:00Z") };
+  assert.equal(
+    remindersView.reminderStatusKey({ status: "pending", dueAt: "2026-06-27T10:00:00Z" }, new Date("2026-06-27T09:00:00Z"), validators, {}),
+    "pending"
+  );
+  assert.equal(
+    remindersView.reminderStatusKey({ status: "pending", dueAt: "2026-06-27T08:00:00Z" }, new Date("2026-06-27T09:00:00Z"), validators, {}),
+    "overdue"
+  );
+});
+
 test("reminders-view labels are driven by injected translation", () => {
   const t = (key) => `tr:${key}`;
   const validators = { reminderDueDate: () => new Date("2026-06-27T10:00:00Z") };
