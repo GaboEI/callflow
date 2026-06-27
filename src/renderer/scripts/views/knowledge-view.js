@@ -1,4 +1,82 @@
 (function () {
+  function summarize(content, maxLength = 180) {
+    const plain = String(content || "")
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/^[#>*+\-\d.\s]+/gm, "")
+      .replace(/[*_~`|]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    return plain.length > maxLength ? `${plain.slice(0, maxLength).trim()}…` : plain;
+  }
+
+  function hasMarkdownSyntax(content) {
+    return /(^|\n)\s*(#{1,6}\s|[-*+]\s|\d+\.\s|>\s|```|\|.+\|)|\*\*[^*]+\*\*|(^|[^*])\*[^*\n]+\*|_[^_\n]+_|`[^`\n]+`|\[[^\]]+\]\([^)]+\)|~~[^~]+~~/m.test(String(content || ""));
+  }
+
+  function documentType(note) {
+    if (note?.documentType === "pdf") return "pdf";
+    if (note?.documentType === "txt") return "txt";
+    if (note?.documentType === "markdown") return "markdown";
+    return hasMarkdownSyntax(note?.content) ? "markdown" : "txt";
+  }
+
+  function typeMeta(note, t) {
+    const type = documentType(note);
+    return {
+      type,
+      label: t(type === "pdf" ? "scriptTypePdf" : type === "markdown" ? "scriptTypeMarkdown" : "scriptTypeText"),
+      extension: type === "pdf" ? "PDF" : type === "markdown" ? ".md" : "TXT",
+      glyph: type === "pdf" ? "▰" : type === "markdown" ? "▤" : "▥"
+    };
+  }
+
+  function formatDate(value, locale = "es-ES") {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+
+  function updateTaskMarker(content, taskIndex, checked) {
+    let currentIndex = 0;
+    return String(content || "").replace(/^(\s*[-*+]\s+)\[([ xX])\]/gm, (match, prefix) => {
+      const replacement = currentIndex === taskIndex ? `${prefix}[${checked ? "x" : " "}]` : match;
+      currentIndex += 1;
+      return replacement;
+    });
+  }
+
+  function markdownToPlainText(content) {
+    const text = String(content || "")
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/[*_~`|]/g, "");
+    return text
+      .split(/\r?\n/)
+      .map((line) =>
+        line
+          .replace(/^\s*-\s+\[[ xX]\]\s*/g, "- ")
+          .replace(/^[#>*+\-\d.\s]+/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+      )
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  function importErrorMessage(error, t) {
+    const messages = {
+      UNSUPPORTED_DOCUMENT_TYPE: "unsupportedDocumentType",
+      IMPORTED_DOCUMENT_TOO_LARGE: "importedDocumentTooLarge",
+      INVALID_TEXT_DOCUMENT: "invalidTextDocument",
+      INVALID_PDF_DOCUMENT: "invalidPdfDocument"
+    };
+    return t(messages[error?.code] || "actionFailed");
+  }
+
   function createKnowledgeView(context) {
     const { $, state, validators: V, escapeHtml, runAction, renderApp } = context;
     let markdownRenderer = null;
@@ -15,55 +93,13 @@
       return state.knowledgeBase.find((note) => note.id === state.selectedNoteId) || null;
     }
 
-    function hasMarkdownSyntax(content) {
-      return V.hasMarkdownSyntax(content);
+    function typeMetaView(note) {
+      return typeMeta(note, t);
     }
 
-    function documentType(note) {
-      if (note?.documentType === "pdf") return "pdf";
-      if (note?.documentType === "txt") return "txt";
-      if (note?.documentType === "markdown") return "markdown";
-      return hasMarkdownSyntax(note?.content) ? "markdown" : "txt";
-    }
-
-    function typeMeta(note) {
-      const type = documentType(note);
-      return {
-        type,
-        label: t(type === "pdf" ? "scriptTypePdf" : type === "markdown" ? "scriptTypeMarkdown" : "scriptTypeText"),
-        extension: type === "pdf" ? "PDF" : type === "markdown" ? ".md" : "TXT",
-        glyph: type === "pdf" ? "▰" : type === "markdown" ? "▤" : "▥"
-      };
-    }
-
-    function formatDate(value) {
-      if (!value) return "";
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return "";
+    function formatDateView(value) {
       const locale = language() === "en" ? "en-US" : language() === "ru" ? "ru-RU" : "es-ES";
-      return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(date);
-    }
-
-    function summarize(content, maxLength = 180) {
-      const plain = String(content || "")
-        .replace(/```[\s\S]*?```/g, " ")
-        .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
-        .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-        .replace(/^[#>*+\-\d.\s]+/gm, "")
-        .replace(/[*_~`|]/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-      return plain.length > maxLength ? `${plain.slice(0, maxLength).trim()}…` : plain;
-    }
-
-    function importErrorMessage(error) {
-      const messages = {
-        UNSUPPORTED_DOCUMENT_TYPE: "unsupportedDocumentType",
-        IMPORTED_DOCUMENT_TOO_LARGE: "importedDocumentTooLarge",
-        INVALID_TEXT_DOCUMENT: "invalidTextDocument",
-        INVALID_PDF_DOCUMENT: "invalidPdfDocument"
-      };
-      return t(messages[error?.code] || "actionFailed");
+      return formatDate(value, locale);
     }
 
     function sanitizeHtml(html) {
@@ -117,14 +153,8 @@
       return template.innerHTML;
     }
 
-    function markdownToPlainText(content) {
-      const container = document.createElement("div");
-      container.innerHTML = renderMarkdown(content);
-      container.querySelectorAll("[data-copy-code]").forEach((button) => button.remove());
-      container.querySelectorAll("br, p, div, li, h1, h2, h3, h4, h5, h6, blockquote, pre, tr").forEach((element) => {
-        element.append(document.createTextNode("\n"));
-      });
-      return (container.textContent || "").replace(/\n{3,}/g, "\n\n").trim();
+    function markdownToPlainTextView(content) {
+      return markdownToPlainText(content);
     }
 
     function initializeMarkdownRenderer() {
@@ -230,13 +260,8 @@
       });
     }
 
-    function updateTaskMarker(content, taskIndex, checked) {
-      let currentIndex = 0;
-      return String(content || "").replace(/^(\s*[-*+]\s+)\[([ xX])\]/gm, (match, prefix) => {
-        const replacement = currentIndex === taskIndex ? `${prefix}[${checked ? "x" : " "}]` : match;
-        currentIndex += 1;
-        return replacement;
-      });
+    function updateTaskMarkerView(content, taskIndex, checked) {
+      return updateTaskMarker(content, taskIndex, checked);
     }
 
     async function toggleTask(checkbox) {
@@ -245,7 +270,7 @@
 
       if (state.knowledgeMode === "editor") {
         const input = $("#scriptContent");
-        input.value = updateTaskMarker(input.value, taskIndex, checkbox.checked);
+        input.value = updateTaskMarkerView(input.value, taskIndex, checkbox.checked);
         $("#scriptEditorPreview").innerHTML = renderMarkdown(input.value);
         return;
       }
@@ -254,14 +279,14 @@
       if (!note) return;
       const updatedNote = {
         ...note,
-        content: updateTaskMarker(note.content, taskIndex, checkbox.checked),
+        content: updateTaskMarkerView(note.content, taskIndex, checkbox.checked),
         updatedAt: new Date().toISOString()
       };
       const nextKnowledgeBase = state.knowledgeBase.map((item) => (item.id === note.id ? updatedNote : item));
       await runAction(async () => {
         await window.CallFlowStorage.write("knowledgeBase", nextKnowledgeBase);
         state.knowledgeBase = nextKnowledgeBase;
-        $("#scriptReaderMeta").textContent = `${t("scriptModified")}: ${formatDate(updatedNote.updatedAt)}`;
+        $("#scriptReaderMeta").textContent = `${t("scriptModified")}: ${formatDateView(updatedNote.updatedAt)}`;
       });
     }
 
@@ -286,7 +311,7 @@
       $("#notesList").innerHTML = scripts
         .map((note) => {
           const dateType = note.updatedAt ? "scriptModified" : "scriptCreated";
-          const meta = typeMeta(note);
+          const meta = typeMetaView(note);
           const summary = meta.type === "pdf" ? note.originalName || t("scriptPdfDocument") : summarize(note.content) || t("scriptDocument");
           const title = note.title || note.originalName || t("scriptDocument");
           return `
@@ -303,7 +328,7 @@
                 </div>
               </div>
               <footer>
-                <span><b class="script-type-label">${escapeHtml(meta.label)}</b> · ${escapeHtml(t(dateType))}: ${escapeHtml(formatDate(note.updatedAt || note.createdAt))}</span>
+                <span><b class="script-type-label">${escapeHtml(meta.label)}</b> · ${escapeHtml(t(dateType))}: ${escapeHtml(formatDateView(note.updatedAt || note.createdAt))}</span>
                 <button type="button" data-select-note="${escapeHtml(note.id)}">${escapeHtml(t("scriptOpen"))} →</button>
               </footer>
             </article>
@@ -313,11 +338,11 @@
     }
 
     function renderReader(note) {
-      const meta = typeMeta(note);
+      const meta = typeMetaView(note);
       $("#scriptReaderTitle").textContent = note.title;
       $("#scriptReaderType").textContent = meta.label;
       const dateType = note.updatedAt ? "scriptModified" : "scriptCreated";
-      $("#scriptReaderMeta").textContent = `${t(dateType)}: ${formatDate(note.updatedAt || note.createdAt)}`;
+      $("#scriptReaderMeta").textContent = `${t(dateType)}: ${formatDateView(note.updatedAt || note.createdAt)}`;
       $("#editNote").classList.toggle("hidden", meta.type === "pdf");
       $("#exportMd").classList.toggle("hidden", meta.type === "pdf");
       $("#exportTxt").classList.toggle("hidden", meta.type === "pdf");
@@ -431,7 +456,7 @@
       await runAction(() =>
         window.callflow.exportNote({
           fileName: note.title.replace(/[^a-z0-9_-]+/gi, "-").toLowerCase() || "callflow-script",
-          content: extension === "txt" ? markdownToPlainText(note.content) : note.content,
+          content: extension === "txt" ? markdownToPlainTextView(note.content) : note.content,
           extension
         })
       );
@@ -458,7 +483,7 @@
         state.knowledgeBase = nextKnowledgeBase;
         renderApp();
         context.setStatusMessage(t("scriptImported"), "success");
-      }, { userMessage: importErrorMessage, logMessage: "Failed to import script document" });
+      }, { userMessage: (error) => importErrorMessage(error, t), logMessage: "Failed to import script document" });
     }
 
     async function togglePinned(id) {
@@ -525,5 +550,23 @@
     return { bindEvents, render, selectNote };
   }
 
-  window.CallFlowKnowledgeView = { createKnowledgeView };
+  const api = {
+    createKnowledgeView,
+    documentType,
+    formatDate,
+    hasMarkdownSyntax,
+    importErrorMessage,
+    markdownToPlainText,
+    summarize,
+    typeMeta,
+    updateTaskMarker
+  };
+
+  if (typeof window !== "undefined") {
+    window.CallFlowKnowledgeView = api;
+  }
+
+  if (typeof module !== "undefined") {
+    module.exports = api;
+  }
 })();
