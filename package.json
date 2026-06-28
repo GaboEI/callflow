@@ -10,12 +10,12 @@
     "test": "node --test",
     "lint": "eslint src test",
     "validate": "npm run check && npm test && npm run lint",
-    "pack:win": "electron-builder --win nsis --dir --x64",
-    "pack:win:ia32": "electron-builder --win nsis --dir --ia32",
-    "dist:win": "electron-builder --win nsis --x64",
-    "dist:win:ia32": "electron-builder --win nsis --ia32",
-    "dist:win:portable": "electron-builder --win portable --x64",
-    "dist:win:portable:ia32": "electron-builder --win portable --ia32",
+    "pack:win": "electron-builder --win nsis --dir --x64 --publish never",
+    "pack:win:ia32": "electron-builder --win nsis --dir --ia32 --publish never",
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "dist:win:ia32": "electron-builder --win nsis --ia32 --publish never",
+    "dist:win:portable": "electron-builder --win portable --x64 --publish never",
+    "dist:win:portable:ia32": "electron-builder --win portable --ia32 --publish never",
     "dist:win:all": "npm run dist:win && npm run dist:win:ia32 && npm run dist:win:portable && npm run dist:win:portable:ia32"
   },
   "keywords": [
