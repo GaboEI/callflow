@@ -67,7 +67,7 @@
   "devDependencies": {
     "electron": "^42.4.1",
     "electron-builder": "^26.15.3",
-    "eslint": "^10.5.0"
+    "eslint": "^10.6.0"
   },
   "dependencies": {
     "dompurify": "^3.4.11",
