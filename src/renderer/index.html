@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CallFlow</title>
     <link rel="stylesheet" href="./styles/main.css" />
+    <link rel="stylesheet" href="./styles/themes/gruvbox.tokens.css" />
+    <link rel="stylesheet" href="./styles/themes/gruvbox.part1.css" />
+    <link rel="stylesheet" href="./styles/themes/gruvbox.part2.css" />
+    <link rel="stylesheet" href="./styles/themes/gruvbox.part3.css" />
+    <link rel="stylesheet" href="./styles/themes/gruvbox.part4.css" />
   </head>
   <body>
+    <script src="./scripts/core/theme-boot.js"></script>
     <div id="onboarding" class="onboarding hidden">
       <section class="onboarding-panel">
         <div class="onboarding-top">
@@ -378,7 +384,7 @@
                 </span>
                 <div class="custom-comment-combobox">
                   <div class="input-action-shell">
-                    <input name="customComment" id="customCommentInput" autocomplete="off" />
+                    <textarea name="customComment" id="customCommentInput" rows="1" autocomplete="off"></textarea>
                     <span class="inline-icon-actions input-actions">
                       <button class="icon-button" type="button" id="addCurrentCustomComment" data-i18n-title="addCustomComment" title="Agregar comentario">+</button>
                       <button class="icon-button" type="button" id="removeCurrentCustomComment" data-i18n-title="removeCustomComment" title="Eliminar comentario">−</button>
@@ -967,6 +973,7 @@
               <button type="button" class="settings-tab" data-settings-tab="lists" data-i18n="settingsCallSetup">Tipos y estados</button>
               <button type="button" class="settings-tab" data-settings-tab="maintenance" data-i18n="maintenanceDiagnostics">Mantenimiento</button>
               <button type="button" class="settings-tab" data-settings-tab="about" data-i18n="settingsAboutLegal">Acerca de y legal</button>
+              <button type="button" class="settings-tab" data-settings-tab="themes" data-i18n="settingsThemes">Temas</button>
             </div>
             <form id="settingsForm" class="settings-layout" novalidate>
               <section class="settings-section settings-tab-panel active" data-settings-panel="general">
@@ -976,15 +983,54 @@
                 </div>
                 <div class="settings-fields compact">
                   <label class="field-sm"><span data-i18n="language">Idioma</span><select name="language"></select></label>
-                  <label class="field-sm">
-                    <span data-i18n="themeVisual">Tema visual</span>
-                    <select name="theme">
-                      <option value="system" data-i18n="themeSystem">Sistema</option>
-                      <option value="dark" data-i18n="themeDark">Oscuro</option>
-                      <option value="light" data-i18n="themeLight">Claro</option>
-                    </select>
-                  </label>
                   <label class="field-md"><span data-i18n="operatorName">Nombre del operador</span><input name="operatorName" required /></label>
+                </div>
+              </section>
+
+              <section class="settings-section settings-tab-panel hidden" data-settings-panel="themes">
+                <div class="settings-section-header">
+                  <h3 data-i18n="settingsThemes">Temas</h3>
+                  <p class="muted" data-i18n="settingsThemesHelp">Elige la familia de colores y el modo claro u oscuro.</p>
+                </div>
+                <div class="theme-settings">
+                  <div class="theme-settings-group">
+                    <span class="theme-settings-label" data-i18n="themeFamily">Familia de tema</span>
+                    <div class="theme-family-grid" role="radiogroup" data-i18n-title="themeFamily" title="Familia de tema">
+                      <button type="button" class="theme-card" data-theme-family-choice="default" role="radio" aria-checked="false">
+                        <span class="theme-card-swatch theme-card-swatch-default" aria-hidden="true">
+                          <i></i><i></i><i></i><i></i>
+                        </span>
+                        <span class="theme-card-label" data-i18n="themeFamilyDefault">Por defecto</span>
+                      </button>
+                      <button type="button" class="theme-card" data-theme-family-choice="gruvbox" role="radio" aria-checked="false">
+                        <span class="theme-card-swatch theme-card-swatch-gruvbox" aria-hidden="true">
+                          <i></i><i></i><i></i><i></i>
+                        </span>
+                        <span class="theme-card-label" data-i18n="themeFamilyGruvbox">Gruvbox</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="theme-settings-group">
+                    <span class="theme-settings-label" data-i18n="themeMode">Modo</span>
+                    <div class="theme-mode-group" role="group" data-i18n-title="themeMode" title="Modo">
+                      <button type="button" class="theme-mode-button" data-theme-choice="light">
+                        <span class="theme-mode-glyph" aria-hidden="true">☀</span>
+                        <span data-i18n="themeLight">Modo claro</span>
+                      </button>
+                      <button type="button" class="theme-mode-button" data-theme-choice="dark">
+                        <span class="theme-mode-glyph" aria-hidden="true">☾</span>
+                        <span data-i18n="themeDark">Modo oscuro</span>
+                      </button>
+                      <button type="button" class="theme-mode-button" data-theme-choice="system">
+                        <span class="theme-mode-glyph" aria-hidden="true">◐</span>
+                        <span data-i18n="themeSystem">Modo sistema</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="theme-active-row">
+                    <span class="theme-settings-label" data-i18n="themeActiveLabel">Tema activo</span>
+                    <p id="themeActiveSummary" class="theme-active-summary" aria-live="polite"></p>
+                  </div>
                 </div>
               </section>
 
@@ -1357,6 +1403,7 @@
     <script src="../shared/reminders.js"></script>
     <script src="../shared/stats.js"></script>
     <script src="./scripts/core/settings.js"></script>
+    <script src="./scripts/core/theme.js"></script>
     <script src="./scripts/core/timezones.js"></script>
     <script src="./scripts/core/timezone-picker.js"></script>
     <script src="./scripts/core/dom.js"></script>

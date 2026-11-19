@@ -67,7 +67,8 @@ module.exports = [
         CallFlowTimezonePicker: "readonly",
         CallFlowUiState: "readonly",
         CallFlowStats: "readonly",
-        CallFlowStorage: "readonly"
+        CallFlowStorage: "readonly",
+        CallFlowTheme: "readonly"
       }
     }
   },

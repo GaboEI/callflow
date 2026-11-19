@@ -1,0 +1,617 @@
+/*
+ * Gruvbox theme family — part 2 (overrides for main.css lines 2201–4403).
+ *
+ * Active only under body[data-theme-family="gruvbox"] (both data-theme modes).
+ * Loaded after main.css and gruvbox.tokens.css. Colours come exclusively from
+ * the --gb-* palette tokens / the remapped CallFlow variables, optionally
+ * blended with color-mix(). Only colour-bearing properties are overridden.
+ *
+ * Covered: settings tabs/panels/forms, input action buttons, status & outcome
+ * controls and menus, status combobox options, generated line / code,
+ * dashboard + stats cards, calculator, finance (forms, chips, charts), quick
+ * calculator, app modals, schedule / timesheet, stats heat-map / bars /
+ * hourly chart, reminder state rows.
+ *
+ * Animations: the keyframes cf-gb-accent-breathe is defined by gruvbox.part1.css;
+ * rules here only swap `animation-name`, keeping the original duration/timing.
+ *
+ * Rules that already resolve through remapped tokens (e.g. #customCommentInput,
+ * .status-options, .stats-bar-row text, the 'card' family) are intentionally
+ * not repeated here.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Local aliases (official palette tokens only). --gb2-well is the sunken
+ * surface that Default paints with #07101f / rgba(15,23,42,x) / rgba(11,18,32,x):
+ *   dark  = dark0-hard   |   light = light0-soft
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] {
+  --gb2-well: var(--gb-dark0-hard);
+  --gb2-hairline: color-mix(in srgb, var(--gb-gray) 22%, transparent);
+}
+
+body[data-theme-family="gruvbox"][data-theme="light"] {
+  --gb2-well: var(--gb-light0-soft);
+}
+
+/* ---------------------------------------------------------------------------
+ * Settings tabs (main.css 2225-2232) and list tabs (2453-2485)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .settings-tab:hover,
+body[data-theme-family="gruvbox"] .settings-tab.active {
+  color: var(--gb-fg-strong);
+  background: color-mix(in srgb, var(--gb-blue) 16%, transparent);
+  border-color: color-mix(in srgb, var(--gb-blue) 32%, transparent);
+  animation-name: cf-gb-accent-breathe;
+}
+
+body[data-theme-family="gruvbox"] .settings-list-tabs {
+  background: color-mix(in srgb, var(--gb2-well) 36%, transparent);
+  border-color: var(--gb2-hairline);
+}
+
+body[data-theme-family="gruvbox"] .settings-list-tab:hover,
+body[data-theme-family="gruvbox"] .settings-list-tab.active {
+  color: var(--gb-fg-strong);
+  background: color-mix(in srgb, var(--gb-blue) 15%, transparent);
+  border-color: color-mix(in srgb, var(--gb-blue) 28%, transparent);
+  animation-name: cf-gb-accent-breathe;
+}
+
+/* ---------------------------------------------------------------------------
+ * Settings section, About cards, button-link (2241-2251, 2362-2435)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .settings-section {
+  background: color-mix(in srgb, var(--gb2-well) 46%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .about-card {
+  background: color-mix(in srgb, var(--gb2-well) 36%, transparent);
+  border-color: var(--gb2-hairline);
+}
+
+body[data-theme-family="gruvbox"] .about-meta-grid div {
+  background: color-mix(in srgb, var(--gb2-well) 58%, transparent);
+  border-color: var(--gb2-hairline);
+}
+
+body[data-theme-family="gruvbox"] .button-link {
+  color: var(--gb-fg-strong);
+  background: color-mix(in srgb, var(--gb-blue) 16%, transparent);
+  border-color: color-mix(in srgb, var(--gb-blue) 32%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .button-link:hover {
+  background: color-mix(in srgb, var(--gb-blue) 24%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Settings list editor (2487-2510)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .settings-list-editor-shell {
+  background: color-mix(in srgb, var(--gb2-well) 30%, transparent);
+  border-color: var(--gb2-hairline);
+}
+
+body[data-theme-family="gruvbox"] .settings-list-panel .field-label {
+  color: var(--gb-blue);
+}
+
+/* ---------------------------------------------------------------------------
+ * Save button, validation, diagnostics, details (2596-2635)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .settings-save-button {
+  color: var(--gb-on-bright);
+  background: linear-gradient(180deg, var(--gb-blue), color-mix(in srgb, var(--gb-blue) 88%, var(--gb-bg-hard)));
+  border-color: color-mix(in srgb, var(--gb-accent-hover) 70%, var(--gb-fg-strong));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--gb-blue) 18%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .settings-save-button:hover {
+  color: var(--gb-on-bright);
+  background: linear-gradient(180deg, var(--gb-blue), color-mix(in srgb, var(--gb-blue) 88%, var(--gb-bg-hard)));
+  border-color: color-mix(in srgb, var(--gb-fg-strong) 72%, transparent);
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--gb-blue) 24%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .settings-validation-tried input:invalid,
+body[data-theme-family="gruvbox"] .settings-validation-tried select:invalid {
+  border-color: var(--gb-red);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gb-red) 18%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .diagnostics-summary {
+  color: var(--text-soft);
+}
+
+body[data-theme-family="gruvbox"] .settings-details summary {
+  color: var(--gb-blue);
+}
+
+/* ---------------------------------------------------------------------------
+ * Icon buttons / input actions (2731-2756)
+ * #customCommentInput (2690-2698) already uses --comment-* tokens: verified, no override.
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .icon-button {
+  border-color: var(--input-border);
+  background: color-mix(in srgb, var(--gb2-well) 52%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .icon-button:hover {
+  border-color: color-mix(in srgb, var(--gb-blue) 55%, transparent);
+  background: color-mix(in srgb, var(--gb-blue) 14%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Status manager popover (2768-2784)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .status-manager {
+  background: var(--gb2-well);
+}
+
+body[data-theme-family="gruvbox"] .call-type-shell .status-manager {
+  box-shadow: 0 18px 36px var(--shadow);
+}
+
+/* ---------------------------------------------------------------------------
+ * Outcome buttons (2842-2891)
+ * Success = green, rejection = red, callback = purple (Default violet).
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .outcome-button {
+  background: color-mix(in srgb, var(--gb2-well) 68%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .outcome-success {
+  border-color: color-mix(in srgb, var(--gb-green) 28%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .outcome-success.selected {
+  border-color: color-mix(in srgb, var(--gb-green) 58%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 16%, transparent);
+  color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .outcome-rejection {
+  border-color: color-mix(in srgb, var(--gb-red) 28%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .outcome-rejection.selected {
+  border-color: color-mix(in srgb, var(--gb-red) 58%, transparent);
+  background: color-mix(in srgb, var(--gb-red) 16%, transparent);
+  color: var(--gb-red);
+}
+
+body[data-theme-family="gruvbox"] .outcome-callback {
+  border-color: color-mix(in srgb, var(--gb-purple) 30%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .outcome-callback.selected {
+  border-color: color-mix(in srgb, var(--gb-purple) 62%, transparent);
+  background: color-mix(in srgb, var(--gb-purple) 18%, transparent);
+  color: var(--gb-purple);
+}
+
+/* ---------------------------------------------------------------------------
+ * Outcome menu, confirm / clear icons, callback fields (2893-3020)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .outcome-menu {
+  background: var(--gb2-well);
+  box-shadow: 0 18px 36px var(--shadow);
+}
+
+body[data-theme-family="gruvbox"] .outcome-confirm {
+  border-color: color-mix(in srgb, var(--gb-green) 50%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 16%, transparent);
+  color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .outcome-confirm:hover {
+  border-color: color-mix(in srgb, var(--gb-green) 80%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 24%, transparent);
+  color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .outcome-clear-icon {
+  border-color: color-mix(in srgb, var(--gb-red) 50%, transparent);
+  background: color-mix(in srgb, var(--gb-red) 14%, transparent);
+  color: var(--gb-red);
+}
+
+body[data-theme-family="gruvbox"] .outcome-clear-icon:hover {
+  border-color: color-mix(in srgb, var(--gb-red) 80%, transparent);
+  background: color-mix(in srgb, var(--gb-red) 22%, transparent);
+  color: var(--gb-red);
+}
+
+body[data-theme-family="gruvbox"] .callback-fields {
+  border-color: color-mix(in srgb, var(--gb-purple) 34%, transparent);
+  background: color-mix(in srgb, var(--gb-purple) 8%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .outcome-menu .callback-fields {
+  border-color: color-mix(in srgb, var(--gb-purple) 28%, transparent);
+  background: color-mix(in srgb, var(--gb-purple) 6%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Status combobox options (3059-3071). .status-options itself is token-driven.
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .status-option:hover {
+  background: color-mix(in srgb, var(--gb-blue) 16%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .status-option.recommended {
+  border-left-color: color-mix(in srgb, var(--gb-green) 82%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 8%, transparent);
+  color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .status-option.recommended:hover {
+  background: color-mix(in srgb, var(--gb-green) 14%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Generated line code block (3093-3101)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] code {
+  background: var(--code-bg);
+  color: var(--code-text);
+}
+
+/* ---------------------------------------------------------------------------
+ * Stats summary / KPI cards (3204-3235)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .stats-summary-card {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gb-aqua) 7%, transparent), transparent),
+    var(--card);
+}
+
+body[data-theme-family="gruvbox"] .stats-kpi-primary {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gb-blue) 12%, transparent), transparent),
+    var(--card);
+}
+
+/* ---------------------------------------------------------------------------
+ * Calculator (3262-3333)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .calculator-box {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gb-blue) 8%, transparent), transparent),
+    color-mix(in srgb, var(--gb2-well) 68%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .calculator-key-utility {
+  color: var(--text-soft);
+  border-color: var(--input-border);
+}
+
+body[data-theme-family="gruvbox"] .calculator-key-equals {
+  border-color: color-mix(in srgb, var(--gb-green) 50%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 13%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .calculator-result {
+  background: var(--gb2-well);
+}
+
+/* ---------------------------------------------------------------------------
+ * Finance: transactions, movements, types, period toggle (3366-3546)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .finance-transaction-item {
+  background: color-mix(in srgb, var(--gb2-well) 72%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .finance-transaction-item b.negative {
+  color: var(--red);
+}
+
+body[data-theme-family="gruvbox"] .finance-movements-button {
+  border-color: color-mix(in srgb, var(--gb-blue) 35%, transparent);
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .finance-movements-button strong {
+  background: color-mix(in srgb, var(--gb-blue) 20%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .finance-type-manager {
+  background: color-mix(in srgb, var(--gb2-well) 65%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .finance-add-type-button {
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .finance-movement-type-chip {
+  background: var(--bg);
+}
+
+body[data-theme-family="gruvbox"] .finance-save-button {
+  border-color: color-mix(in srgb, var(--gb-green) 48%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 12%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .finance-save-button:hover {
+  border-color: color-mix(in srgb, var(--gb-green) 66%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 18%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .finance-period-toggle {
+  background: var(--gb2-well);
+}
+
+body[data-theme-family="gruvbox"] .finance-period-toggle button.active {
+  border-color: color-mix(in srgb, var(--gb-blue) 50%, transparent);
+  background: color-mix(in srgb, var(--gb-blue) 20%, transparent);
+  color: var(--gb-blue);
+}
+
+/* ---------------------------------------------------------------------------
+ * Finance chart (3554-3651)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .finance-chart {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gb-aqua) 5%, transparent), transparent),
+    var(--chart-bg);
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-axis {
+  stroke: var(--chart-grid);
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-fill {
+  fill: color-mix(in srgb, var(--gb-green) 9%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-line {
+  stroke: var(--chart-accent);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--chart-accent) 22%, transparent));
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-grid {
+  stroke: color-mix(in srgb, var(--chart-grid) 50%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-grid.vertical {
+  stroke: color-mix(in srgb, var(--chart-grid) 30%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-point {
+  fill: var(--chart-bg);
+  stroke: var(--chart-accent);
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-point.is-active {
+  fill: var(--chart-accent);
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-point:hover,
+body[data-theme-family="gruvbox"] .finance-chart-point:focus {
+  stroke: var(--gb-fg-strong);
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-tooltip {
+  border-color: color-mix(in srgb, var(--chart-accent) 40%, transparent);
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-bars rect {
+  fill: color-mix(in srgb, var(--gb-blue) 20%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .finance-chart-bars rect.is-active {
+  fill: color-mix(in srgb, var(--gb-green) 72%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Quick calculator panel (3653-3666)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .quick-calculator-panel {
+  background: var(--gb2-well);
+  box-shadow: 0 18px 38px var(--shadow);
+}
+
+/* ---------------------------------------------------------------------------
+ * Stats empty message, app modals (3754-3811)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .stats-empty-message {
+  border-color: color-mix(in srgb, var(--gb-blue) 24%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .app-modal {
+  background: var(--modal-backdrop);
+}
+
+body[data-theme-family="gruvbox"]:not([data-theme="light"]) .nested-modal {
+  background: color-mix(in srgb, var(--gb-dark0-hard) 86%, transparent);
+}
+
+body[data-theme-family="gruvbox"][data-theme="light"] .nested-modal {
+  background: color-mix(in srgb, var(--gb-dark1) 42%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .app-modal-card {
+  border-color: color-mix(in srgb, var(--gb-blue) 30%, transparent);
+  background: var(--modal-bg);
+  box-shadow: 0 24px 70px var(--shadow);
+}
+
+/* ---------------------------------------------------------------------------
+ * Schedule overview (3900-4020)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .schedule-date-panel {
+  background: var(--gb2-well);
+}
+
+body[data-theme-family="gruvbox"] .schedule-lock-button {
+  border-color: color-mix(in srgb, var(--gb-blue) 42%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .schedule-period-card {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gb-aqua) 8%, transparent), transparent),
+    var(--gb2-well);
+}
+
+body[data-theme-family="gruvbox"] .schedule-period-card:nth-child(3n + 2) {
+  background-color: color-mix(in srgb, var(--gb-aqua) 9%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .schedule-period-card:nth-child(3n) {
+  background-color: color-mix(in srgb, var(--gb-yellow) 7%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .schedule-hour {
+  border-color: color-mix(in srgb, var(--gb-blue) 18%, transparent);
+  background: color-mix(in srgb, var(--gb2-well) 82%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .schedule-hour.selected {
+  border-color: color-mix(in srgb, var(--gb-aqua) 72%, transparent);
+  background: color-mix(in srgb, var(--gb-aqua) 30%, transparent);
+  color: var(--gb-fg-strong);
+}
+
+/* ---------------------------------------------------------------------------
+ * Timesheet (4052-4120)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .timesheet-month-picker {
+  border-color: color-mix(in srgb, var(--gb-blue) 36%, transparent);
+  background: var(--surface-raised);
+  box-shadow: 0 18px 42px var(--shadow);
+}
+
+body[data-theme-family="gruvbox"] .timesheet-month-options button.active {
+  border-color: color-mix(in srgb, var(--gb-aqua) 72%, transparent);
+  background: color-mix(in srgb, var(--gb-aqua) 24%, transparent);
+  color: var(--gb-fg-strong);
+}
+
+body[data-theme-family="gruvbox"] .timesheet-day {
+  border-color: color-mix(in srgb, var(--gb-blue) 16%, transparent);
+  background: var(--gb2-well);
+}
+
+body[data-theme-family="gruvbox"] .timesheet-day.has-time {
+  border-color: color-mix(in srgb, var(--gb-aqua) 48%, transparent);
+  background: color-mix(in srgb, var(--gb-aqua) 15%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .timesheet-day.adjusted {
+  box-shadow: inset 0 -2px var(--gb-yellow);
+}
+
+/* ---------------------------------------------------------------------------
+ * Stats activity heat-map (4122-4170)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .stats-day-cell {
+  border-color: color-mix(in srgb, var(--gb-blue) 10%, transparent);
+  background: color-mix(in srgb, var(--gb2-well) 72%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .stats-day-cell.level-1 {
+  background: color-mix(in srgb, var(--gb-aqua) 18%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .stats-day-cell.level-2 {
+  background: color-mix(in srgb, var(--gb-aqua) 32%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .stats-day-cell.level-3 {
+  background: color-mix(in srgb, color-mix(in srgb, var(--gb-aqua) 70%, var(--gb-blue)) 52%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .stats-day-cell.level-4 {
+  background: color-mix(in srgb, var(--gb-aqua) 78%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .stats-day-cell:hover,
+body[data-theme-family="gruvbox"] .stats-day-cell.selected,
+body[data-theme-family="gruvbox"] .stats-hour-cell:hover,
+body[data-theme-family="gruvbox"] .stats-hour-cell.selected {
+  border-color: var(--gb-blue);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gb-blue) 18%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Stats bars, hourly chart, insight/detail cards (4179-4267)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .stats-bar-row {
+  background: color-mix(in srgb, var(--gb2-well) 28%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .stats-bar-row:hover,
+body[data-theme-family="gruvbox"] .stats-bar-row.selected {
+  border-color: color-mix(in srgb, var(--gb-aqua) 42%, transparent);
+  background: color-mix(in srgb, var(--gb-aqua) 8%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .stats-bar-track {
+  background: var(--gb2-hairline);
+}
+
+body[data-theme-family="gruvbox"] .stats-bar-track span {
+  background: linear-gradient(90deg, var(--gb-aqua), var(--primary));
+}
+
+body[data-theme-family="gruvbox"] .stats-hour-cell {
+  border-color: var(--gb2-hairline);
+  background: color-mix(in srgb, var(--gb2-well) 24%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .stats-hour-cell.has-data {
+  background: color-mix(in srgb, var(--gb-aqua) 10%, transparent);
+  color: var(--gb-fg-strong);
+}
+
+body[data-theme-family="gruvbox"] .stats-hour-cell.current-hour {
+  border-color: color-mix(in srgb, var(--gb-yellow) 55%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .stats-hour-bar {
+  background: linear-gradient(180deg, var(--gb-aqua), var(--gb-blue));
+}
+
+body[data-theme-family="gruvbox"] .stats-insight-card,
+body[data-theme-family="gruvbox"] .stats-detail-active,
+body[data-theme-family="gruvbox"] .stats-detail-grid article,
+body[data-theme-family="gruvbox"] .stats-block-summary {
+  background: color-mix(in srgb, var(--gb2-well) 34%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Reminder state rows (4362-4403)
+ * --------------------------------------------------------------------------- */
+body[data-theme-family="gruvbox"] .reminder-item {
+  border-left-color: color-mix(in srgb, var(--gb-yellow) 62%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .reminder-pending {
+  border-left-color: color-mix(in srgb, var(--gb-yellow) 72%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .reminder-overdue {
+  border-left-color: color-mix(in srgb, var(--gb-red) 82%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .reminder-completed {
+  border-left-color: color-mix(in srgb, var(--gb-green) 82%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .reminder-invalid {
+  border-left-color: color-mix(in srgb, var(--gb-gray) 82%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .reminder-deleted {
+  border-left-color: var(--gb-gray);
+}
+
+body[data-theme-family="gruvbox"] .reminder-deleted .reminder-state,
+body[data-theme-family="gruvbox"] .reminder-deleted .reminder-countdown {
+  border-color: color-mix(in srgb, var(--gb-gray) 30%, transparent);
+  background: color-mix(in srgb, var(--gb-gray) 10%, transparent);
+  color: var(--text-subtle);
+}

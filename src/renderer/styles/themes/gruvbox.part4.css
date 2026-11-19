@@ -1,0 +1,194 @@
+/* Gruvbox family overrides for final polish layers, chips and tab accents. */
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab,
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab,
+body[data-theme-family="gruvbox"] .report-period-chip,
+body[data-theme-family="gruvbox"] .reminder-chip {
+  background: color-mix(in srgb, var(--gb-bg1) 74%, transparent) !important;
+  color: var(--gb-fg4) !important;
+  border-color: var(--gb-bg3) !important;
+}
+
+body[data-theme-family="gruvbox"] .theme-settings-label,
+body[data-theme-family="gruvbox"] .settings-section-header .muted {
+  color: var(--gb-fg3);
+}
+
+body[data-theme-family="gruvbox"] .theme-card-swatch i {
+  border: 1px solid var(--gb-fg4);
+}
+
+body[data-theme-family="gruvbox"] .statusbar {
+  border-top-color: var(--gb-accent);
+}
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab:hover,
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab.active,
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab:hover,
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab.active,
+body[data-theme-family="gruvbox"] .report-period-chip:hover,
+body[data-theme-family="gruvbox"] .report-period-chip--active,
+body[data-theme-family="gruvbox"] .reminder-chip:hover,
+body[data-theme-family="gruvbox"] .reminder-chip--active {
+  color: var(--gb-fg-strong) !important;
+  background: color-mix(in srgb, var(--gb-blue) 20%, var(--gb-bg1)) !important;
+  border-color: var(--gb-blue) !important;
+  animation-name: cf-gb-accent-breathe;
+}
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab:nth-child(1),
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab:nth-child(1) {
+  border-left-color: var(--gb-gray) !important;
+}
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab:nth-child(2),
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab:nth-child(2) {
+  border-left-color: var(--gb-green) !important;
+}
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab:nth-child(3),
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab:nth-child(3) {
+  border-left-color: var(--gb-blue) !important;
+}
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab:nth-child(4),
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab:nth-child(4) {
+  border-left-color: var(--gb-purple) !important;
+}
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab:nth-child(5),
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab:nth-child(5) {
+  border-left-color: var(--gb-orange) !important;
+}
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab:nth-child(6),
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab:nth-child(6) {
+  border-left-color: var(--gb-yellow) !important;
+}
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab:nth-child(7),
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab:nth-child(7) {
+  border-left-color: var(--gb-aqua) !important;
+}
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab:nth-child(8) {
+  border-left-color: color-mix(in srgb, var(--gb-aqua) 60%, var(--gb-blue)) !important;
+}
+
+body[data-theme-family="gruvbox"][data-theme="light"] .theme-switcher button.active {
+  color: var(--gb-fg-strong) !important;
+  background: var(--gb-bg-hard) !important;
+  border-color: var(--gb-blue) !important;
+  box-shadow: inset 0 0 0 1px var(--gb-blue) !important;
+}
+
+body[data-theme-family="gruvbox"][data-theme="light"] .nav-link.active {
+  color: var(--gb-fg-strong) !important;
+  background: color-mix(in srgb, var(--gb-aqua) 20%, var(--gb-bg1)) !important;
+  border-color: var(--gb-aqua) !important;
+  box-shadow: inset 0 0 0 1px var(--gb-aqua) !important;
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="today"],
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="today"] {
+  border-left-color: var(--gb-blue) !important;
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="yesterday"],
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="tomorrow"] {
+  border-left-color: var(--gb-purple) !important;
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="last7"],
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="week"] {
+  border-left-color: var(--gb-green) !important;
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="last30"],
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="overdue"] {
+  border-left-color: var(--gb-yellow) !important;
+}
+
+body[data-theme-family="gruvbox"] .report-trash-chip,
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="deleted"] {
+  border-left-color: var(--gb-red) !important;
+}
+
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="completed"] {
+  border-left-color: var(--gb-green) !important;
+}
+
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="invalid"] {
+  border-left-color: var(--gb-gray) !important;
+}
+
+body[data-theme-family="gruvbox"] .report-match,
+body[data-theme-family="gruvbox"] .search-counter,
+body[data-theme-family="gruvbox"] .tag,
+body[data-theme-family="gruvbox"] .chip {
+  color: var(--gb-fg2);
+  background: var(--gb-bg1);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] .report-match.active,
+body[data-theme-family="gruvbox"] .chip.active,
+body[data-theme-family="gruvbox"] .chip.preset {
+  color: var(--gb-fg-strong);
+  background: color-mix(in srgb, var(--gb-blue) 20%, var(--gb-bg1));
+  border-color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .report-item-trash,
+body[data-theme-family="gruvbox"] .reminder-deleted {
+  border-color: color-mix(in srgb, var(--gb-red) 52%, var(--gb-bg3));
+  background: color-mix(in srgb, var(--gb-red) 8%, var(--gb-bg1));
+}
+
+body[data-theme-family="gruvbox"] .report-copy-action,
+body[data-theme-family="gruvbox"] .report-bulk-actions button,
+body[data-theme-family="gruvbox"] .settings-secondary-action {
+  color: var(--gb-fg2);
+  background: var(--gb-bg1);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] .report-copy-action:hover,
+body[data-theme-family="gruvbox"] .report-bulk-actions button:hover,
+body[data-theme-family="gruvbox"] .settings-secondary-action:hover {
+  color: var(--gb-fg-strong);
+  background: color-mix(in srgb, var(--gb-blue) 20%, var(--gb-bg1));
+  border-color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .stats-summary-card.success-metric,
+body[data-theme-family="gruvbox"] .success-metric {
+  border-color: color-mix(in srgb, var(--gb-green) 62%, var(--gb-bg3));
+}
+
+body[data-theme-family="gruvbox"] .stats-summary-card.rejection-metric,
+body[data-theme-family="gruvbox"] .rejection-metric {
+  border-color: color-mix(in srgb, var(--gb-red) 62%, var(--gb-bg3));
+}
+
+body[data-theme-family="gruvbox"] .status-success,
+body[data-theme-family="gruvbox"] [data-tone="success"] {
+  color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .status-warning,
+body[data-theme-family="gruvbox"] [data-tone="warning"] {
+  color: var(--gb-yellow);
+}
+
+body[data-theme-family="gruvbox"] .status-error,
+body[data-theme-family="gruvbox"] [data-tone="error"] {
+  color: var(--gb-red);
+}
+
+body[data-theme-family="gruvbox"] .settings-tabs > .settings-tab.active,
+body[data-theme-family="gruvbox"] .settings-list-tabs > .settings-list-tab.active,
+body[data-theme-family="gruvbox"] .report-period-chip--active,
+body[data-theme-family="gruvbox"] .reminder-chip--active {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gb-blue) 30%, transparent);
+}

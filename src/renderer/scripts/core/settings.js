@@ -155,6 +155,7 @@
       notifyAtExactTime: sanitized.notifyAtExactTime,
       reminderSound: sanitized.reminderSound,
       theme: sanitized.theme,
+      themeFamily: sanitized.themeFamily,
       legalAcceptance: sanitized.legalAcceptance,
       onboardingCompleted: sanitized.onboardingCompleted
     };
