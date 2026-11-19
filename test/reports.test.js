@@ -32,26 +32,76 @@ test("creates a call record with CRM and supervisor line formats", () => {
   assert.equal(call.crmLine, "18.06 14:05 Ana: Sin_respuesta — Cliente pidio rellamada");
 });
 
-test("callback outcome is included before status and custom comment", () => {
-  const call = reports.createCallRecord(
+const callbackOutcome = {
+  category: "callback",
+  label: "Rellamada",
+  callbackDate: "2026-06-19",
+  callbackTime: "09:30"
+};
+
+function recordWith(primaryOutcome, description, customComment, recordSettings = settings) {
+  return reports.createCallRecord(
     {
       callId: "9001",
       callType: "",
-      primaryOutcome: {
-        category: "callback",
-        label: "Rellamada",
-        callbackDate: "2026-06-19",
-        callbackTime: "09:30"
-      },
-      description: "Buzon",
-      customComment: "Prefiere manana",
+      primaryOutcome,
+      description,
+      customComment,
       capturedAt: "2026-06-18T10:00:00.000Z"
     },
-    settings
+    recordSettings
   );
+}
 
-  assert.equal(call.description, "Rellamada 19.06 09:30 — Buzon — Prefiere manana");
-  assert.equal(call.fullLine, "# 9001 18.06 10:00 Ana: Rellamada 19.06 09:30 — Buzon — Prefiere manana");
+function assertComposed(call, expected) {
+  assert.equal(call.description, expected);
+  assert.equal(call.fullLine, `# 9001 18.06 10:00 Ana: ${expected}`);
+  assert.equal(call.crmLine, `18.06 10:00 Ana: ${expected}`);
+}
+
+test("callback block is last after status and custom comment", () => {
+  assertComposed(recordWith(callbackOutcome, "Buzon", "Prefiere manana"), "Buzon — Prefiere manana — Rellamada 19.06 09:30");
+});
+
+test("callback block is last when there is a status but no custom comment", () => {
+  assertComposed(recordWith(callbackOutcome, "Buzon", ""), "Buzon — Rellamada 19.06 09:30");
+});
+
+test("callback block is last when there is a custom comment but no status", () => {
+  assertComposed(recordWith(callbackOutcome, "", "Prefiere manana"), "Prefiere manana — Rellamada 19.06 09:30");
+});
+
+test("callback block is the only component when status and comment are empty", () => {
+  assertComposed(recordWith(callbackOutcome, "", ""), "Rellamada 19.06 09:30");
+});
+
+test("success outcome keeps its original position before status and comment", () => {
+  const outcome = { category: "success", label: "Exitosa", callbackDate: null, callbackTime: null };
+  assertComposed(recordWith(outcome, "Interesado", "Pidio factura"), "Exitosa — Interesado — Pidio factura");
+});
+
+test("rejection outcome keeps its original position before status and comment", () => {
+  const outcome = { category: "rejection", label: "Rechazo", callbackDate: null, callbackTime: null };
+  assertComposed(recordWith(outcome, "No interesado", "Sin presupuesto"), "Rechazo — No interesado — Sin presupuesto");
+});
+
+test("no selected outcome keeps status followed by custom comment", () => {
+  assertComposed(recordWith(null, "Buzon", "Prefiere manana"), "Buzon — Prefiere manana");
+});
+
+test("callback date and time keep their original formats at the end of the line", () => {
+  assertComposed(
+    recordWith({ ...callbackOutcome, label: "Callback", callbackTime: "15:30" }, "Buzon", "", { ...settings, language: "en" }),
+    "Buzon — Callback 06/19 03:30 PM"
+  );
+  assertComposed(
+    recordWith({ ...callbackOutcome, label: "Повторный_звонок" }, "Buzon", "", { ...settings, language: "ru" }),
+    "Buzon — Повторный_звонок 19.06 09:30"
+  );
+  assertComposed(
+    recordWith({ ...callbackOutcome, callbackDate: null, callbackTime: null }, "Buzon", ""),
+    "Buzon — Rellamada"
+  );
 });
 
 test("daily numbering mode uses padded sequence instead of hash", () => {

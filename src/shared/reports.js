@@ -63,7 +63,10 @@
   }
 
   function buildDescription(primaryOutcome, description, customComment, settings) {
-    return [primaryOutcomeText(primaryOutcome, settings), description, customComment].filter(Boolean).join(" — ");
+    const outcomeText = primaryOutcomeText(primaryOutcome, settings);
+    const isCallback = Boolean(primaryOutcome) && primaryOutcome.category === "callback";
+    const parts = isCallback ? [description, customComment, outcomeText] : [outcomeText, description, customComment];
+    return parts.filter(Boolean).join(" — ");
   }
 
   function linePrefix(call, settings) {
