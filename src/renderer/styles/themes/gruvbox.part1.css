@@ -1,0 +1,267 @@
+/* Gruvbox family overrides for the renderer base, shell, sidebar and shared controls. */
+
+@keyframes cf-gb-accent-breathe {
+  from {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--gb-blue) 18%, transparent),
+      0 8px 18px color-mix(in srgb, var(--gb-blue) 18%, transparent);
+  }
+
+  to {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--gb-blue) 30%, transparent),
+      0 12px 24px color-mix(in srgb, var(--gb-blue) 24%, transparent);
+  }
+}
+
+@keyframes cf-gb-sheen {
+  from { background-position: 0 0, 100% 0, 0 0, 0 0; }
+  to { background-position: 0 0, 100% 0, 120px 0, 0 0; }
+}
+
+body[data-theme-family="gruvbox"] {
+  color: var(--gb-fg);
+  background: var(--gb-bg-hard);
+  caret-color: var(--gb-focus);
+  color-scheme: dark;
+}
+
+body[data-theme-family="gruvbox"][data-theme="light"] {
+  color-scheme: light;
+}
+
+body[data-theme-family="gruvbox"] .app,
+body[data-theme-family="gruvbox"] .main,
+body[data-theme-family="gruvbox"] .main-content {
+  background: var(--gb-bg);
+}
+
+body[data-theme-family="gruvbox"] .sidebar {
+  color: var(--gb-fg);
+  background: var(--gb-bg-hard);
+  border-color: var(--gb-bg2);
+}
+
+body[data-theme-family="gruvbox"] .sidebar-backdrop {
+  background: var(--modal-backdrop);
+}
+
+body[data-theme-family="gruvbox"] .brand,
+body[data-theme-family="gruvbox"] .sidebar-operator {
+  color: var(--gb-fg);
+}
+
+body[data-theme-family="gruvbox"] .brand strong,
+body[data-theme-family="gruvbox"] .brand-text {
+  color: var(--gb-fg-strong);
+}
+
+body[data-theme-family="gruvbox"] .nav-link {
+  color: var(--gb-fg4);
+  background: color-mix(in srgb, var(--gb-bg1) 54%, transparent);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] .nav-link:hover,
+body[data-theme-family="gruvbox"] .nav-link.active {
+  color: var(--gb-fg-strong);
+  background: color-mix(in srgb, var(--gb-blue) 24%, var(--gb-bg1));
+  border-color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .theme-switcher {
+  background: var(--gb-bg-soft);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] .theme-switcher::before {
+  display: none;
+}
+
+body[data-theme-family="gruvbox"] .theme-switcher button {
+  color: var(--gb-fg4);
+  background: transparent;
+  border-color: transparent;
+}
+
+body[data-theme-family="gruvbox"] .theme-switcher button:hover,
+body[data-theme-family="gruvbox"] .theme-switcher button.active {
+  color: var(--gb-fg-strong);
+  background: color-mix(in srgb, var(--gb-blue) 22%, transparent);
+  border-color: color-mix(in srgb, var(--gb-blue) 50%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .topbar,
+body[data-theme-family="gruvbox"] .panel,
+body[data-theme-family="gruvbox"] .settings-section,
+body[data-theme-family="gruvbox"] .settings-group,
+body[data-theme-family="gruvbox"] .script-library,
+body[data-theme-family="gruvbox"] .script-reader,
+body[data-theme-family="gruvbox"] .script-editor-panel,
+body[data-theme-family="gruvbox"] .ai-context-panel,
+body[data-theme-family="gruvbox"] .ai-chat-panel,
+body[data-theme-family="gruvbox"] .calculator-panel,
+body[data-theme-family="gruvbox"] .stats-panel-wide,
+body[data-theme-family="gruvbox"] .stats-activity-panel,
+body[data-theme-family="gruvbox"] .stats-hour-panel,
+body[data-theme-family="gruvbox"] .stats-outcome-panel,
+body[data-theme-family="gruvbox"] .stats-type-panel,
+body[data-theme-family="gruvbox"] .stats-detail-panel,
+body[data-theme-family="gruvbox"] .stats-insights-panel,
+body[data-theme-family="gruvbox"] .reminder-list-panel,
+body[data-theme-family="gruvbox"] .quick-calculator-panel,
+body[data-theme-family="gruvbox"] .clock-panel {
+  color: var(--gb-fg);
+  background: var(--gb-bg-soft);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] .card,
+body[data-theme-family="gruvbox"] .report-item,
+body[data-theme-family="gruvbox"] .reminder-item,
+body[data-theme-family="gruvbox"] .calculator-box,
+body[data-theme-family="gruvbox"] .calculator-result,
+body[data-theme-family="gruvbox"] .calculator-history,
+body[data-theme-family="gruvbox"] .stats-summary-card,
+body[data-theme-family="gruvbox"] .settings-tabs,
+body[data-theme-family="gruvbox"] .settings-list-editor-shell,
+body[data-theme-family="gruvbox"] .settings-list-panel,
+body[data-theme-family="gruvbox"] .about-card,
+body[data-theme-family="gruvbox"] .ai-source-card,
+body[data-theme-family="gruvbox"] .ai-bubble,
+body[data-theme-family="gruvbox"] .script-card,
+body[data-theme-family="gruvbox"] .script-search,
+body[data-theme-family="gruvbox"] .timezone-results,
+body[data-theme-family="gruvbox"] .status-options,
+body[data-theme-family="gruvbox"] .outcome-menu,
+body[data-theme-family="gruvbox"] .clock-panel-item {
+  color: var(--gb-fg);
+  background: var(--gb-bg1);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] h1,
+body[data-theme-family="gruvbox"] h2,
+body[data-theme-family="gruvbox"] h3,
+body[data-theme-family="gruvbox"] strong,
+body[data-theme-family="gruvbox"] label,
+body[data-theme-family="gruvbox"] .field-label {
+  color: var(--gb-fg-strong);
+}
+
+body[data-theme-family="gruvbox"] .muted,
+body[data-theme-family="gruvbox"] .helper,
+body[data-theme-family="gruvbox"] .eyebrow {
+  color: var(--gb-fg4);
+}
+
+body[data-theme-family="gruvbox"] button,
+body[data-theme-family="gruvbox"] input,
+body[data-theme-family="gruvbox"] select,
+body[data-theme-family="gruvbox"] textarea {
+  color: var(--gb-fg);
+  background-color: var(--gb-bg-hard);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] button:hover,
+body[data-theme-family="gruvbox"] input:hover,
+body[data-theme-family="gruvbox"] select:hover,
+body[data-theme-family="gruvbox"] textarea:hover {
+  border-color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] input:focus,
+body[data-theme-family="gruvbox"] select:focus,
+body[data-theme-family="gruvbox"] textarea:focus,
+body[data-theme-family="gruvbox"] button:focus-visible {
+  border-color: var(--gb-focus);
+  outline-color: var(--gb-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gb-focus) 24%, transparent);
+}
+
+body[data-theme-family="gruvbox"] input::placeholder,
+body[data-theme-family="gruvbox"] textarea::placeholder {
+  color: var(--gb-gray);
+}
+
+body[data-theme-family="gruvbox"] button:disabled,
+body[data-theme-family="gruvbox"] input:disabled,
+body[data-theme-family="gruvbox"] select:disabled,
+body[data-theme-family="gruvbox"] textarea:disabled,
+body[data-theme-family="gruvbox"] input[readonly],
+body[data-theme-family="gruvbox"] textarea[readonly] {
+  color: var(--gb-fg4);
+  background: var(--gb-bg1);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] .primary {
+  color: var(--gb-accent-text);
+  background: var(--gb-accent);
+  border-color: var(--gb-accent);
+}
+
+body[data-theme-family="gruvbox"] .primary:hover {
+  background: var(--gb-accent-hover);
+  border-color: var(--gb-accent-hover);
+}
+
+body[data-theme-family="gruvbox"] .success {
+  color: var(--gb-on-bright);
+  background: var(--gb-green);
+  border-color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .danger,
+body[data-theme-family="gruvbox"] .ghost-danger {
+  color: var(--gb-fg-strong);
+  border-color: var(--gb-red);
+}
+
+body[data-theme-family="gruvbox"] .system-notice,
+body[data-theme-family="gruvbox"] .toast,
+body[data-theme-family="gruvbox"] .status-message {
+  color: var(--gb-fg);
+  background: var(--gb-bg1);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] code,
+body[data-theme-family="gruvbox"] pre,
+body[data-theme-family="gruvbox"] .diagnostics-output {
+  color: var(--code-text);
+  background: var(--code-bg);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] .modal,
+body[data-theme-family="gruvbox"] .modal-content,
+body[data-theme-family="gruvbox"] .modal-panel {
+  color: var(--gb-fg);
+  background: var(--modal-bg);
+  border-color: var(--gb-bg3);
+}
+
+body[data-theme-family="gruvbox"] a {
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] a:hover {
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .status-option:hover,
+body[data-theme-family="gruvbox"] .timezone-option:hover,
+body[data-theme-family="gruvbox"] .timezone-option.active {
+  color: var(--gb-fg-strong);
+  background: var(--gb-selection);
+}
+
+body[data-theme-family="gruvbox"] .view.active,
+body[data-theme-family="gruvbox"] .panel-header,
+body[data-theme-family="gruvbox"] .settings-heading,
+body[data-theme-family="gruvbox"] .report-toolbar,
+body[data-theme-family="gruvbox"] .reminder-toolbar {
+  color: var(--gb-fg);
+}

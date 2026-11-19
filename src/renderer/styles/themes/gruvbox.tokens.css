@@ -1,0 +1,269 @@
+/*
+ * Gruvbox theme family — design tokens.
+ *
+ * Palette source: morhetz/gruvbox v2.0.0 (MIT), file colors/gruvbox.vim,
+ * `let s:gb.<name> = [...]` palette block (lines 89-132). Light/dark relative
+ * mapping follows the same file ("determine relative colors", lines 160-217):
+ *   dark:  bg0..bg4 = dark0..dark4,   fg0..fg4 = light0..light4, accents = bright_*
+ *   light: bg0..bg4 = light0..light4, fg0..fg4 = dark0..dark4,   accents = faded_*
+ * Contrast is the vim plugin default ("medium": dark0 / light0).
+ *
+ * Every colour below is an official palette value. Translucent variants are
+ * derived with color-mix() from those tokens; no other colour is introduced.
+ *
+ * Activation: body[data-theme-family="gruvbox"] + body[data-theme="light|dark"].
+ * Default theme rules live in ../main.css and are not modified by this file.
+ */
+
+body[data-theme-family="gruvbox"] {
+  /* Official palette — neutrals */
+  --gb-dark0-hard: #1d2021;
+  --gb-dark0: #282828;
+  --gb-dark0-soft: #32302f;
+  --gb-dark1: #3c3836;
+  --gb-dark2: #504945;
+  --gb-dark3: #665c54;
+  --gb-dark4: #7c6f64;
+  --gb-gray: #928374;
+  --gb-light0-hard: #f9f5d7;
+  --gb-light0: #fbf1c7;
+  --gb-light0-soft: #f2e5bc;
+  --gb-light1: #ebdbb2;
+  --gb-light2: #d5c4a1;
+  --gb-light3: #bdae93;
+  --gb-light4: #a89984;
+
+  /* Official palette — accents */
+  --gb-bright-red: #fb4934;
+  --gb-bright-green: #b8bb26;
+  --gb-bright-yellow: #fabd2f;
+  --gb-bright-blue: #83a598;
+  --gb-bright-purple: #d3869b;
+  --gb-bright-aqua: #8ec07c;
+  --gb-bright-orange: #fe8019;
+  --gb-neutral-red: #cc241d;
+  --gb-neutral-green: #98971a;
+  --gb-neutral-yellow: #d79921;
+  --gb-neutral-blue: #458588;
+  --gb-neutral-purple: #b16286;
+  --gb-neutral-aqua: #689d6a;
+  --gb-neutral-orange: #d65d0e;
+  --gb-faded-red: #9d0006;
+  --gb-faded-green: #79740e;
+  --gb-faded-yellow: #b57614;
+  --gb-faded-blue: #076678;
+  --gb-faded-purple: #8f3f71;
+  --gb-faded-aqua: #427b58;
+  --gb-faded-orange: #af3a03;
+}
+
+/* ---------------------------------------------------------------- dark */
+body[data-theme-family="gruvbox"]:not([data-theme="light"]) {
+  /* Semantic (gb-*) tokens used by the per-component overrides */
+  --gb-bg: var(--gb-dark0);
+  --gb-bg-hard: var(--gb-dark0-hard);
+  --gb-bg-soft: var(--gb-dark0-soft);
+  --gb-bg1: var(--gb-dark1);
+  --gb-bg2: var(--gb-dark2);
+  --gb-bg3: var(--gb-dark3);
+  --gb-bg4: var(--gb-dark4);
+  --gb-fg: var(--gb-light1);
+  --gb-fg-strong: var(--gb-light0);
+  --gb-fg2: var(--gb-light2);
+  --gb-fg3: var(--gb-light3);
+  --gb-fg4: var(--gb-light4);
+  --gb-red: var(--gb-bright-red);
+  --gb-green: var(--gb-bright-green);
+  --gb-yellow: var(--gb-bright-yellow);
+  --gb-blue: var(--gb-bright-blue);
+  --gb-purple: var(--gb-bright-purple);
+  --gb-aqua: var(--gb-bright-aqua);
+  --gb-orange: var(--gb-bright-orange);
+  --gb-accent: var(--gb-neutral-blue);
+  --gb-accent-hover: var(--gb-bright-blue);
+  --gb-accent-text: var(--gb-light0);
+  --gb-on-bright: var(--gb-dark0-hard);
+  --gb-focus: var(--gb-bright-yellow);
+  --gb-selection: var(--gb-dark2);
+
+  /* Existing CallFlow tokens, remapped */
+  --bg: var(--gb-dark0);
+  --app-shell: var(--gb-dark0-hard);
+  --statusbar-bg: var(--gb-dark0-hard);
+  --panel: var(--gb-dark0-soft);
+  --card: var(--gb-dark1);
+  --surface: var(--gb-dark0-hard);
+  --surface-raised: var(--gb-dark1);
+  --surface-soft: color-mix(in srgb, var(--gb-dark0-soft) 72%, transparent);
+  --surface-muted: var(--gb-dark1);
+  --surface-hover: var(--gb-dark2);
+  --surface-active: var(--gb-dark2);
+  --input-bg: var(--gb-dark0-hard);
+  --input-border: var(--gb-dark3);
+  --input-focus: var(--gb-bright-yellow);
+  --button-bg: var(--gb-dark2);
+  --button-hover: var(--gb-dark3);
+  --button-active: var(--gb-dark4);
+  --button-disabled-bg: var(--gb-dark1);
+  --button-disabled-text: var(--gb-dark4);
+  --text: var(--gb-light1);
+  --text-soft: var(--gb-light2);
+  --text-subtle: var(--gb-light4);
+  --muted: var(--gb-light4);
+  --placeholder: var(--gb-gray);
+  --border: var(--gb-dark3);
+  --shadow: color-mix(in srgb, var(--gb-dark0-hard) 60%, transparent);
+  --blue: var(--gb-bright-blue);
+  --green: var(--gb-bright-green);
+  --red: var(--gb-bright-red);
+  --yellow: var(--gb-bright-yellow);
+  --violet: var(--gb-bright-purple);
+  --primary: var(--gb-neutral-blue);
+
+  --chip-bg: var(--gb-dark1);
+  --chip-active: var(--gb-dark2);
+  --badge-info-bg: color-mix(in srgb, var(--gb-bright-blue) 18%, var(--gb-dark0-soft));
+  --badge-info-text: var(--gb-bright-blue);
+  --badge-success-bg: color-mix(in srgb, var(--gb-bright-green) 18%, var(--gb-dark0-soft));
+  --badge-success-text: var(--gb-bright-green);
+  --badge-warning-bg: color-mix(in srgb, var(--gb-bright-yellow) 18%, var(--gb-dark0-soft));
+  --badge-warning-text: var(--gb-bright-yellow);
+  --badge-danger-bg: color-mix(in srgb, var(--gb-bright-red) 18%, var(--gb-dark0-soft));
+  --badge-danger-text: var(--gb-bright-red);
+  --badge-neutral-bg: var(--gb-dark1);
+  --badge-neutral-text: var(--gb-light3);
+  --badge-purple-bg: color-mix(in srgb, var(--gb-bright-purple) 18%, var(--gb-dark0-soft));
+  --badge-purple-text: var(--gb-bright-purple);
+  --badge-pink-bg: color-mix(in srgb, var(--gb-neutral-purple) 24%, var(--gb-dark0-soft));
+  --badge-pink-text: var(--gb-bright-purple);
+
+  --aura-blue: color-mix(in srgb, var(--gb-bright-blue) 8%, transparent);
+  --aura-cyan: color-mix(in srgb, var(--gb-bright-aqua) 6%, transparent);
+  --aura-green: color-mix(in srgb, var(--gb-bright-green) 6%, transparent);
+  --aura-violet: color-mix(in srgb, var(--gb-bright-purple) 6%, transparent);
+  --aura-amber: color-mix(in srgb, var(--gb-bright-yellow) 5%, transparent);
+  --aura-rose: color-mix(in srgb, var(--gb-bright-red) 5%, transparent);
+
+  --modal-bg: var(--gb-dark1);
+  --modal-backdrop: color-mix(in srgb, var(--gb-dark0-hard) 70%, transparent);
+  --code-bg: var(--gb-dark0-hard);
+  --code-text: var(--gb-light1);
+  --chart-bg: var(--gb-dark0-hard);
+  --chart-grid: var(--gb-dark3);
+  --chart-grid-soft: color-mix(in srgb, var(--gb-dark4) 40%, transparent);
+  --chart-accent: var(--gb-bright-aqua);
+  --scrollbar-track: var(--gb-dark0-hard);
+  --scrollbar-thumb: var(--gb-dark3);
+  --scrollbar-thumb-hover: var(--gb-dark4);
+
+  /* Custom-comment field (see main.css --comment-*) */
+  --comment-bg: var(--gb-dark1);
+  --comment-border: var(--gb-dark3);
+  --comment-text: var(--gb-light0);
+
+  color-scheme: dark;
+}
+
+/* --------------------------------------------------------------- light */
+body[data-theme-family="gruvbox"][data-theme="light"] {
+  --gb-bg: var(--gb-light0);
+  --gb-bg-hard: var(--gb-light0-hard);
+  --gb-bg-soft: var(--gb-light0-soft);
+  --gb-bg1: var(--gb-light1);
+  --gb-bg2: var(--gb-light2);
+  --gb-bg3: var(--gb-light3);
+  --gb-bg4: var(--gb-light4);
+  --gb-fg: var(--gb-dark1);
+  --gb-fg-strong: var(--gb-dark0);
+  --gb-fg2: var(--gb-dark2);
+  --gb-fg3: var(--gb-dark3);
+  --gb-fg4: var(--gb-dark4);
+  --gb-red: var(--gb-faded-red);
+  --gb-green: var(--gb-faded-green);
+  --gb-yellow: var(--gb-faded-yellow);
+  --gb-blue: var(--gb-faded-blue);
+  --gb-purple: var(--gb-faded-purple);
+  --gb-aqua: var(--gb-faded-aqua);
+  --gb-orange: var(--gb-faded-orange);
+  --gb-accent: var(--gb-faded-blue);
+  --gb-accent-hover: var(--gb-neutral-blue);
+  --gb-accent-text: var(--gb-light0);
+  --gb-on-bright: var(--gb-light0-hard);
+  --gb-focus: var(--gb-faded-orange);
+  --gb-selection: var(--gb-light2);
+
+  --bg: var(--gb-light0);
+  --app-shell: var(--gb-light0-soft);
+  --statusbar-bg: var(--gb-light1);
+  --panel: var(--gb-light0-hard);
+  --card: var(--gb-light0-hard);
+  --surface: var(--gb-light0-hard);
+  --surface-raised: var(--gb-light0-soft);
+  --surface-soft: color-mix(in srgb, var(--gb-light0-hard) 86%, transparent);
+  --surface-muted: var(--gb-light1);
+  --surface-hover: var(--gb-light1);
+  --surface-active: var(--gb-light2);
+  --input-bg: var(--gb-light0-hard);
+  --input-border: var(--gb-light3);
+  --input-focus: var(--gb-faded-orange);
+  --button-bg: var(--gb-light1);
+  --button-hover: var(--gb-light2);
+  --button-active: var(--gb-light3);
+  --button-disabled-bg: var(--gb-light0-soft);
+  --button-disabled-text: var(--gb-light4);
+  --text: var(--gb-dark1);
+  --text-soft: var(--gb-dark2);
+  --text-subtle: var(--gb-dark3);
+  --muted: var(--gb-dark4);
+  --placeholder: var(--gb-gray);
+  --border: var(--gb-light3);
+  --shadow: color-mix(in srgb, var(--gb-dark1) 14%, transparent);
+  --blue: var(--gb-faded-blue);
+  --green: var(--gb-faded-green);
+  --red: var(--gb-faded-red);
+  --yellow: var(--gb-faded-yellow);
+  --violet: var(--gb-faded-purple);
+  --primary: var(--gb-faded-blue);
+
+  --chip-bg: var(--gb-light1);
+  --chip-active: var(--gb-light2);
+  --badge-info-bg: color-mix(in srgb, var(--gb-faded-blue) 14%, var(--gb-light0-hard));
+  --badge-info-text: var(--gb-faded-blue);
+  --badge-success-bg: color-mix(in srgb, var(--gb-faded-green) 16%, var(--gb-light0-hard));
+  --badge-success-text: var(--gb-faded-green);
+  --badge-warning-bg: color-mix(in srgb, var(--gb-faded-yellow) 18%, var(--gb-light0-hard));
+  --badge-warning-text: var(--gb-faded-orange);
+  --badge-danger-bg: color-mix(in srgb, var(--gb-faded-red) 14%, var(--gb-light0-hard));
+  --badge-danger-text: var(--gb-faded-red);
+  --badge-neutral-bg: var(--gb-light1);
+  --badge-neutral-text: var(--gb-dark3);
+  --badge-purple-bg: color-mix(in srgb, var(--gb-faded-purple) 14%, var(--gb-light0-hard));
+  --badge-purple-text: var(--gb-faded-purple);
+  --badge-pink-bg: color-mix(in srgb, var(--gb-neutral-purple) 16%, var(--gb-light0-hard));
+  --badge-pink-text: var(--gb-faded-purple);
+
+  --aura-blue: color-mix(in srgb, var(--gb-faded-blue) 8%, transparent);
+  --aura-cyan: color-mix(in srgb, var(--gb-faded-aqua) 6%, transparent);
+  --aura-green: color-mix(in srgb, var(--gb-faded-green) 6%, transparent);
+  --aura-violet: color-mix(in srgb, var(--gb-faded-purple) 6%, transparent);
+  --aura-amber: color-mix(in srgb, var(--gb-faded-yellow) 5%, transparent);
+  --aura-rose: color-mix(in srgb, var(--gb-faded-red) 5%, transparent);
+
+  --modal-bg: var(--gb-light0-hard);
+  --modal-backdrop: color-mix(in srgb, var(--gb-dark1) 32%, transparent);
+  --code-bg: var(--gb-light0-soft);
+  --code-text: var(--gb-dark1);
+  --chart-bg: var(--gb-light0-hard);
+  --chart-grid: var(--gb-light2);
+  --chart-grid-soft: color-mix(in srgb, var(--gb-light4) 40%, transparent);
+  --chart-accent: var(--gb-faded-aqua);
+  --scrollbar-track: var(--gb-light0-soft);
+  --scrollbar-thumb: var(--gb-light3);
+  --scrollbar-thumb-hover: var(--gb-light4);
+
+  --comment-bg: var(--gb-light1);
+  --comment-border: var(--gb-light3);
+  --comment-text: var(--gb-dark0);
+
+  color-scheme: light;
+}

@@ -18,6 +18,7 @@
   const linePrefixModes = new Set(["hash", "none", "dailyNumber"]);
   const clockFormats = new Set(["24h", "12h", "military"]);
   const themes = new Set(["dark", "light", "system"]);
+  const themeFamilies = new Set(["default", "gruvbox"]);
   const reminderSounds = new Set(["soft", "ping", "bell", "alert", "chime", "none"]);
   const reminderStatuses = new Set(["pending", "overdue", "completed", "deleted"]);
 
@@ -313,6 +314,7 @@
       notifyAtExactTime: merged.notifyAtExactTime !== false,
       reminderSound: reminderSounds.has(merged.reminderSound) ? merged.reminderSound : "soft",
       theme: themes.has(merged.theme) ? merged.theme : "system",
+      themeFamily: themeFamilies.has(merged.themeFamily) ? merged.themeFamily : "default",
       legalAcceptance: normalizeLegalAcceptance(merged.legalAcceptance),
       onboardingCompleted: Boolean(merged.onboardingCompleted)
     };

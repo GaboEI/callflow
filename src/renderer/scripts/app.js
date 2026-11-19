@@ -620,30 +620,63 @@ Africa/Harare ZW
     if (view === "settings") settingsView.setSettingsTab("general");
   }
 
-  function normalizedThemePreference(theme) {
-    return ["dark", "light", "system"].includes(theme) ? theme : "system";
+  const themeApi = window.CallFlowTheme;
+
+  function normalizedThemePreference(mode) {
+    return themeApi.normalizeMode(mode);
   }
 
-  function resolvedTheme(theme) {
-    const preference = normalizedThemePreference(theme);
-    if (preference === "system") return systemThemeQuery?.matches ? "light" : "dark";
-    return preference;
+  function normalizedThemeFamily(family) {
+    return themeApi.normalizeFamily(family);
   }
 
-  function applyThemePreference(theme) {
-    const preference = normalizedThemePreference(theme);
-    const resolved = resolvedTheme(preference);
-    document.body.dataset.themePreference = preference;
-    document.body.dataset.theme = resolved;
-    document.body.style.colorScheme = resolved;
+  function resolvedTheme(mode) {
+    return themeApi.resolveMode(mode, Boolean(systemThemeQuery?.matches));
+  }
+
+  function writeThemeHint(family, resolved) {
+    try {
+      localStorage.setItem(themeApi.HINT_KEY, themeApi.serializeHint({ family, resolved }));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function themeSummaryText(active, language = state.settings?.language || "es") {
+    const familyLabel = CallFlowI18n.t(active.familyLabelKey, language);
+    const modeLabel = CallFlowI18n.t(active.modeLabelKey, language);
+    if (!active.isSystem) return `${familyLabel} · ${modeLabel}`;
+    const resolvedLabel = CallFlowI18n.t(active.resolvedLabelKey, language);
+    return `${familyLabel} · ${modeLabel} (${resolvedLabel})`;
+  }
+
+  function applyThemePreference(mode, family = state.settings?.themeFamily, language = state.settings?.language || "es") {
+    const active = themeApi.describeActive({
+      family,
+      mode,
+      resolved: resolvedTheme(mode)
+    });
+    document.body.dataset.themePreference = active.mode;
+    document.body.dataset.themeFamily = active.family;
+    document.body.dataset.theme = active.resolved;
+    document.body.style.colorScheme = active.resolved;
     document.querySelectorAll(".theme-switcher").forEach((container) => {
-      container.dataset.themeActive = preference;
+      container.dataset.themeActive = active.mode;
     });
     document.querySelectorAll("[data-theme-choice]").forEach((button) => {
-      const active = button.dataset.themeChoice === preference;
-      button.classList.toggle("active", active);
-      button.setAttribute("aria-pressed", String(active));
+      const isActive = button.dataset.themeChoice === active.mode;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
     });
+    document.querySelectorAll("[data-theme-family-choice]").forEach((button) => {
+      const isActive = button.dataset.themeFamilyChoice === active.family;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-checked", String(isActive));
+    });
+    const summary = $("#themeActiveSummary");
+    if (summary) summary.textContent = themeSummaryText(active, language);
+    writeThemeHint(active.family, active.resolved);
   }
 
   function applySettingsToForms() {
@@ -687,7 +720,6 @@ Africa/Harare ZW
     settingsForm.operatorName.value = settings.operatorName || "";
     settingsForm.reportHeaderFormat.value = settings.reportHeaderFormat;
     settingsForm.linePrefixMode.value = settings.linePrefixMode || "hash";
-    settingsForm.theme.value = normalizedThemePreference(settings.theme);
     settingsForm.clockFormat.value = settings.clockFormat || "24h";
     renderStatsTimezoneOptions(settingsForm);
     settingsForm.statsCycleStartDay.value = String(settings.statsCycleStartDay || 1);
@@ -816,6 +848,17 @@ Africa/Harare ZW
     });
   }
 
+  async function changeThemeFamily(family) {
+    const nextFamily = normalizedThemeFamily(family);
+    await runAction(async () => {
+      await saveSettings({
+        ...state.settings,
+        themeFamily: nextFamily
+      });
+      setStatusMessage(CallFlowI18n.t("themeSaved", state.settings.language || "es"), "success");
+    });
+  }
+
   function activeFormLanguage() {
     const onboardingVisible = !$("#onboarding").classList.contains("hidden");
     const form = onboardingVisible ? $("#onboardingForm") : $("#settingsForm");
@@ -843,6 +886,7 @@ Africa/Harare ZW
     timezonePicker.renderAll(language);
     renderStatsTimezoneOptions(form);
     settingsView.renderActiveTimezoneEditors();
+    applyThemePreference(state.settings?.theme || "system", state.settings?.themeFamily, language);
 
     if (form.id === "onboardingForm" && !state.settings.onboardingCompleted) {
       refreshPresetBackedStatuses("onboardingFrequentStatuses", language);
@@ -1445,6 +1489,9 @@ Africa/Harare ZW
     $$(".nav-link").forEach((button) => button.addEventListener("click", () => setView(button.dataset.view)));
     $$("[data-theme-choice]").forEach((button) => {
       button.addEventListener("click", () => changeThemePreference(button.dataset.themeChoice));
+    });
+    $$("[data-theme-family-choice]").forEach((button) => {
+      button.addEventListener("click", () => changeThemeFamily(button.dataset.themeFamilyChoice));
     });
     $("#onboardingForm").addEventListener("submit", async (event) => {
       event.preventDefault();

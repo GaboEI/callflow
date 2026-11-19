@@ -1,0 +1,697 @@
+/*
+ * Gruvbox theme family — part 3 (main.css lines 4401–6600).
+ * Covers: reminder states/chips/alarm, compact hour blocks, reports toolbar and
+ * period chips, tags/chips/timezone picker, script library + cards, AI chat shell,
+ * and the rules that follow in the 4401–6600 range (see section headers).
+ *
+ * Loaded after main.css and gruvbox.tokens.css. Active only under
+ * body[data-theme-family="gruvbox"]. Colours come exclusively from the
+ * --gb-* / remapped tokens (and color-mix() of them); no literals.
+ * Keyframes `cf-gb-accent-breathe` / `cf-gb-sheen` are defined in part 1.
+ */
+
+/* =========================================================================
+ * 0. Local aliases (tokens only) — used throughout this file
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] {
+  /* Text for "yellow/warning" on tinted surfaces: bright-yellow on dark,
+     faded-orange on light (mirrors --badge-warning-text) for AA contrast. */
+  --gb3-warn-text: var(--gb-yellow);
+  /* Neutral hairlines replacing the slate-grey Default borders. */
+  --gb3-line: color-mix(in srgb, var(--gb-fg4) 28%, transparent);
+  --gb3-line-soft: color-mix(in srgb, var(--gb-fg4) 16%, transparent);
+  /* Translucent recessed wells replacing the navy Default fills. */
+  --gb3-well: color-mix(in srgb, var(--gb-bg-hard) 62%, transparent);
+  --gb3-well-strong: color-mix(in srgb, var(--gb-bg-hard) 78%, transparent);
+}
+
+body[data-theme-family="gruvbox"][data-theme="light"] {
+  --gb3-warn-text: var(--gb-faded-orange);
+}
+
+/* =========================================================================
+ * 1. Reminder states / countdown pills  (main.css 4456–4483)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .reminder-state,
+body[data-theme-family="gruvbox"] .reminder-countdown {
+  border-color: color-mix(in srgb, var(--gb-yellow) 40%, transparent);
+  background: color-mix(in srgb, var(--gb-yellow) 14%, transparent);
+  color: var(--gb3-warn-text);
+}
+
+body[data-theme-family="gruvbox"] .reminder-overdue .reminder-state,
+body[data-theme-family="gruvbox"] .reminder-overdue .reminder-countdown {
+  border-color: color-mix(in srgb, var(--gb-red) 42%, transparent);
+  background: color-mix(in srgb, var(--gb-red) 14%, transparent);
+  color: var(--gb-red);
+}
+
+body[data-theme-family="gruvbox"] .reminder-completed .reminder-state,
+body[data-theme-family="gruvbox"] .reminder-completed .reminder-countdown,
+body[data-theme-family="gruvbox"] .reminder-completed-label {
+  border-color: color-mix(in srgb, var(--gb-green) 42%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 14%, transparent);
+  color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .reminder-invalid .reminder-state,
+body[data-theme-family="gruvbox"] .reminder-invalid .reminder-countdown {
+  border-color: color-mix(in srgb, var(--gb-fg4) 42%, transparent);
+  background: color-mix(in srgb, var(--gb-fg4) 14%, transparent);
+  color: var(--gb-fg2);
+}
+
+/* =========================================================================
+ * 2. Reminder filter chips  (main.css 4613–4776)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .reminder-chip {
+  border-color: var(--gb3-line);
+  background: color-mix(in srgb, var(--gb-bg-hard) 45%, transparent);
+  color: var(--gb-fg4);
+}
+
+body[data-theme-family="gruvbox"] .reminder-chip:hover {
+  background: color-mix(in srgb, var(--gb-bg1) 70%, transparent);
+  color: var(--gb-fg);
+  box-shadow: 0 2px 8px var(--shadow);
+  animation-name: cf-gb-accent-breathe;
+}
+
+/* Todos — neutral */
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="all"] {
+  border-left-color: var(--gb-bg3);
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="all"].reminder-chip--active {
+  border-left-color: var(--gb-fg4);
+  border-color: color-mix(in srgb, var(--gb-fg4) 38%, transparent);
+  background: color-mix(in srgb, var(--gb-bg3) 45%, transparent);
+  color: var(--gb-fg);
+  box-shadow: inset 0 0 0 0 transparent, 0 0 0 1px color-mix(in srgb, var(--gb-fg4) 16%, transparent);
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="all"]:hover {
+  border-left-color: var(--gb-fg4);
+}
+
+/* Hoy — blue */
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="today"] {
+  border-left-color: color-mix(in srgb, var(--gb-blue) 60%, var(--gb-bg));
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="today"]:hover {
+  border-left-color: var(--gb-blue);
+  color: var(--gb-blue);
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="today"].reminder-chip--active {
+  border-left-color: var(--gb-blue);
+  border-color: color-mix(in srgb, var(--gb-blue) 38%, transparent);
+  background: color-mix(in srgb, var(--gb-blue) 18%, transparent);
+  color: var(--gb-blue);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gb-blue) 14%, transparent);
+}
+
+/* Mañana — aqua */
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="tomorrow"] {
+  border-left-color: color-mix(in srgb, var(--gb-aqua) 60%, var(--gb-bg));
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="tomorrow"]:hover {
+  border-left-color: var(--gb-aqua);
+  color: var(--gb-aqua);
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="tomorrow"].reminder-chip--active {
+  border-left-color: var(--gb-aqua);
+  border-color: color-mix(in srgb, var(--gb-aqua) 36%, transparent);
+  background: color-mix(in srgb, var(--gb-aqua) 18%, transparent);
+  color: var(--gb-aqua);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gb-aqua) 12%, transparent);
+}
+
+/* Esta semana — purple */
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="week"] {
+  border-left-color: color-mix(in srgb, var(--gb-purple) 60%, var(--gb-bg));
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="week"]:hover {
+  border-left-color: var(--gb-purple);
+  color: var(--gb-purple);
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="week"].reminder-chip--active {
+  border-left-color: var(--gb-purple);
+  border-color: color-mix(in srgb, var(--gb-purple) 36%, transparent);
+  background: color-mix(in srgb, var(--gb-purple) 18%, transparent);
+  color: var(--gb-purple);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gb-purple) 14%, transparent);
+}
+
+/* Vencidos — orange alert */
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="overdue"] {
+  border-left-color: color-mix(in srgb, var(--gb-orange) 60%, var(--gb-bg));
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="overdue"]:hover {
+  border-left-color: var(--gb-orange);
+  color: var(--gb-orange);
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="overdue"].reminder-chip--active {
+  border-left-color: var(--gb-orange);
+  border-color: color-mix(in srgb, var(--gb-orange) 38%, transparent);
+  background: color-mix(in srgb, var(--gb-orange) 18%, transparent);
+  color: var(--gb-orange);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gb-orange) 14%, transparent);
+}
+
+/* Inválidos — gray */
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="invalid"] {
+  border-left-color: color-mix(in srgb, var(--gb-gray) 82%, transparent);
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="invalid"]:hover {
+  border-left-color: var(--gb-gray);
+  color: var(--gb-fg2);
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="invalid"].reminder-chip--active {
+  border-left-color: var(--gb-gray);
+  border-color: color-mix(in srgb, var(--gb-gray) 36%, transparent);
+  background: color-mix(in srgb, var(--gb-gray) 22%, transparent);
+  color: var(--gb-fg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gb-gray) 14%, transparent);
+}
+
+/* Completados — green */
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="completed"] {
+  border-left-color: color-mix(in srgb, var(--gb-green) 60%, var(--gb-bg));
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="completed"]:hover {
+  border-left-color: var(--gb-green);
+  color: var(--gb-green);
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="completed"].reminder-chip--active {
+  border-left-color: var(--gb-green);
+  border-color: color-mix(in srgb, var(--gb-green) 36%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 18%, transparent);
+  color: var(--gb-green);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gb-green) 12%, transparent);
+}
+
+/* Basura — red */
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="deleted"] {
+  border-left-color: color-mix(in srgb, var(--gb-red) 60%, var(--gb-bg));
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="deleted"]:hover {
+  border-left-color: var(--gb-red);
+  color: var(--gb-red);
+}
+body[data-theme-family="gruvbox"] .reminder-chip[data-filter="deleted"].reminder-chip--active {
+  border-left-color: var(--gb-red);
+  border-color: color-mix(in srgb, var(--gb-red) 36%, transparent);
+  background: color-mix(in srgb, var(--gb-red) 18%, transparent);
+  color: var(--gb-red);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gb-red) 12%, transparent);
+}
+
+/* =========================================================================
+ * 3. Reminder alarm overlay  (main.css 4809–4847)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .reminder-alarm-overlay {
+  background: var(--modal-backdrop);
+}
+
+body[data-theme-family="gruvbox"] .reminder-alarm {
+  border-color: color-mix(in srgb, var(--gb-yellow) 55%, transparent);
+  background: var(--modal-bg);
+  box-shadow: 0 26px 70px var(--shadow);
+}
+
+body[data-theme-family="gruvbox"] .reminder-alarm-kicker {
+  border-color: color-mix(in srgb, var(--gb-yellow) 45%, transparent);
+  background: color-mix(in srgb, var(--gb-yellow) 16%, transparent);
+  color: var(--gb3-warn-text);
+}
+
+/* =========================================================================
+ * 4. Compact hour blocks  (main.css 4884–4912)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .compact-hour-block.best-block {
+  border-color: color-mix(in srgb, var(--gb-green) 70%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 14%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .compact-hour-block.current-block {
+  border-color: color-mix(in srgb, var(--gb-blue) 72%, transparent);
+  background: color-mix(in srgb, var(--gb-blue) 15%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .compact-hour-block.current-block strong,
+body[data-theme-family="gruvbox"] .compact-hour-block.current-block .muted {
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .compact-hour-block.worst-block {
+  border-color: color-mix(in srgb, var(--gb-red) 72%, transparent);
+  background: color-mix(in srgb, var(--gb-red) 13%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .compact-hour-block.worst-block strong,
+body[data-theme-family="gruvbox"] .compact-hour-block.worst-block .muted {
+  color: var(--gb-red);
+}
+
+/* =========================================================================
+ * 5. Reports toolbar / actions / period chips  (main.css 4960–5122)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .report-copy-action {
+  border-color: color-mix(in srgb, var(--gb-green) 46%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 14%, transparent);
+  color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .report-copy-action:hover {
+  border-color: color-mix(in srgb, var(--gb-green) 78%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 22%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .report-copy-action span {
+  color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .report-export-actions {
+  background: color-mix(in srgb, var(--gb-bg-hard) 50%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .report-bulk-actions .report-copy-action span {
+  color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .report-bulk-actions button span {
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip {
+  border-left-color: color-mix(in srgb, var(--gb-blue) 40%, transparent);
+  background: color-mix(in srgb, var(--gb-bg-hard) 52%, transparent);
+  color: var(--gb-fg2);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip:hover {
+  border-left-color: color-mix(in srgb, var(--gb-blue) 82%, transparent);
+  color: var(--gb-fg-strong);
+  animation-name: cf-gb-accent-breathe;
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip--active {
+  border-color: color-mix(in srgb, var(--gb-blue) 50%, transparent);
+  background: color-mix(in srgb, var(--gb-blue) 18%, transparent);
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="today"] {
+  border-left-color: color-mix(in srgb, var(--gb-blue) 72%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="today"].report-period-chip--active {
+  border-color: color-mix(in srgb, var(--gb-blue) 50%, transparent);
+  border-left-color: var(--gb-blue);
+  background: color-mix(in srgb, var(--gb-blue) 18%, transparent);
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="yesterday"] {
+  border-left-color: color-mix(in srgb, var(--gb-green) 72%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="yesterday"].report-period-chip--active {
+  border-color: color-mix(in srgb, var(--gb-green) 46%, transparent);
+  background: color-mix(in srgb, var(--gb-green) 15%, transparent);
+  color: var(--gb-green);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="last7"] {
+  border-left-color: color-mix(in srgb, var(--gb-purple) 72%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="last7"].report-period-chip--active {
+  border-color: color-mix(in srgb, var(--gb-purple) 48%, transparent);
+  background: color-mix(in srgb, var(--gb-purple) 17%, transparent);
+  color: var(--gb-purple);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="last30"] {
+  border-left-color: color-mix(in srgb, var(--gb-yellow) 72%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="last30"].report-period-chip--active {
+  border-color: color-mix(in srgb, var(--gb-yellow) 48%, transparent);
+  background: color-mix(in srgb, var(--gb-yellow) 14%, transparent);
+  color: var(--gb3-warn-text);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="custom"] {
+  border-left-color: color-mix(in srgb, var(--gb-orange) 72%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .report-period-chip[data-report-period="custom"].report-period-chip--active {
+  border-color: color-mix(in srgb, var(--gb-orange) 48%, transparent);
+  border-left-color: var(--gb-orange);
+  background: color-mix(in srgb, var(--gb-orange) 15%, transparent);
+  color: var(--gb-orange);
+}
+
+body[data-theme-family="gruvbox"] .report-trash-chip {
+  border-left-color: color-mix(in srgb, var(--gb-red) 52%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .report-trash-chip.report-period-chip--active {
+  border-color: color-mix(in srgb, var(--gb-red) 46%, transparent);
+  background: color-mix(in srgb, var(--gb-red) 14%, transparent);
+  color: var(--gb-red);
+}
+
+/* =========================================================================
+ * 6. Search counter / match highlight / trash item / ghost-danger / tag
+ *    (main.css 5183–5273)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .search-counter {
+  background: color-mix(in srgb, var(--gb-blue) 14%, transparent);
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .report-match {
+  background: color-mix(in srgb, var(--gb-yellow) 38%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .report-match.active {
+  color: var(--gb-on-bright);
+}
+
+body[data-theme-family="gruvbox"] .report-item-trash {
+  border-color: color-mix(in srgb, var(--gb-red) 34%, transparent);
+  background: color-mix(in srgb, var(--gb-red) 12%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .ghost-danger {
+  background: color-mix(in srgb, var(--gb-red) 13%, transparent);
+  border-color: color-mix(in srgb, var(--gb-red) 40%, transparent);
+  color: var(--gb-red);
+}
+
+body[data-theme-family="gruvbox"] .tag {
+  background: color-mix(in srgb, var(--gb-blue) 16%, transparent);
+  color: var(--gb-blue);
+}
+
+/* =========================================================================
+ * 7. Timezone picker / chips / preview  (main.css 5315–5398)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .timezone-results {
+  background: var(--gb-bg-hard);
+}
+
+body[data-theme-family="gruvbox"] .timezone-option.active,
+body[data-theme-family="gruvbox"] .timezone-option:hover {
+  background: color-mix(in srgb, var(--gb-blue) 18%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .chip {
+  background: color-mix(in srgb, var(--gb-blue) 13%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .chip.preset {
+  background: var(--gb-bg1);
+}
+
+body[data-theme-family="gruvbox"] .preview {
+  background: var(--gb-bg-hard);
+}
+
+/* =========================================================================
+ * 8. Script library header / search  (main.css 5419–5473)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .script-library {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gb-blue) 8%, transparent), transparent 180px),
+    var(--gb3-well);
+}
+
+body[data-theme-family="gruvbox"] .script-search {
+  background: color-mix(in srgb, var(--gb-bg-hard) 70%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-search:focus-within {
+  border-color: var(--gb-focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gb-focus) 22%, transparent);
+}
+
+/* =========================================================================
+ * 9. AI chat foundation  (main.css 5502–5690)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .ai-context-panel,
+body[data-theme-family="gruvbox"] .ai-chat-panel {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gb-blue) 8%, transparent), transparent 220px),
+    var(--gb3-well);
+}
+
+body[data-theme-family="gruvbox"] .ai-source-card {
+  background: color-mix(in srgb, var(--gb-bg-hard) 62%, transparent);
+  border-color: var(--gb3-line-soft);
+}
+
+body[data-theme-family="gruvbox"] .ai-privacy-note {
+  background: color-mix(in srgb, var(--gb-green) 9%, transparent);
+  border-color: color-mix(in srgb, var(--gb-green) 26%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .ai-state-pill {
+  color: var(--gb-blue);
+  background: color-mix(in srgb, var(--gb-blue) 16%, transparent);
+  border-color: color-mix(in srgb, var(--gb-blue) 34%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .ai-avatar {
+  color: var(--gb-blue);
+  background: color-mix(in srgb, var(--gb-blue) 18%, transparent);
+  border-color: color-mix(in srgb, var(--gb-blue) 32%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .ai-bubble {
+  background: color-mix(in srgb, var(--gb-bg-hard) 62%, transparent);
+  border-color: var(--gb3-line-soft);
+}
+
+body[data-theme-family="gruvbox"] .ai-reference-row span,
+body[data-theme-family="gruvbox"] .ai-suggestion-row button {
+  color: var(--gb-blue);
+  background: color-mix(in srgb, var(--gb-blue) 13%, transparent);
+  border-color: color-mix(in srgb, var(--gb-blue) 26%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .ai-suggestion-row button:hover {
+  background: color-mix(in srgb, var(--gb-blue) 22%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .ai-composer {
+  background: var(--gb3-well-strong);
+}
+
+/* =========================================================================
+ * 10. Script cards  (main.css 5703–5876)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .script-card {
+  background: linear-gradient(145deg, var(--gb-bg1), var(--gb-bg-soft));
+}
+
+body[data-theme-family="gruvbox"] .script-card.pinned {
+  border-color: color-mix(in srgb, var(--gb-yellow) 46%, transparent);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--gb-yellow) 9%, var(--gb-bg1)), var(--gb-bg-soft));
+}
+
+body[data-theme-family="gruvbox"] .script-card-action {
+  color: var(--gb-fg4);
+  background: color-mix(in srgb, var(--gb-bg-hard) 72%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-pin-button:hover,
+body[data-theme-family="gruvbox"] .script-pin-button.active {
+  color: var(--gb3-warn-text);
+  border-color: color-mix(in srgb, var(--gb-yellow) 40%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-delete-card-button:hover {
+  color: var(--gb-red);
+  border-color: color-mix(in srgb, var(--gb-red) 40%, transparent);
+  background: color-mix(in srgb, var(--gb-red) 16%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-card:hover {
+  border-color: color-mix(in srgb, var(--gb-blue) 52%, transparent);
+  box-shadow: 0 8px 24px var(--shadow);
+}
+
+body[data-theme-family="gruvbox"] .script-card-icon {
+  color: var(--gb-blue);
+  background: color-mix(in srgb, var(--gb-blue) 15%, transparent);
+  border-color: color-mix(in srgb, var(--gb-blue) 28%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-card-icon.type-txt {
+  color: var(--gb-fg2);
+  background: color-mix(in srgb, var(--gb-fg4) 12%, transparent);
+  border-color: color-mix(in srgb, var(--gb-fg4) 28%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-card-icon.type-pdf {
+  color: var(--gb-red);
+  background: color-mix(in srgb, var(--gb-red) 11%, transparent);
+  border-color: color-mix(in srgb, var(--gb-red) 30%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-card footer {
+  border-top-color: var(--gb3-line-soft);
+}
+
+body[data-theme-family="gruvbox"] .script-type-label {
+  color: var(--gb-fg4);
+}
+
+body[data-theme-family="gruvbox"] .script-card footer button {
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .script-empty-state {
+  border-color: var(--gb3-line);
+}
+
+body[data-theme-family="gruvbox"] .script-empty-state > span {
+  color: var(--gb-blue);
+}
+
+/* =========================================================================
+ * 11. Script reader / editor surfaces  (main.css 5887–5918)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .script-reader,
+body[data-theme-family="gruvbox"] .script-editor-panel {
+  background: color-mix(in srgb, var(--gb-bg-hard) 66%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-reader-toolbar {
+  background: color-mix(in srgb, var(--gb-bg-hard) 94%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-back-button {
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .script-edit-button {
+  color: var(--gb-blue);
+}
+
+/* =========================================================================
+ * 12. Markdown rendering (.script-markdown)  (main.css 5937–6142)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .script-markdown {
+  color: var(--gb-fg);
+}
+
+body[data-theme-family="gruvbox"] .script-markdown a {
+  color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .script-markdown blockquote {
+  color: var(--gb-fg2);
+  background: color-mix(in srgb, var(--gb-blue) 9%, transparent);
+  border-left-color: var(--gb-blue);
+}
+
+body[data-theme-family="gruvbox"] .script-markdown blockquote.script-callout {
+  color: var(--gb-fg-strong);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--gb-aqua) 15%, transparent), color-mix(in srgb, var(--gb-blue) 7%, transparent));
+  border-left-color: var(--gb-aqua);
+}
+
+body[data-theme-family="gruvbox"] .script-markdown code {
+  color: var(--gb-purple);
+  background: color-mix(in srgb, var(--gb-purple) 13%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-markdown pre {
+  background: var(--code-bg);
+  border-color: var(--gb3-line);
+}
+
+body[data-theme-family="gruvbox"] .script-copy-code {
+  color: var(--gb-fg4);
+  background: var(--gb-bg1);
+  border-color: var(--gb3-line);
+}
+
+body[data-theme-family="gruvbox"] .script-copy-code:hover {
+  color: var(--gb-fg-strong);
+  background: color-mix(in srgb, var(--gb-blue) 22%, var(--gb-bg1));
+  border-color: color-mix(in srgb, var(--gb-blue) 52%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-copy-code.copied {
+  color: var(--gb-green);
+  border-color: color-mix(in srgb, var(--gb-green) 52%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-markdown pre code {
+  color: var(--code-text);
+}
+
+body[data-theme-family="gruvbox"] .script-markdown th {
+  background: color-mix(in srgb, var(--gb-bg1) 92%, transparent);
+}
+
+/* =========================================================================
+ * 13. Script editor: actions bar / plain toolbar / textarea / preview /
+ *     plain text / PDF reader  (main.css 6163–6269)
+ * ========================================================================= */
+body[data-theme-family="gruvbox"] .script-editor-actions {
+  background: color-mix(in srgb, var(--gb-bg-hard) 94%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-plain-toolbar {
+  background: var(--gb-bg-soft);
+}
+
+body[data-theme-family="gruvbox"] .script-plain-toolbar button {
+  color: var(--gb-fg2);
+}
+
+body[data-theme-family="gruvbox"] .script-plain-toolbar button:hover,
+body[data-theme-family="gruvbox"] .script-plain-toolbar button.active {
+  color: var(--gb-fg-strong);
+  background: color-mix(in srgb, var(--gb-blue) 20%, transparent);
+  border-color: color-mix(in srgb, var(--gb-blue) 36%, transparent);
+}
+
+body[data-theme-family="gruvbox"] .script-editor-form #scriptContent {
+  color: var(--gb-fg);
+  caret-color: var(--gb-fg);
+  background: var(--gb-bg-hard);
+}
+
+body[data-theme-family="gruvbox"] .script-editor-preview {
+  background: var(--gb-bg-hard);
+}
+
+body[data-theme-family="gruvbox"] .script-plain-text {
+  color: var(--gb-fg);
+  background: var(--gb-bg-hard);
+}
+
+body[data-theme-family="gruvbox"] .script-pdf-reader {
+  background: var(--gb-bg-hard);
+  border-color: color-mix(in srgb, var(--gb-blue) 24%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gb-bg) 85%, transparent);
+}
+
+/* =========================================================================
+ * 14. Responsive overrides  (main.css 6449–6467, inside @media (max-width: 779px))
+ *     The @media blocks at 6286, 6394, 6548 and 6621 carry no colour rules.
+ * ========================================================================= */
+@media (max-width: 779px) {
+  body[data-theme-family="gruvbox"] .app.sidebar-open .sidebar {
+    box-shadow: 0 18px 42px var(--shadow);
+  }
+
+  body[data-theme-family="gruvbox"] .app.sidebar-open .sidebar-backdrop {
+    background: var(--modal-backdrop);
+  }
+}
